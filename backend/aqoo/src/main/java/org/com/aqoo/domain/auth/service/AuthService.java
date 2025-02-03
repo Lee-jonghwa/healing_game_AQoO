@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -205,5 +206,22 @@ public class AuthService {
         // 4. 새로운 비밀번호 암호화 후 저장
         user.setPw(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+    }
+
+    // 회원정보 조회 서비스
+    public UserInfoResponse getUserInfo(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return UserInfoResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .mainFishId(Objects.requireNonNullElse(user.getMainFishId(), 0)) // 기본값 0
+                .exp(user.getExp())
+                .level(user.getLevel())
+                .status(user.getStatus())
+                .mainAquarium(Objects.requireNonNullElse(user.getMainAquarium(), 0)) // 기본값 0
+                .build();
     }
 }

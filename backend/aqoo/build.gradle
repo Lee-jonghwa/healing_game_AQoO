@@ -75,11 +75,11 @@ dependencies {
     // SLF4J API (필수)
     implementation 'org.slf4j:slf4j-api:2.0.7'
 
-    // Logback (Spring Boot 기본 로깅)
-    implementation 'ch.qos.logback:logback-classic:1.4.7'
-
     // SLF4J Simple (옵션, Logback 없이 콘솔 출력)
     runtimeOnly 'org.slf4j:slf4j-simple:2.0.7'
+
+
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {

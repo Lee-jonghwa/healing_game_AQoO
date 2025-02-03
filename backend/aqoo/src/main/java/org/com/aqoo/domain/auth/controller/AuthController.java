@@ -1,5 +1,6 @@
 package org.com.aqoo.domain.auth.controller;
 
+import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.*;
@@ -134,5 +135,4 @@ public class AuthController {
         authService.changePassword(request);
         return ResponseEntity.ok(Map.of("message", "비밀번호 변경이 완료되었습니다."));
     }
-
 }
