@@ -30,8 +30,9 @@ public class User {
     @Column(columnDefinition = "TEXT") // TEXT 타입
     private String refreshToken;
 
-    @Column
-    private Integer mainFishId; // INTEGER
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String mainFishImage;
 
     @Column
     private Integer exp; // INTEGER
