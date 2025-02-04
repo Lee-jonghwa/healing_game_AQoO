@@ -53,4 +53,10 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/non-group/{userId}")
+    public ResponseEntity<NonGroupedFishResponseDto> getNonGroupedFishes(@PathVariable("userId") String userId) {
+        NonGroupedFishResponseDto response = aquariumService.getNonGroupedFishes(userId);
+        return ResponseEntity.ok(response);
+    }
+
 }
