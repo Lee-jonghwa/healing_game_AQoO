@@ -18,7 +18,6 @@ import java.util.Objects;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserFishRepository userFishRepository;
 
     // 회원정보 조회 서비스
     public UserInfoResponse getUserInfo(String userId) {

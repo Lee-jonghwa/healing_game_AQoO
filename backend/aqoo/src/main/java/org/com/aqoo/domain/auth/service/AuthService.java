@@ -27,7 +27,7 @@ public class AuthService {
 
         public static String generateRandomString() {
             StringBuilder sb = new StringBuilder(RANDOM_PART_LENGTH);
-            for(int i = 0; i < RANDOM_PART_LENGTH; i++) {
+            for (int i = 0; i < RANDOM_PART_LENGTH; i++) {
                 sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
             }
             return sb.toString();
@@ -207,5 +207,15 @@ public class AuthService {
         user.setPw(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
-    
+
+    // 비밀번호 재설정 서비스
+    public void newPassword(NewPasswordRequest request) {
+        // 1. 사용자 조회
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 2. 새로운 비밀번호 암호화 후 저장
+        user.setPw(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
 }
