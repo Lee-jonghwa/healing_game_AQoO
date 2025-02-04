@@ -2,6 +2,7 @@ package org.com.aqoo.domain.fish.controller;
 
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import lombok.RequiredArgsConstructor;
+import org.com.aqoo.domain.fish.dto.CollectionFishResponse;
 import org.com.aqoo.domain.fish.dto.CustomFishResponse;
 import org.com.aqoo.domain.fish.dto.FishTypeResponseDto;
 import org.com.aqoo.domain.fish.dto.UserFishResponse;
@@ -45,6 +46,18 @@ public class FishController {
             List<CustomFishResponse> fishList = fishService.getCustomFish(userId);
             return ResponseEntity.ok(fishList);
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", "커스텀 물고기 조회하기에 실패했습니다."));
+        }
+    }
+
+    @GetMapping("/collection/{userId}")
+    public ResponseEntity<?> getCollectionFish(@PathVariable String userId) {
+        try {
+            List<CollectionFishResponse> fishList = fishService.getCollectionFish(userId);
+            return ResponseEntity.ok(fishList);
+        } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Collections.singletonMap("error", "커스텀 물고기 조회하기에 실패했습니다."));
         }

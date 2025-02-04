@@ -1,6 +1,7 @@
 package org.com.aqoo.domain.fish.service;
 
 import lombok.RequiredArgsConstructor;
+import org.com.aqoo.domain.fish.dto.CollectionFishResponse;
 import org.com.aqoo.domain.fish.dto.CustomFishResponse;
 import org.com.aqoo.domain.fish.dto.UserFishResponse;
 import org.com.aqoo.domain.fish.dto.FishTypeResponseDto;
@@ -12,7 +13,10 @@ import org.com.aqoo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -66,4 +70,36 @@ public class FishService {
                 ))
                 .toList();
     }
+
+    public List<CollectionFishResponse> getCollectionFish(String userId) {
+        // 유효한 사용자 확인
+        userRepository.findById(userId).orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+
+        // 1. user_fish 테이블에서 사용자의 물고기 목록을 가져오고 fishTypeId 별로 개수를 센다.
+        List<Object[]> fishCountList = userFishRepository.countFishByUserId(userId);
+
+        Map<Integer, Integer> fishCountMap = new HashMap<>();
+
+        for (Object[] row : fishCountList) {
+            Integer fishTypeId = (Integer) row[0]; // fishTypeId
+            Integer count = ((Number) row[1]).intValue(); // count 값 변환
+            fishCountMap.put(fishTypeId, count);
+        }
+
+        // 2. fish_type 테이블에서 해당 fishTypeId 목록을 가져온다.
+        List<Integer> fishTypeIds = new ArrayList<>(fishCountMap.keySet()); // Set -> List 변환
+        List<Fish> fishTypes = fishRepository.findByIdIn(fishTypeIds);
+
+        // 3. 응답 객체로 변환하여 반환
+        return fishTypes.stream()
+                .map(fishType -> new CollectionFishResponse(
+                        fishType.getId(),        // fishTypeId
+                        fishType.getFishName(),  // 물고기 이름
+                        fishType.getImageUrl(),  // 물고기 이미지
+                        fishCountMap.getOrDefault(fishType.getId(), 0) // 해당 타입의 물고기 개수
+                ))
+                .toList();
+    }
+
+
 }
