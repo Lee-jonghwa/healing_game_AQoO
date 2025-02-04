@@ -8,12 +8,16 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public interface UserFishRepository extends JpaRepository<UserFish, Integer> {
 
     @Query("SELECT DISTINCT uf.fishTypeId FROM UserFish uf WHERE uf.userId = :userId")
     List<Integer> findDistinctFishTypeIdsByUserId(@Param("userId") String userId);
+
+    @Query("SELECT uf.fishTypeId, COUNT(uf) FROM UserFish uf WHERE uf.userId = :userId GROUP BY uf.fishTypeId")
+    List<Object[]> countFishByUserId(@Param("userId") String userId);
 
     @Query("SELECT uf.fishTypeId, COUNT(uf) FROM UserFish uf WHERE uf.aquariumId = :aquariumId GROUP BY uf.fishTypeId")
     List<Object[]> countFishesInAquarium(Integer aquariumId);
