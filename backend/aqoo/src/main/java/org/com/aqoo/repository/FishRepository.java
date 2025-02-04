@@ -11,4 +11,6 @@ public interface FishRepository extends JpaRepository<Fish, Integer> {
     List<Fish> findAll();
 
     List<Fish> findByIdIn(List<Integer> ids);
+
+    List<Fish> findByRarity(String rarity);
 }

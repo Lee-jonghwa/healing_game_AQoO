@@ -1,6 +1,7 @@
 package org.com.aqoo.domain.fish.service;
 
 import lombok.RequiredArgsConstructor;
+import org.com.aqoo.domain.fish.dto.CustomFishResponse;
 import org.com.aqoo.domain.fish.dto.UserFishResponse;
 import org.com.aqoo.domain.fish.dto.FishTypeResponseDto;
 import org.com.aqoo.domain.fish.entity.Fish;
@@ -45,6 +46,23 @@ public class FishService {
                         item.getId(),        // fishTypeId
                         item.getFishName(),  // 물고기 이름
                         item.getImageUrl()
+                ))
+                .toList();
+    }
+
+    public List<CustomFishResponse> getCustomFish(String userId) {
+        // 유효한 사용자 확인
+        userRepository.findById(userId).orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+
+        // 1. fish_type 테이블에서 rarity가 해당 사용자 ID와 같은 물고기 목록 가져오기
+        List<Fish> customFishTypes = fishRepository.findByRarity(userId);
+
+        // 2. CustomFishResponse 객체로 변환하여 반환
+        return customFishTypes.stream()
+                .map(fishType -> new CustomFishResponse(
+                        fishType.getId(),        // fishTypeId
+                        fishType.getFishName(),  // 물고기 이름
+                        fishType.getImageUrl()   // 물고기 이미지
                 ))
                 .toList();
     }
