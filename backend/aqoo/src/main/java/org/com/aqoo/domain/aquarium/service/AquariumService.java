@@ -3,11 +3,13 @@ package org.com.aqoo.domain.aquarium.service;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
+import org.com.aqoo.domain.auth.entity.User;
+import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.repository.AquariumRepository;
-import org.com.aqoo.domain.fish.entity.FishType;
 import org.com.aqoo.domain.fish.entity.UserFish;
-import org.com.aqoo.repository.FishTypeRepository;
+import org.com.aqoo.repository.FishRepository;
 import org.com.aqoo.repository.UserFishRepository;
+import org.com.aqoo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +25,24 @@ public class AquariumService {
 
     private final AquariumRepository aquariumRepository;
     private final UserFishRepository userFishRepository;
-    private final FishTypeRepository fishTypeRepository;
+    private final FishRepository fishRepository;
+    private final UserRepository userRepository;
+
+
+
+    /**
+     * ✅ 대표 어항 설정
+     */
+    @Transactional
+    public MainAquariumResponseDto setMainAquarium(MainAquariumRequestDto requestDto) {
+        User user = userRepository.findById(requestDto.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저가 존재하지 않습니다."));
+
+        user.setMainAquarium(requestDto.getAquariumId());
+        userRepository.save(user);
+
+        return new MainAquariumResponseDto("성공", "대표 어항이 설정되었습니다.");
+    }
 
     public List<AquariumResponseDto> getAquariumsByUserId(String userId) {
         List<Aquarium> aquariums = aquariumRepository.findByUserId(userId);
@@ -58,13 +77,13 @@ public class AquariumService {
             Long count = (Long) fishData[1];
 
             // 물고기 종류 조회
-            FishType fishType = fishTypeRepository.findById(fishTypeId)
+            Fish fish = fishRepository.findById(fishTypeId)
                     .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
 
-            return new FishCountDto(fishType.getFishName(), count);
+            return new FishCountDto(fish.getFishName(), count);
         }).collect(Collectors.toList());
 
-        return new AquariumDetailResponseDto(aquarium.getAquariumBackgroundId(), fishList);
+        return new AquariumDetailResponseDto(aquarium.getAquariumBackground().getId(), fishList);
     }
 
 
@@ -73,7 +92,7 @@ public class AquariumService {
         Aquarium aquarium = new Aquarium();
         aquarium.setAquariumName(requestDto.getAquariumName());
         aquarium.setUserId(requestDto.getUserId());
-        aquarium.setAquariumBackgroundId(Integer.parseInt(requestDto.getAquariumBack())); // 숫자로 변환
+        aquarium.getAquariumBackground().setId(Integer.parseInt(requestDto.getAquariumBack())); // 숫자로 변환
 
         // 기본값 설정
         aquarium.setLastFedTime(LocalDateTime.now());
@@ -84,17 +103,73 @@ public class AquariumService {
     }
 
     @Transactional
-    public FishAddResponseDto addFishToAquarium(FishAddRequestDto requestDto) {
-        UserFish userFish = userFishRepository.findById(requestDto.getId())
+    public DeleteAquariumResponseDto deleteAquarium(DeleteAquariumRequestDto requestDto) {
+        Integer aquariumId = requestDto.getAquariumId();
+
+        // 존재 여부 확인
+        if (!aquariumRepository.existsById(aquariumId)) {
+            throw new IllegalArgumentException("해당 ID의 어항이 존재하지 않습니다.");
+        }
+
+        // 해당 어항에 속한 물고기들의 어항 ID를 NULL로 설정
+        userFishRepository.removeAllByAquariumId(aquariumId);
+
+        // 어항 삭제
+        aquariumRepository.deleteById(aquariumId);
+
+        return new DeleteAquariumResponseDto("성공", "어항이 삭제되었습니다.");
+    }
+
+
+    /**
+     * 어항에 물고기 추가
+     */
+    @Transactional
+    public FishResponseDto addFishToAquarium(FishRequestDto requestDto) {
+        UserFish userFish = userFishRepository.findById(requestDto.getUserFishId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
 
         // 어항 ID 업데이트
         userFish.setAquariumId(requestDto.getAquariumId());
         userFishRepository.save(userFish);
 
-        return new FishAddResponseDto("성공", "어항에 물고기 추가하기에 성공했습니다.");
+        return new FishResponseDto("성공", "어항에 물고기 추가하기에 성공했습니다.");
     }
 
+    /**
+     * ✅ 물고기 이동 (다른 어항으로 옮기기)
+     */
+    @Transactional
+    public FishResponseDto moveFishToAnotherAquarium(FishRequestDto requestDto) {
+        UserFish userFish = userFishRepository.findById(requestDto.getUserFishId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
+
+        // 새로운 어항으로 이동
+        userFish.setAquariumId(requestDto.getAquariumId());
+        userFishRepository.save(userFish);
+
+        return new FishResponseDto("성공", "물고기가 새로운 어항으로 이동되었습니다.");
+    }
+
+    /**
+     * ✅ 물고기 제거 (어항에서 삭제, but 보유 유지)
+     */
+    @Transactional
+    public FishResponseDto removeFishFromAquarium(FishRequestDto requestDto) {
+        UserFish userFish = userFishRepository.findById(requestDto.getUserFishId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
+
+        // 물고기의 어항 ID를 NULL로 설정 (어항에서 제거)
+        userFish.setAquariumId(null);
+        userFishRepository.save(userFish);
+
+        return new FishResponseDto("성공", "물고기가 어항에서 제거되었습니다.");
+    }
+
+
+    /**
+     * 자신의 물고기중 어항에 속하지 않는 물고기 조회
+     */
     @Transactional(readOnly = true)
     public NonGroupedFishResponseDto getNonGroupedFishes(String userId) {
         // 어항에 속하지 않은 물고기 개수 조회
@@ -105,13 +180,52 @@ public class AquariumService {
             Long count = (Long) fishData[1];
 
             // 물고기 타입 조회
-            FishType fishType = fishTypeRepository.findById(fishTypeId)
+            Fish fishType = fishRepository.findById(fishTypeId)
                     .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
 
             return new FishCountDto(fishType.getFishName(), count);
         }).collect(Collectors.toList());
 
         return new NonGroupedFishResponseDto(fishList);
+    }
+
+    /**
+     * ✅ 어항 상태 업데이트
+     * @param aquariumId 업데이트할 어항 ID
+     * @param type 업데이트할 항목 (name, background, feed, water, clean)
+     * @param data 업데이트할 값
+     */
+    @Transactional
+    public StatusResponseDto updateStatus(Integer aquariumId, String type, String data) {
+        Aquarium aquarium = aquariumRepository.findById(aquariumId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 어항이 존재하지 않습니다."));
+
+        switch (type.toLowerCase()) {
+            case "name":
+                aquarium.setAquariumName(data);
+                break;
+            case "background":
+                try {
+                    int backgroundId = Integer.parseInt(data);
+                    aquarium.getAquariumBackground().setId(backgroundId);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("배경 ID는 숫자여야 합니다.");
+                }
+                break;
+            case "feed":
+                aquarium.setLastFedTime(LocalDateTime.now());
+                break;
+            case "water":
+                aquarium.setLastWaterChangeTime(LocalDateTime.now());
+                break;
+            case "clean":
+                aquarium.setLastCleanedTime(LocalDateTime.now());
+                break;
+            default:
+                throw new IllegalArgumentException("유효하지 않은 상태 타입입니다. (name, background, feed, water, clean 중 선택)");
+        }
+
+        return new StatusResponseDto("성공", "어항 상태가 업데이트되었습니다.");
     }
 
 

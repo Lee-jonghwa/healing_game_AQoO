@@ -6,10 +6,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class FishAddRequestDto {
+public class MainAquariumRequestDto {
 
-    @NotNull(message = "물고기 ID는 필수입니다.")
-    private Integer id;
+    @NotNull(message = "유저 ID는 필수입니다.")
+    private String userId;
 
     @NotNull(message = "어항 ID는 필수입니다.")
     private Integer aquariumId;
