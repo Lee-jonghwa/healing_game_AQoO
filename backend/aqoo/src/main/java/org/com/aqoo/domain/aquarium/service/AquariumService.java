@@ -101,18 +101,56 @@ public class AquariumService {
         return new DeleteAquariumResponseDto("성공", "어항이 삭제되었습니다.");
     }
 
+
+    /**
+     * 어항에 물고기 추가
+     */
     @Transactional
-    public FishAddResponseDto addFishToAquarium(FishAddRequestDto requestDto) {
-        UserFish userFish = userFishRepository.findById(requestDto.getId())
+    public FishResponseDto addFishToAquarium(FishRequestDto requestDto) {
+        UserFish userFish = userFishRepository.findById(requestDto.getUserFishId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
 
         // 어항 ID 업데이트
         userFish.setAquariumId(requestDto.getAquariumId());
         userFishRepository.save(userFish);
 
-        return new FishAddResponseDto("성공", "어항에 물고기 추가하기에 성공했습니다.");
+        return new FishResponseDto("성공", "어항에 물고기 추가하기에 성공했습니다.");
     }
 
+    /**
+     * ✅ 물고기 이동 (다른 어항으로 옮기기)
+     */
+    @Transactional
+    public FishResponseDto moveFishToAnotherAquarium(FishRequestDto requestDto) {
+        UserFish userFish = userFishRepository.findById(requestDto.getUserFishId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
+
+        // 새로운 어항으로 이동
+        userFish.setAquariumId(requestDto.getAquariumId());
+        userFishRepository.save(userFish);
+
+        return new FishResponseDto("성공", "물고기가 새로운 어항으로 이동되었습니다.");
+    }
+
+    /**
+     * ✅ 물고기 제거 (어항에서 삭제, but 보유 유지)
+     */
+    @Transactional
+    public FishResponseDto removeFishFromAquarium(FishRequestDto requestDto) {
+        UserFish userFish = userFishRepository.findById(requestDto.getUserFishId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
+
+        // 물고기의 어항 ID를 NULL로 설정 (어항에서 제거)
+        userFish.setAquariumId(null);
+        userFishRepository.save(userFish);
+
+        return new FishResponseDto("성공", "물고기가 어항에서 제거되었습니다.");
+    }
+
+
+    /**
+     * 자신의 물고기중 어항에 속하지 않는 물고기 조회
+     */
     @Transactional(readOnly = true)
     public NonGroupedFishResponseDto getNonGroupedFishes(String userId) {
         // 어항에 속하지 않은 물고기 개수 조회

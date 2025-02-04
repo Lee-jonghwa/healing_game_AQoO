@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/aquariums")
+@RequestMapping("/api/v1/fish")
 @RequiredArgsConstructor
 public class FishController {
     private final FishService fishService;

@@ -52,12 +52,34 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
-//    물고기 추가
-    @PostMapping("/fish")
-    public ResponseEntity<FishAddResponseDto> addFishToAquarium(@Validated @RequestBody FishAddRequestDto requestDto) {
-        FishAddResponseDto response = aquariumService.addFishToAquarium(requestDto);
+    /**
+     * ✅ 물고기 추가
+     */
+    @PostMapping("/fish/add")
+    public ResponseEntity<FishResponseDto> addFishToAquarium(@Validated @RequestBody FishRequestDto requestDto) {
+        FishResponseDto response = aquariumService.addFishToAquarium(requestDto);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * ✅ 물고기 이동 (다른 어항으로 옮기기)
+     */
+    @PostMapping("/fish/move")
+    public ResponseEntity<FishResponseDto> moveFish(@Validated @RequestBody FishRequestDto requestDto) {
+        FishResponseDto response = aquariumService.moveFishToAnotherAquarium(requestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * ✅ 물고기 제거 (어항에서 삭제)
+     */
+    @PostMapping("/fish/remove")
+    public ResponseEntity<FishResponseDto> removeFish(@Validated @RequestBody FishRequestDto requestDto) {
+        FishResponseDto response = aquariumService.removeFishFromAquarium(requestDto);
+        return ResponseEntity.ok(response);
+    }
+
+
 
     @GetMapping("/non-group/{userId}")
     public ResponseEntity<NonGroupedFishResponseDto> getNonGroupedFishes(@PathVariable("userId") String userId) {

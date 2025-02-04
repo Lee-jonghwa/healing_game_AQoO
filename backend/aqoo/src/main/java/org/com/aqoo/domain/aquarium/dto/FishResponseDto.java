@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class FishAddResponseDto {
+public class FishResponseDto {
     private String status;
     private String message;
 }
