@@ -170,6 +170,45 @@ public class AquariumService {
         return new NonGroupedFishResponseDto(fishList);
     }
 
+    /**
+     * ✅ 어항 상태 업데이트
+     * @param aquariumId 업데이트할 어항 ID
+     * @param type 업데이트할 항목 (name, background, feed, water, clean)
+     * @param data 업데이트할 값
+     */
+    @Transactional
+    public StatusResponseDto updateStatus(Integer aquariumId, String type, String data) {
+        Aquarium aquarium = aquariumRepository.findById(aquariumId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 어항이 존재하지 않습니다."));
+
+        switch (type.toLowerCase()) {
+            case "name":
+                aquarium.setAquariumName(data);
+                break;
+            case "background":
+                try {
+                    int backgroundId = Integer.parseInt(data);
+                    aquarium.setAquariumBackgroundId(backgroundId);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("배경 ID는 숫자여야 합니다.");
+                }
+                break;
+            case "feed":
+                aquarium.setLastFedTime(LocalDateTime.now());
+                break;
+            case "water":
+                aquarium.setLastWaterChangeTime(LocalDateTime.now());
+                break;
+            case "clean":
+                aquarium.setLastCleanedTime(LocalDateTime.now());
+                break;
+            default:
+                throw new IllegalArgumentException("유효하지 않은 상태 타입입니다. (name, background, feed, water, clean 중 선택)");
+        }
+
+        return new StatusResponseDto("성공", "어항 상태가 업데이트되었습니다.");
+    }
+
 
 
     /**

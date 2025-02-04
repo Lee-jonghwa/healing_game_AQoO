@@ -87,4 +87,11 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/update")
+    public ResponseEntity<StatusResponseDto> updateStatus(@RequestBody StatusRequestDto request) {
+        StatusResponseDto response = aquariumService.updateStatus(request.getAquariumId(),request.getType(),request.getData());
+        return ResponseEntity.ok(response);
+    }
+
+
 }
