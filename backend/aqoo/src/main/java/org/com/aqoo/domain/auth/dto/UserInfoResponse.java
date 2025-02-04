@@ -17,7 +17,7 @@ public class UserInfoResponse {
     private String nickname = "닉네임 없음";
 
     @Builder.Default
-    private int mainFishId = 0;
+    private String mainFishImage = "";
 
     @Builder.Default
     private int exp = 0;

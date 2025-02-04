@@ -209,4 +209,15 @@ public class AuthService {
     }
 
 
+        return UserInfoResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .mainFishImage(user.getMainFishImage()) // 기본값 0
+                .exp(user.getExp())
+                .level(user.getLevel())
+                .status(user.getStatus())
+                .mainAquarium(Objects.requireNonNullElse(user.getMainAquarium(), 0)) // 기본값 0
+                .build();
+    }
 }
