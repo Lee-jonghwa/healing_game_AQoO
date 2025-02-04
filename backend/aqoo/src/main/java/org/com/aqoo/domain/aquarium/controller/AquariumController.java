@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.service.AquariumService;
+import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.repository.FishRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.com.aqoo.repository.UserFishRepository;
@@ -79,8 +81,6 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
-
-
     @GetMapping("/non-group/{userId}")
     public ResponseEntity<NonGroupedFishResponseDto> getNonGroupedFishes(@PathVariable("userId") String userId) {
         NonGroupedFishResponseDto response = aquariumService.getNonGroupedFishes(userId);
@@ -93,9 +93,12 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
-
-
-
-
-
+    /**
+     * ✅ 대표 어항 설정 API
+     */
+    @PostMapping("/main-aqua")
+    public ResponseEntity<MainAquariumResponseDto> setMainAquarium(@Validated @RequestBody MainAquariumRequestDto requestDto) {
+        MainAquariumResponseDto response = aquariumService.setMainAquarium(requestDto);
+        return ResponseEntity.ok(response);
+    }
 }

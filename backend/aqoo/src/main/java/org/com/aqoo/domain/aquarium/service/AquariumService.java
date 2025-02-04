@@ -3,11 +3,13 @@ package org.com.aqoo.domain.aquarium.service;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
+import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.repository.AquariumRepository;
 import org.com.aqoo.domain.fish.entity.UserFish;
 import org.com.aqoo.repository.FishRepository;
 import org.com.aqoo.repository.UserFishRepository;
+import org.com.aqoo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,23 @@ public class AquariumService {
     private final AquariumRepository aquariumRepository;
     private final UserFishRepository userFishRepository;
     private final FishRepository fishRepository;
+    private final UserRepository userRepository;
+
+
+
+    /**
+     * ✅ 대표 어항 설정
+     */
+    @Transactional
+    public MainAquariumResponseDto setMainAquarium(MainAquariumRequestDto requestDto) {
+        User user = userRepository.findById(requestDto.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저가 존재하지 않습니다."));
+
+        user.setMainAquarium(requestDto.getAquariumId());
+        userRepository.save(user);
+
+        return new MainAquariumResponseDto("성공", "대표 어항이 설정되었습니다.");
+    }
 
     public List<AquariumResponseDto> getAquariumsByUserId(String userId) {
         List<Aquarium> aquariums = aquariumRepository.findByUserId(userId);
