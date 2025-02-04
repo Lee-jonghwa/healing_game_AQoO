@@ -4,6 +4,7 @@ import org.com.aqoo.domain.fish.entity.UserFish;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,4 +19,6 @@ public interface UserFishRepository extends JpaRepository<UserFish, Integer> {
     List<Object[]> countNonGroupedFishes(String userId);
 
     boolean existsByUserIdAndFishTypeId(String userId, Integer fishTypeId);
+    @Transactional
+    void removeAllByAquariumId(Integer aquariumId);
 }

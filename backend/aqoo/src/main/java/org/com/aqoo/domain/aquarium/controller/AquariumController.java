@@ -40,6 +40,12 @@ public class AquariumController {
         return ResponseEntity.ok(createdAquarium);
     }
 
+    @DeleteMapping
+    public ResponseEntity<DeleteAquariumResponseDto> deleteAquarium(@Validated @RequestBody DeleteAquariumRequestDto requestDto) {
+        DeleteAquariumResponseDto response = aquariumService.deleteAquarium(requestDto);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{aquariumId}")
     public ResponseEntity<AquariumDetailResponseDto> getAquariumDetails(@PathVariable("aquariumId") Integer aquariumId) {
         AquariumDetailResponseDto response = aquariumService.getAquariumDetails(aquariumId);
