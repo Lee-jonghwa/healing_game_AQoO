@@ -30,7 +30,7 @@ public class Aquarium {
     @Column(name = "last_cleaned_time")
     private LocalDateTime lastCleanedTime;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", nullable = false, length = 50)
     private String userId;
 
     @Column(name = "aquarium_background_id", nullable = false)

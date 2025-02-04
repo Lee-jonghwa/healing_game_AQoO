@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "fish")
+@Table(name = "fish_type")
 public class Fish {
 
     @Id
