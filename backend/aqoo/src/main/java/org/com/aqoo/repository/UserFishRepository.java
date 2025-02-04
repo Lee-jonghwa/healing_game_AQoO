@@ -1,4 +1,4 @@
-package org.com.aqoo.domain.fish.repository;
+package org.com.aqoo.repository;
 
 import org.com.aqoo.domain.fish.entity.UserFish;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +12,6 @@ public interface UserFishRepository extends JpaRepository<UserFish, Integer> {
 
     @Query("SELECT uf.fishTypeId, COUNT(uf) FROM UserFish uf WHERE uf.aquariumId = :aquariumId GROUP BY uf.fishTypeId")
     List<Object[]> countFishesInAquarium(Integer aquariumId);
+
+    boolean existsByUserIdAndFishTypeId(String userId, Integer fishTypeId);
 }

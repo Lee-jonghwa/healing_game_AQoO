@@ -8,14 +8,13 @@ import org.com.aqoo.domain.aquarium.dto.FishCountDto;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.repository.AquariumRepository;
 import org.com.aqoo.domain.fish.entity.FishType;
-import org.com.aqoo.domain.fish.repository.FishTypeRepository;
-import org.com.aqoo.domain.fish.repository.UserFishRepository;
+import org.com.aqoo.repository.FishTypeRepository;
+import org.com.aqoo.repository.UserFishRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,15 +43,31 @@ public class AquariumService {
         }).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public AquariumDetailResponseDto getAquariumDetails(Integer aquariumId) {
-        Aquarium aquarium = aquariumRepository.findById(aquariumId)
-                .orElseThrow(() -> new IllegalArgumentException("어항을 찾을 수 없습니다."));
+        // 어항 정보 조회
+        Optional<Aquarium> aquariumOpt = aquariumRepository.findById(aquariumId);
+        if (aquariumOpt.isEmpty()) {
+            throw new IllegalArgumentException("어항을 찾을 수 없습니다.");
+        }
+        Aquarium aquarium = aquariumOpt.get();
 
-        return new AquariumDetailResponseDto(aquarium.getAquariumBackgroundId(), new ArrayList<>());
+        // 어항 속 물고기 개수 조회
+        List<Object[]> fishCounts = userFishRepository.countFishesInAquarium(aquariumId);
+
+        List<FishCountDto> fishList = fishCounts.stream().map(fishData -> {
+            Integer fishTypeId = (Integer) fishData[0];
+            Long count = (Long) fishData[1];
+
+            // 물고기 종류 조회
+            FishType fishType = fishTypeRepository.findById(fishTypeId)
+                    .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
+
+            return new FishCountDto(fishType.getFishName(), count);
+        }).collect(Collectors.toList());
+
+        return new AquariumDetailResponseDto(aquarium.getAquariumBackgroundId(), fishList);
     }
-
-
-
 
 
     @Transactional

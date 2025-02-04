@@ -208,10 +208,6 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    // 회원정보 조회 서비스
-    public UserInfoResponse getUserInfo(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         return UserInfoResponse.builder()
                 .id(user.getId())

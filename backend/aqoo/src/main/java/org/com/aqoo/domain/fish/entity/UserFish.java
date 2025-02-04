@@ -19,7 +19,7 @@ public class UserFish {
     @Column(name = "fish_type_id", nullable = false)
     private Integer fishTypeId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id", nullable = false, length = 50)
     private String userId;
 
     @Column(name = "aquarium_id", nullable = false)

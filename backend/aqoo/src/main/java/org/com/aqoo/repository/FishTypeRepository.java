@@ -1,4 +1,4 @@
-package org.com.aqoo.domain.fish.repository;
+package org.com.aqoo.repository;
 
 import org.com.aqoo.domain.fish.entity.FishType;
 import org.springframework.data.jpa.repository.JpaRepository;
