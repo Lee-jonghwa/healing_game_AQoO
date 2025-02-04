@@ -64,7 +64,7 @@ public class AquariumService {
             return new FishCountDto(fish.getFishName(), count);
         }).collect(Collectors.toList());
 
-        return new AquariumDetailResponseDto(aquarium.getAquariumBackgroundId(), fishList);
+        return new AquariumDetailResponseDto(aquarium.getAquariumBackground().getId(), fishList);
     }
 
 
@@ -73,7 +73,7 @@ public class AquariumService {
         Aquarium aquarium = new Aquarium();
         aquarium.setAquariumName(requestDto.getAquariumName());
         aquarium.setUserId(requestDto.getUserId());
-        aquarium.setAquariumBackgroundId(Integer.parseInt(requestDto.getAquariumBack())); // 숫자로 변환
+        aquarium.getAquariumBackground().setId(Integer.parseInt(requestDto.getAquariumBack())); // 숫자로 변환
 
         // 기본값 설정
         aquarium.setLastFedTime(LocalDateTime.now());
@@ -188,7 +188,7 @@ public class AquariumService {
             case "background":
                 try {
                     int backgroundId = Integer.parseInt(data);
-                    aquarium.setAquariumBackgroundId(backgroundId);
+                    aquarium.getAquariumBackground().setId(backgroundId);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException("배경 ID는 숫자여야 합니다.");
                 }
