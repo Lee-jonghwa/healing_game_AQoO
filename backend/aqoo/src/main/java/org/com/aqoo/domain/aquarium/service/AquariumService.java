@@ -95,6 +95,27 @@ public class AquariumService {
         return new FishAddResponseDto("성공", "어항에 물고기 추가하기에 성공했습니다.");
     }
 
+    @Transactional(readOnly = true)
+    public NonGroupedFishResponseDto getNonGroupedFishes(String userId) {
+        // 어항에 속하지 않은 물고기 개수 조회
+        List<Object[]> fishCounts = userFishRepository.countNonGroupedFishes(userId);
+
+        List<FishCountDto> fishList = fishCounts.stream().map(fishData -> {
+            Integer fishTypeId = (Integer) fishData[0];
+            Long count = (Long) fishData[1];
+
+            // 물고기 타입 조회
+            FishType fishType = fishTypeRepository.findById(fishTypeId)
+                    .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
+
+            return new FishCountDto(fishType.getFishName(), count);
+        }).collect(Collectors.toList());
+
+        return new NonGroupedFishResponseDto(fishList);
+    }
+
+
+
     /**
      * 물 상태 계산 (5가 최적, 1이 최악)
      */
