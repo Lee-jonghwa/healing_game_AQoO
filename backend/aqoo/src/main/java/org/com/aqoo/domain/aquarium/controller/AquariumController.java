@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.service.AquariumService;
+import org.com.aqoo.repository.FishRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.com.aqoo.repository.FishTypeRepository;
 import org.com.aqoo.repository.UserFishRepository;
 
 import java.util.HashMap;
@@ -21,7 +21,7 @@ public class AquariumController {
 
     private final AquariumService aquariumService;
     private final UserFishRepository userFishRepository;
-    private final FishTypeRepository fishTypeRepository;
+    private final FishRepository fishRepository;
 
     @GetMapping("/all/{userId}")
     public ResponseEntity<Map<String, Object>> getUserAquariums(@PathVariable("userId") String userId) {

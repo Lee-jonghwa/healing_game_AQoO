@@ -3,10 +3,10 @@ package org.com.aqoo.domain.aquarium.service;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
+import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.repository.AquariumRepository;
-import org.com.aqoo.domain.fish.entity.FishType;
 import org.com.aqoo.domain.fish.entity.UserFish;
-import org.com.aqoo.repository.FishTypeRepository;
+import org.com.aqoo.repository.FishRepository;
 import org.com.aqoo.repository.UserFishRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ public class AquariumService {
 
     private final AquariumRepository aquariumRepository;
     private final UserFishRepository userFishRepository;
-    private final FishTypeRepository fishTypeRepository;
+    private final FishRepository fishRepository;
 
     public List<AquariumResponseDto> getAquariumsByUserId(String userId) {
         List<Aquarium> aquariums = aquariumRepository.findByUserId(userId);
@@ -58,10 +58,10 @@ public class AquariumService {
             Long count = (Long) fishData[1];
 
             // 물고기 종류 조회
-            FishType fishType = fishTypeRepository.findById(fishTypeId)
+            Fish fish = fishRepository.findById(fishTypeId)
                     .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
 
-            return new FishCountDto(fishType.getFishName(), count);
+            return new FishCountDto(fish.getFishName(), count);
         }).collect(Collectors.toList());
 
         return new AquariumDetailResponseDto(aquarium.getAquariumBackgroundId(), fishList);
@@ -123,7 +123,7 @@ public class AquariumService {
             Long count = (Long) fishData[1];
 
             // 물고기 타입 조회
-            FishType fishType = fishTypeRepository.findById(fishTypeId)
+            Fish fishType = fishRepository.findById(fishTypeId)
                     .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
 
             return new FishCountDto(fishType.getFishName(), count);
