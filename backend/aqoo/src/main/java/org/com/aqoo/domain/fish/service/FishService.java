@@ -28,7 +28,7 @@ public class FishService {
 
     @Transactional(readOnly = true)
     public List<FishTypeResponseDto> getAllFishTypes() {
-        List<Fish> fishTypes = fishRepository.findAll();
+        List<Fish> fishTypes = fishRepository.findByRarityInIgnoreCase();
         return fishTypes.stream()
                 .map(fish -> new FishTypeResponseDto(fish.getId(), fish.getFishName(), fish.getImageUrl(), fish.getRarity()))
                 .collect(Collectors.toList());
@@ -88,7 +88,7 @@ public class FishService {
 
         // 2. fish_type 테이블에서 해당 fishTypeId 목록을 가져온다.
         List<Integer> fishTypeIds = new ArrayList<>(fishCountMap.keySet()); // Set -> List 변환
-        List<Fish> fishTypes = fishRepository.findByIdIn(fishTypeIds);
+        List<Fish> fishTypes = fishRepository.findByIdInAndRarityIgnoreCase(fishTypeIds);
 
         // 3. 응답 객체로 변환하여 반환
         return fishTypes.stream()

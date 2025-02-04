@@ -15,8 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -167,26 +166,42 @@ public class AquariumService {
     }
 
 
-    /**
-     * 자신의 물고기중 어항에 속하지 않는 물고기 조회
-     */
+
+    // 어항 속 물고기 조회
     @Transactional(readOnly = true)
-    public NonGroupedFishResponseDto getNonGroupedFishes(String userId) {
-        // 어항에 속하지 않은 물고기 개수 조회
-        List<Object[]> fishCounts = userFishRepository.countNonGroupedFishes(userId);
+    public List<AquariumFishResponse> getAquariumFish(String userId, int aquariumId) {
 
-        List<FishCountDto> fishList = fishCounts.stream().map(fishData -> {
-            Integer fishTypeId = (Integer) fishData[0];
-            Long count = (Long) fishData[1];
+        // 1. 특정 사용자의 특정 어항 물고기 조회
+        List<Object[]> fishData = userFishRepository.findFishDetailsByUserIdAndAquariumId(userId, aquariumId);
 
-            // 물고기 타입 조회
-            Fish fishType = fishRepository.findById(fishTypeId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
+        if (fishData.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-            return new FishCountDto(fishType.getFishName(), count);
-        }).collect(Collectors.toList());
+        // 2. fishTypeId 리스트 생성
+        List<Integer> fishTypeIds = fishData.stream()
+                .map(row -> (Integer) row[1]) // fishTypeId 추출
+                .distinct()
+                .toList();
 
-        return new NonGroupedFishResponseDto(fishList);
+        // 3. fishTypeId에 해당하는 fish 정보 조회
+        List<Fish> fishList = fishRepository.findByIdIn(fishTypeIds);
+
+        // 4. fishTypeId -> Fish 매핑 (Map<Integer, Fish>)
+        Map<Integer, Fish> fishTypeMap = fishList.stream()
+                .collect(Collectors.toMap(Fish::getId, fish -> fish));
+
+        // 5. 응답 객체 변환
+        return fishData.stream()
+                .map(row -> new AquariumFishResponse(
+                        (Integer) row[2],  // aquariumId
+                        (Integer) row[0], // fishId
+                        (Integer) row[1], // fishTypeId
+                        fishTypeMap.get((Integer) row[1]).getFishName(), // fishTypeName
+                        fishTypeMap.get((Integer) row[1]).getImageUrl() // fishImage
+                ))
+                .sorted(Comparator.comparing(AquariumFishResponse::getFishTypeId)) // fishTypeId 기준 정렬
+                .toList();
     }
 
     /**

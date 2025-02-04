@@ -5,7 +5,11 @@ import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.service.AquariumService;
 import org.com.aqoo.domain.auth.entity.User;
+import org.com.aqoo.domain.friend.dto.FindResponse;
 import org.com.aqoo.repository.FishRepository;
+import org.com.aqoo.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -22,8 +26,9 @@ import java.util.Map;
 public class AquariumController {
 
     private final AquariumService aquariumService;
-    private final UserFishRepository userFishRepository;
-    private final FishRepository fishRepository;
+
+    @Autowired
+    private final JwtUtil util;
 
     @GetMapping("/all/{userId}")
     public ResponseEntity<Map<String, Object>> getUserAquariums(@PathVariable("userId") String userId) {
@@ -81,10 +86,30 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/non-group/{userId}")
-    public ResponseEntity<NonGroupedFishResponseDto> getNonGroupedFishes(@PathVariable("userId") String userId) {
-        NonGroupedFishResponseDto response = aquariumService.getNonGroupedFishes(userId);
-        return ResponseEntity.ok(response);
+    //어항 별 물고기 조회하기 (어항에 속하지 않은 경우 aquariumId : -1)
+    @GetMapping("/fish/{aquariumId}")
+    public ResponseEntity<?> getAquariumFish(@PathVariable("aquariumId") int aquariumId,
+                                                                       @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "로그인 필요"));
+        }
+
+        try{
+            // 로그인된 사용자 ID 추출
+            String userId = util.extractUsername(refreshToken);
+
+            List<AquariumFishResponse> response = aquariumService.getAquariumFish(userId, aquariumId);
+
+            if (response.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "해당하는 물고기가 없습니다."));
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "어항 물고기 검색에 실패했습니다."));
+        }
     }
 
     @PostMapping("/update")
