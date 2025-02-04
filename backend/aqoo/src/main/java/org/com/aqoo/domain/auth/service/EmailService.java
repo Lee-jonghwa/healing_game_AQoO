@@ -45,7 +45,7 @@ public class EmailService {
         String content = "<div style='max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ddd; "
                 + "border-radius: 10px; text-align: center; font-family: Arial, sans-serif;'>"
                 + "<h2 style='color: #1A1D81;'>이메일 인증 코드</h2>"
-                + "<p>아래의 인증번호를 입력하여 본인 인증을 완료하세요.</p>"
+                + "<p>아래의 인증번호를 입력하여 비밀전호 재설정을 완료하세요.</p>"
                 + "<br />"
                 + "<div style='font-size: 24px; font-weight: bold; padding: 15px; background-color: #f8f8f8; "
                 + "border-radius: 8px; border: 1px solid #ccc; display: inline-block;'>"
