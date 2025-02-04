@@ -8,6 +8,9 @@ import org.com.aqoo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.Objects;
 
 @Service
@@ -26,7 +29,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
-                .mainFishImage(user.getMainFishImage()) // 기본값 0
+                .mainFishImage(user.getMainFishImage())
                 .exp(user.getExp())
                 .level(user.getLevel())
                 .status(user.getStatus())
@@ -50,19 +53,13 @@ public class UserService {
             user.setNickname(request.getUserNickName());
         }
 
-        // 3. mainFishImage 보유 여부 확인
-        //boolean ownsFish = userFishRepository.existsByUserIdAndFishTypeId(request.getUserId(), request.getMainFishImage());
-        //if (!ownsFish) {
-        //    throw new IllegalArgumentException("You do not own this fish.");
-        //}
-
-        // 4. mainFishId 업데이트
+        // 3. mainFishId 업데이트
         user.setMainFishImage(request.getMainFishImage());
 
-        // 5. 변경된 데이터 저장
+        // 4. 변경된 데이터 저장
         userRepository.save(user);
 
-        // 6. 응답 반환
+        // 5. 응답 반환
         return new UpdateUserResponse(
                 user.getId(),
                 user.getNickname(),
@@ -71,7 +68,6 @@ public class UserService {
         );
     }
 
-
     // 경험치 증가 & 레벨업 서비스
     @Transactional
     public ExpUpResponse increaseUserExp(ExpUpRequest request) {
@@ -79,22 +75,30 @@ public class UserService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // 2. 경험치 추가
-        int newExp = user.getExp() + request.getUserExp();
-        int newLevel = user.getLevel();
+        int level = user.getLevel();
+        int expToNextLevel = level * 20;  // 현재 레벨업을 위한 경험치 필요량
 
-        // 3. 레벨업 조건 확인 (예: 100 경험치마다 레벨업)
-        while (newExp >= 100) {
-            newExp -= 100; // 경험치 차감
-            newLevel += 1; // 레벨 증가
+        // 2. 경험치 추가
+        int newExp = user.getExp() + request.getEarnedExp();
+
+        // 3. 레벨업 조건 확인
+        while (true) {
+            if (newExp < expToNextLevel) break;
+            newExp -= expToNextLevel; // 경험치 차감
+            level++; // 레벨 증가
+            expToNextLevel = level * 20;  // 경험치 필요량 갱신
         }
 
         // 4. 변경된 정보 저장
         user.setExp(newExp);
-        user.setLevel(newLevel);
+        user.setLevel(level);
         userRepository.save(user);
 
+        // 경험치 퍼센트 계산
+        double expProgress = (newExp*100.0) / (double) expToNextLevel;
+        expProgress = Math.round(expProgress * 100) / 100.00;
+
         // 5. 응답 반환
-        return new ExpUpResponse(newExp, newLevel);
+        return new ExpUpResponse(newExp, expToNextLevel, expProgress, level, "경험치 상승 반영 완료");
     }
 }

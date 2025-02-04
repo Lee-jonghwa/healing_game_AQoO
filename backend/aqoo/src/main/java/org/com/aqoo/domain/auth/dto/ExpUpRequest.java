@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class ExpUpRequest {
     private String userId;
-    private int userExp;
+    private int earnedExp;
 }
