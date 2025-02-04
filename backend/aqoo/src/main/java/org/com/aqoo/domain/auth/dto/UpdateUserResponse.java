@@ -8,6 +8,6 @@ import lombok.Data;
 public class UpdateUserResponse {
     private String userId;
     private String userNickName;
-    private int mainFishId;
+    private String mainFishImage;
     private String message;
 }

@@ -26,7 +26,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
-                .mainFishId(Objects.requireNonNullElse(user.getMainFishId(), 0)) // 기본값 0
+                .mainFishImage(user.getMainFishImage()) // 기본값 0
                 .exp(user.getExp())
                 .level(user.getLevel())
                 .status(user.getStatus())
@@ -50,14 +50,14 @@ public class UserService {
             user.setNickname(request.getUserNickName());
         }
 
-        // 3. mainFishId 보유 여부 확인
-        boolean ownsFish = userFishRepository.existsByUserIdAndFishTypeId(request.getUserId(), request.getMainFishId());
-        if (!ownsFish) {
-            throw new IllegalArgumentException("You do not own this fish.");
-        }
+        // 3. mainFishImage 보유 여부 확인
+        //boolean ownsFish = userFishRepository.existsByUserIdAndFishTypeId(request.getUserId(), request.getMainFishImage());
+        //if (!ownsFish) {
+        //    throw new IllegalArgumentException("You do not own this fish.");
+        //}
 
         // 4. mainFishId 업데이트
-        user.setMainFishId(request.getMainFishId());
+        user.setMainFishImage(request.getMainFishImage());
 
         // 5. 변경된 데이터 저장
         userRepository.save(user);
@@ -66,7 +66,7 @@ public class UserService {
         return new UpdateUserResponse(
                 user.getId(),
                 user.getNickname(),
-                user.getMainFishId(),
+                user.getMainFishImage(),
                 "회원 정보 수정 성공!"
         );
     }

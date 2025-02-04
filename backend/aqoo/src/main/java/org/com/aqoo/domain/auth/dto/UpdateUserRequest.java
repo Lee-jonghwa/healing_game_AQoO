@@ -6,5 +6,5 @@ import lombok.Data;
 public class UpdateUserRequest {
     private String userId;
     private String userNickName;
-    private int mainFishId;
+    private String mainFishImage;
 }

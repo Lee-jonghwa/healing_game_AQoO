@@ -207,22 +207,5 @@ public class AuthService {
         user.setPw(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
-
-    // 회원정보 조회 서비스
-    public UserInfoResponse getUserInfo(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        return UserInfoResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .mainFishImage(user.getMainFishImage()) // 기본값 0
-                .exp(user.getExp())
-                .level(user.getLevel())
-                .status(user.getStatus())
-                .mainAquarium(Objects.requireNonNullElse(user.getMainAquarium(), 0)) // 기본값 0
-                .build();
-    }
     
 }
