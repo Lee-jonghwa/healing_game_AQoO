@@ -84,6 +84,24 @@ public class AquariumService {
     }
 
     @Transactional
+    public DeleteAquariumResponseDto deleteAquarium(DeleteAquariumRequestDto requestDto) {
+        Integer aquariumId = requestDto.getAquariumId();
+
+        // 존재 여부 확인
+        if (!aquariumRepository.existsById(aquariumId)) {
+            throw new IllegalArgumentException("해당 ID의 어항이 존재하지 않습니다.");
+        }
+
+        // 해당 어항에 속한 물고기들의 어항 ID를 NULL로 설정
+        userFishRepository.removeAllByAquariumId(aquariumId);
+
+        // 어항 삭제
+        aquariumRepository.deleteById(aquariumId);
+
+        return new DeleteAquariumResponseDto("성공", "어항이 삭제되었습니다.");
+    }
+
+    @Transactional
     public FishAddResponseDto addFishToAquarium(FishAddRequestDto requestDto) {
         UserFish userFish = userFishRepository.findById(requestDto.getId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
