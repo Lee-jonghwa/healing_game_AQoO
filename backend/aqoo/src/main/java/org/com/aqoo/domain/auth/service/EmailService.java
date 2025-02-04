@@ -39,7 +39,7 @@ public class EmailService {
         String key = uuid.toString().substring(0, 7);
 
         // 📧 **이메일 제목 설정**
-        String subject = "🐟 Aqoo - 이메일 인증 코드";
+        String subject = "🐟 AQOO - 이메일 인증 코드";
 
         // 📩 **HTML 이메일 본문 생성**
         String content = "<div style='max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ddd; "
