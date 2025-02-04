@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Data
-@Getter
-@Setter
 public class FriendInfo {
     private Long id;              // 친구 관계의 ID
     private String friendId;      // 친구의 ID

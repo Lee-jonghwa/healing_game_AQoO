@@ -5,8 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Data
-@Getter
-@Setter
 public class FriendResponse {
     private Long id;            // 친구 관계 ID (FriendRelationship 테이블의 id)
     private String friendId;    // 친구의 ID (User 테이블의 id)

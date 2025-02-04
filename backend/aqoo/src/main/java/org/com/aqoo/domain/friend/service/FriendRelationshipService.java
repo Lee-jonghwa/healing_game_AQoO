@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.friend.dto.FriendInfo;
 import org.com.aqoo.domain.friend.dto.FriendRequest;
-import org.com.aqoo.domain.friend.dto.FriendResponse;
+import org.com.aqoo.domain.friend.dto.FindResponse;
 import org.com.aqoo.domain.friend.entity.FriendRelationship;
 import org.com.aqoo.repository.FriendRelationshipRepository;
 import org.com.aqoo.repository.UserRepository;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,9 +31,7 @@ public class FriendRelationshipService {
     @Transactional
     public String createFriendRelationship(FriendRequest request) {
         // 기존 친구 관계 조회
-        Optional<FriendRelationship> existingRelationship =
-                friendRelationshipRepository.findFriendship(request.getUserId(), request.getFriendId());
-
+        Optional<FriendRelationship> existingRelationship = checkFriendship(request.getUserId(), request.getFriendId());
         if (existingRelationship.isPresent()) {
             FriendRelationship relationship = existingRelationship.get();
             //이미 친구 관계인 경우
@@ -94,10 +93,10 @@ public class FriendRelationshipService {
         }
     }
 
-    public List<FriendInfo> getFriends(String userId) {
+    public List<FriendInfo> getFriendList(String userId) {
         try {
             // 친구 관계 조회
-            List<FriendRelationship> friends = friendRelationshipRepository.findByFriend1IdOrFriend2IdAndStatus(userId, userId, "ACCEPTED");
+            List<FriendRelationship> friends = friendRelationshipRepository.findByFriend1IdOrFriend2IdAndStatus(userId, "ACCEPTED");
             List<FriendInfo> friendDetails = new ArrayList<>();
 
             // 친구 정보 조회
@@ -123,6 +122,50 @@ public class FriendRelationshipService {
         } catch (Exception e) {
             throw new RuntimeException("친구 조회하기에 실패했습니다.", e);
         }
+    }
+
+    public List<FindResponse> findUsers(String userId, String keyword) {
+        List<User> foundUsers = userRepository.findByIdContainingIgnoreCase(keyword); // 'id'에 keyword 포함된 사용자 조회
+
+        // 검색 결과에서 자신을 제외
+        foundUsers = foundUsers.stream()
+                .filter(user -> !user.getId().equals(userId)) // userId와 일치하는 사용자 제외
+                .toList();
+
+        if (foundUsers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 친구 관계 확인
+        List<FindResponse> responseList = new ArrayList<>();
+        for (User user : foundUsers) {
+
+            Optional<FriendRelationship> existingRelationship = checkFriendship(userId, user.getId());
+
+            boolean isFriend = false;
+
+            if(existingRelationship.isPresent()
+                    && "ACCEPTED".equals(existingRelationship.get().getStatus())
+            ) isFriend = true;
+
+            FindResponse response = new FindResponse(
+                    userId,
+                    user.getId(),
+                    isFriend ? 1 : 0,
+                    user.getNickname(),
+                    user.getLevel(),
+                    user.getMainFishImage()
+            );
+            responseList.add(response);
+        }
+
+        return responseList;
+    }
+
+    private Optional<FriendRelationship> checkFriendship(String userId, String friendId) {
+        Optional<FriendRelationship> existingRelationship =
+                friendRelationshipRepository.findFriendship(userId, friendId);
+        return existingRelationship;
     }
 
 
