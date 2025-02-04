@@ -15,10 +15,10 @@ public class FriendRelationship {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "friend1_id")
+    @Column(name = "friend1_id", length = 50)
     private String friend1Id;
 
-    @Column(name = "friend2_id")
+    @Column(name = "friend2_id", length = 50)
     private String friend2Id;
 
     @Column(nullable = false)
