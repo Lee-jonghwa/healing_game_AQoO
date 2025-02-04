@@ -33,8 +33,10 @@ public class Aquarium {
     @Column(name = "user_id", nullable = false, length = 50)
     private String userId;
 
-    @Column(name = "aquarium_background_id", nullable = false)
-    private Integer aquariumBackgroundId;
+    // ✅ 기존의 중복 컬럼 제거, 대신 @ManyToOne에서 관리
+    @ManyToOne
+    @JoinColumn(name = "aquarium_background_id", insertable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_aquarium_background"))
+    private AquariumBackground aquariumBackground;
 
     // 추가적인 논리적 필드 (DB 컬럼 X)
     @Transient
