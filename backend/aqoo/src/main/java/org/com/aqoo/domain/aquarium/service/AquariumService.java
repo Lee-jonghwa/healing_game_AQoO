@@ -1,13 +1,11 @@
 package org.com.aqoo.domain.aquarium.service;
 
 import lombok.RequiredArgsConstructor;
-import org.com.aqoo.domain.aquarium.dto.AquariumCreateRequestDto;
-import org.com.aqoo.domain.aquarium.dto.AquariumDetailResponseDto;
-import org.com.aqoo.domain.aquarium.dto.AquariumResponseDto;
-import org.com.aqoo.domain.aquarium.dto.FishCountDto;
+import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
-import org.com.aqoo.domain.aquarium.repository.AquariumRepository;
+import org.com.aqoo.repository.AquariumRepository;
 import org.com.aqoo.domain.fish.entity.FishType;
+import org.com.aqoo.domain.fish.entity.UserFish;
 import org.com.aqoo.repository.FishTypeRepository;
 import org.com.aqoo.repository.UserFishRepository;
 import org.springframework.stereotype.Service;
@@ -83,6 +81,18 @@ public class AquariumService {
         aquarium.setLastCleanedTime(LocalDateTime.now());
 
         return aquariumRepository.save(aquarium);
+    }
+
+    @Transactional
+    public FishAddResponseDto addFishToAquarium(FishAddRequestDto requestDto) {
+        UserFish userFish = userFishRepository.findById(requestDto.getId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 물고기가 존재하지 않습니다."));
+
+        // 어항 ID 업데이트
+        userFish.setAquariumId(requestDto.getAquariumId());
+        userFishRepository.save(userFish);
+
+        return new FishAddResponseDto("성공", "어항에 물고기 추가하기에 성공했습니다.");
     }
 
     /**

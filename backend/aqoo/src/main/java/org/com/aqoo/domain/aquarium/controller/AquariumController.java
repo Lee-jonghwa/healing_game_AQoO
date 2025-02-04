@@ -1,9 +1,7 @@
 package org.com.aqoo.domain.aquarium.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.com.aqoo.domain.aquarium.dto.AquariumCreateRequestDto;
-import org.com.aqoo.domain.aquarium.dto.AquariumDetailResponseDto;
-import org.com.aqoo.domain.aquarium.dto.AquariumResponseDto;
+import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.service.AquariumService;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +43,13 @@ public class AquariumController {
     @GetMapping("/{aquariumId}")
     public ResponseEntity<AquariumDetailResponseDto> getAquariumDetails(@PathVariable("aquariumId") Integer aquariumId) {
         AquariumDetailResponseDto response = aquariumService.getAquariumDetails(aquariumId);
+        return ResponseEntity.ok(response);
+    }
+
+//    물고기 추가
+    @PostMapping("/fish")
+    public ResponseEntity<FishAddResponseDto> addFishToAquarium(@Validated @RequestBody FishAddRequestDto requestDto) {
+        FishAddResponseDto response = aquariumService.addFishToAquarium(requestDto);
         return ResponseEntity.ok(response);
     }
 

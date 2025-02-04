@@ -1,4 +1,4 @@
-package org.com.aqoo.domain.aquarium.repository;
+package org.com.aqoo.repository;
 
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.springframework.data.jpa.repository.JpaRepository;
