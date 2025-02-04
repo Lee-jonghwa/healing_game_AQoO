@@ -32,6 +32,7 @@ WORKDIR /app
 # 빌드된 JAR 파일 복사 (빌드 단계에서 생성된 JAR 파일을 실행 환경으로 이동)
 COPY --from=builder /app/build/libs/*.jar app.jar
 
+
 # 애플리케이션 실행 (환경변수는 컨테이너 실행 시 주입됩니다)
 CMD ["java", "-jar", "app.jar"]
 
