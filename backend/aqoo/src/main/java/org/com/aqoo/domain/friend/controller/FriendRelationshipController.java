@@ -2,11 +2,9 @@ package org.com.aqoo.domain.friend.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.UserInfoResponse;
-import org.com.aqoo.domain.friend.dto.FriendInfo;
-import org.com.aqoo.domain.friend.dto.FriendRequest;
-import org.com.aqoo.domain.friend.dto.FriendResponse;
-import org.com.aqoo.domain.friend.dto.RelationshipIdRequest;
+import org.com.aqoo.domain.friend.dto.*;
 import org.com.aqoo.domain.friend.service.FriendRelationshipService;
+import org.com.aqoo.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +21,10 @@ import java.util.Map;
 public class FriendRelationshipController {
 
     @Autowired
-    private FriendRelationshipService friendRelationshipService;
+    private final FriendRelationshipService friendRelationshipService;
+
+    @Autowired
+    private final JwtUtil util;
 
     //친구 요청 보내기
     @PostMapping("/request")
@@ -66,7 +67,7 @@ public class FriendRelationshipController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getFriendList(@PathVariable String userId) {
         try {
-            List<FriendInfo> friends = friendRelationshipService.getFriends(userId);
+            List<FriendInfo> friends = friendRelationshipService.getFriendList(userId);
             Map<String, Object> response = new HashMap<>();
             response.put("friends", friends);
             response.put("count", friends.size());
@@ -74,6 +75,31 @@ public class FriendRelationshipController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+    //키워드로 사용자 검색하기
+    @GetMapping("/find-users/{keyword}")
+    public ResponseEntity<?> findUsers(@PathVariable String keyword, @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인 필요"));
+        }
+
+        try {
+            // 로그인된 사용자 ID 추출
+            String userId = util.extractUsername(refreshToken);
+
+            // 친구 검색
+            List<FindResponse> friends = friendRelationshipService.findUsers(userId, keyword);
+
+            if (friends.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "검색된 사용자가 없습니다."));
+            }
+
+            return ResponseEntity.ok(friends);
+        } catch (Exception e) {
+           e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "사용자 검색에 실패했습니다."));
         }
     }
 }
