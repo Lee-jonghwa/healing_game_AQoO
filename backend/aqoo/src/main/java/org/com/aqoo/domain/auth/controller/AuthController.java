@@ -135,4 +135,11 @@ public class AuthController {
         authService.changePassword(request);
         return ResponseEntity.ok(Map.of("message", "비밀번호 변경이 완료되었습니다."));
     }
+
+    // 비밀번호 재설정
+    @PostMapping("/new-password")
+    public ResponseEntity<Map<String, String>> newPassword(@RequestBody NewPasswordRequest request) {
+        authService.newPassword(request);
+        return ResponseEntity.ok(Map.of("message", "비밀번호 재설정이 완료되었습니다."));
+    }
 }
