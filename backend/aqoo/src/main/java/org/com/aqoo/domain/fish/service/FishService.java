@@ -1,10 +1,8 @@
 package org.com.aqoo.domain.fish.service;
 
 import lombok.RequiredArgsConstructor;
-import org.com.aqoo.domain.fish.dto.CollectionFishResponse;
-import org.com.aqoo.domain.fish.dto.CustomFishResponse;
-import org.com.aqoo.domain.fish.dto.UserFishResponse;
-import org.com.aqoo.domain.fish.dto.FishTypeResponseDto;
+import org.com.aqoo.domain.auth.entity.User;
+import org.com.aqoo.domain.fish.dto.*;
 import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.domain.fish.entity.UserFish;
 import org.com.aqoo.repository.FishRepository;
@@ -13,10 +11,7 @@ import org.com.aqoo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +20,7 @@ public class FishService {
     private final FishRepository fishRepository;
     private final UserFishRepository userFishRepository;
     private final UserRepository userRepository;
+    private final Random random = new Random();
 
     @Transactional(readOnly = true)
     public List<FishTypeResponseDto> getAllFishTypes() {
@@ -101,5 +97,46 @@ public class FishService {
                 .toList();
     }
 
+    public GotchaResponse gotchaFish(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+
+        // 1. 난수 생성 (0~99)
+        int chance = random.nextInt(100);
+
+        // 2. 확률에 따라 rarity 결정
+        String rarity;
+        if (chance < 60) {
+            rarity = "COMMON";
+        } else if (chance < 90) {
+            rarity = "RARE";
+        } else {
+            rarity = "EPIC";
+        }
+
+        // 3. 해당 rarity의 물고기 중 랜덤 선택
+        List<Fish> fishList = fishRepository.findByRarity(rarity);
+        if (fishList.isEmpty()) {
+            throw new IllegalStateException("해당 희귀도의 물고기가 존재하지 않습니다.");
+        }
+        Fish selectedFish = fishList.get(random.nextInt(fishList.size()));
+
+        // 4. 물고기 저장
+        UserFish newone = new UserFish();
+        newone.setUserId(user.getId());
+        newone.setFishTypeId(selectedFish.getId());
+        UserFish userFish = userFishRepository.save(newone);
+
+        Integer userFishId = userFish.getId(); // 저장 후 ID 바로 가져오기
+
+
+        // 5. 결과 응답
+        return new GotchaResponse(
+                userFishId,
+                selectedFish.getId(),
+                selectedFish.getFishName(),
+                selectedFish.getRarity(),
+                selectedFish.getImageUrl());
+    }
 
 }
