@@ -8,6 +8,7 @@ import org.com.aqoo.domain.fish.entity.UserFish;
 import org.com.aqoo.repository.FishRepository;
 import org.com.aqoo.repository.UserFishRepository;
 import org.com.aqoo.repository.UserRepository;
+import org.com.aqoo.util.ImageUrlUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +21,14 @@ public class FishService {
     private final FishRepository fishRepository;
     private final UserFishRepository userFishRepository;
     private final UserRepository userRepository;
+    private final ImageUrlUtils imageUtils;
     private final Random random = new Random();
 
     @Transactional(readOnly = true)
     public List<FishTypeResponseDto> getAllFishTypes() {
         List<Fish> fishTypes = fishRepository.findByRarityInIgnoreCase();
         return fishTypes.stream()
-                .map(fish -> new FishTypeResponseDto(fish.getId(), fish.getFishName(), fish.getImageUrl(), fish.getRarity()))
+                .map(fish -> new FishTypeResponseDto(fish.getId(), fish.getFishName(), imageUtils.toAbsoluteUrl(fish.getImageUrl()), fish.getRarity()))
                 .collect(Collectors.toList());
     }
 
@@ -45,7 +47,7 @@ public class FishService {
                 .map(item -> new UserFishResponse(
                         item.getId(),        // fishTypeId
                         item.getFishName(),  // 물고기 이름
-                        item.getImageUrl()
+                        imageUtils.toAbsoluteUrl(item.getImageUrl())
                 ))
                 .toList();
     }
@@ -62,7 +64,7 @@ public class FishService {
                 .map(fishType -> new CustomFishResponse(
                         fishType.getId(),        // fishTypeId
                         fishType.getFishName(),  // 물고기 이름
-                        fishType.getImageUrl()   // 물고기 이미지
+                        imageUtils.toAbsoluteUrl(fishType.getImageUrl())   // 물고기 이미지
                 ))
                 .toList();
     }
@@ -91,7 +93,7 @@ public class FishService {
                 .map(fishType -> new CollectionFishResponse(
                         fishType.getId(),        // fishTypeId
                         fishType.getFishName(),  // 물고기 이름
-                        fishType.getImageUrl(),  // 물고기 이미지
+                        imageUtils.toAbsoluteUrl(fishType.getImageUrl()),  // 물고기 이미지
                         fishCountMap.getOrDefault(fishType.getId(), 0) // 해당 타입의 물고기 개수
                 ))
                 .toList();
@@ -136,7 +138,21 @@ public class FishService {
                 selectedFish.getId(),
                 selectedFish.getFishName(),
                 selectedFish.getRarity(),
-                selectedFish.getImageUrl());
+                imageUtils.toAbsoluteUrl(selectedFish.getImageUrl()));
+    }
+
+    @Transactional
+    public Fish saveFishType(FishTypeRequest request) {
+        Fish fishType = new Fish();
+        fishType.setFishName(request.getFishName());
+        fishType.setImageUrl(request.getImageUrl());
+        fishType.setRarity(request.getRarity());
+
+        // EC2 이미지 저장 로직
+        // 예: "/var/www/fish-images" 경로로 파일 복사
+
+        fishRepository.save(fishType);
+        return fishType;
     }
 
 }

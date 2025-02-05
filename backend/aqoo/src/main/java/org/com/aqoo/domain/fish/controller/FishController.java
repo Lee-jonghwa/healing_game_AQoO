@@ -3,6 +3,7 @@ package org.com.aqoo.domain.fish.controller;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.fish.dto.*;
+import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.domain.fish.service.FishService;
 import org.com.aqoo.util.JwtUtil;
 import org.springframework.http.HttpStatus;
@@ -82,5 +83,15 @@ public class FishController {
         }
     }
 
+    @PostMapping("/newtype")
+    public ResponseEntity<?> addFishType(@RequestBody FishTypeRequest request) {
+        try {
+            Fish newType = fishService.saveFishType(request);
+            return ResponseEntity.ok(newType);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "새로운 물고기 타입 추가에 실패했습니다."));
+        }
+    }
 
 }

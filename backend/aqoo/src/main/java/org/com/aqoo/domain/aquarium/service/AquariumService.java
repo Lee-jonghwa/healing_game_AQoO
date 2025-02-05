@@ -10,6 +10,7 @@ import org.com.aqoo.domain.fish.entity.UserFish;
 import org.com.aqoo.repository.FishRepository;
 import org.com.aqoo.repository.UserFishRepository;
 import org.com.aqoo.repository.UserRepository;
+import org.com.aqoo.util.ImageUrlUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ public class AquariumService {
     private final UserFishRepository userFishRepository;
     private final FishRepository fishRepository;
     private final UserRepository userRepository;
+    private final ImageUrlUtils imageUtils;
 
 
 
@@ -198,7 +200,7 @@ public class AquariumService {
                         (Integer) row[0], // fishId
                         (Integer) row[1], // fishTypeId
                         fishTypeMap.get((Integer) row[1]).getFishName(), // fishTypeName
-                        fishTypeMap.get((Integer) row[1]).getImageUrl() // fishImage
+                        imageUtils.toAbsoluteUrl(fishTypeMap.get((Integer) row[1]).getImageUrl()) // fishImage
                 ))
                 .sorted(Comparator.comparing(AquariumFishResponse::getFishTypeId)) // fishTypeId 기준 정렬
                 .toList();

@@ -5,6 +5,7 @@ import org.com.aqoo.domain.auth.dto.*;
 import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.repository.UserFishRepository;
 import org.com.aqoo.repository.UserRepository;
+import org.com.aqoo.util.ImageUrlUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.Objects;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ImageUrlUtils imageUtils;
 
     // 회원정보 조회 서비스
     public UserInfoResponse getUserInfo(String userId) {
@@ -28,7 +30,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
-                .mainFishImage(user.getMainFishImage())
+                .mainFishImage(imageUtils.toAbsoluteUrl(user.getMainFishImage()))
                 .exp(user.getExp())
                 .level(user.getLevel())
                 .status(user.getStatus())
@@ -62,7 +64,7 @@ public class UserService {
         return new UpdateUserResponse(
                 user.getId(),
                 user.getNickname(),
-                user.getMainFishImage(),
+                imageUtils.toAbsoluteUrl(user.getMainFishImage()),
                 "회원 정보 수정 성공!"
         );
     }
