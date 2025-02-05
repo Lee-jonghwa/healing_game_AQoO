@@ -2,13 +2,19 @@ package org.com.aqoo.repository;
 
 import org.com.aqoo.domain.fish.entity.Fish;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
 public interface FishRepository extends JpaRepository<Fish, Integer> {
-    List<Fish> findAll();
+    @Query("SELECT f FROM Fish f WHERE LOWER(f.rarity) IN ('common', 'rare', 'epic')")
+    List<Fish> findByRarityInIgnoreCase();
+
+    @Query("SELECT f FROM Fish f WHERE f.id IN :ids AND LOWER(f.rarity) IN ('common', 'rare', 'epic')")
+    List<Fish> findByIdInAndRarityIgnoreCase(@Param("ids") List<Integer> ids);
 
     List<Fish> findByIdIn(List<Integer> ids);
 

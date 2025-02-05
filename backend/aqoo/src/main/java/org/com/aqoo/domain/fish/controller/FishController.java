@@ -21,7 +21,7 @@ import java.util.List;
 public class FishController {
     private final FishService fishService;
 
-    @GetMapping("/all-type")
+    @GetMapping("/all-collection")
     public ResponseEntity<List<FishTypeResponseDto>> getAllFishTypes() {
         List<FishTypeResponseDto> response = fishService.getAllFishTypes();
         return ResponseEntity.ok(response);
