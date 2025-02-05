@@ -2,11 +2,9 @@ package org.com.aqoo.domain.fish.controller;
 
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import lombok.RequiredArgsConstructor;
-import org.com.aqoo.domain.fish.dto.CollectionFishResponse;
-import org.com.aqoo.domain.fish.dto.CustomFishResponse;
-import org.com.aqoo.domain.fish.dto.FishTypeResponseDto;
-import org.com.aqoo.domain.fish.dto.UserFishResponse;
+import org.com.aqoo.domain.fish.dto.*;
 import org.com.aqoo.domain.fish.service.FishService;
+import org.com.aqoo.util.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -14,12 +12,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/fish")
 @RequiredArgsConstructor
 public class FishController {
     private final FishService fishService;
+    private final JwtUtil util;
 
     @GetMapping("/all-collection")
     public ResponseEntity<List<FishTypeResponseDto>> getAllFishTypes() {
@@ -60,6 +60,25 @@ public class FishController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Collections.singletonMap("error", "커스텀 물고기 조회하기에 실패했습니다."));
+        }
+    }
+
+    @GetMapping("/gotcha")
+    public ResponseEntity<?> gotchaFish(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인 필요"));
+        }
+
+        try {
+            // 로그인된 사용자 ID 추출
+            String userId = util.extractUsername(refreshToken);
+            GotchaResponse response = fishService.gotchaFish(userId);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "서버 오류로 물고기를 뽑을 수 없습니다."));
         }
     }
 
