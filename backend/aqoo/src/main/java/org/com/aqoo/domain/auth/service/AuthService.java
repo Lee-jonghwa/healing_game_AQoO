@@ -141,50 +141,32 @@ public class AuthService {
     // 소셜 로그인 서비스
     @Transactional
     public LoginResponse handleOAuthLogin(String email) {
-        // DB에서 사용자 정보 조회
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-
-        User user;
-        if (optionalUser.isPresent()) {
-            // 사용자 정보가 존재하면 JWT 생성
-            user = optionalUser.get();
-        } else {
+        // DB에서 사용자 정보 조회 (없으면 새 유저 생성)
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
             System.out.println("소셜 로그인 시도한 유저 회원가입");
 
-            // 사용자 정보가 없으면 신규 사용자 생성
             String rawPassword = PasswordGenerator.generatePasswordWithDateTime();
             String hashedPassword = passwordEncoder.encode(rawPassword);
 
-            RegisterRequest request = new RegisterRequest();
-            request.setId(email);
-            request.setEmail(email);
-            request.setPw(hashedPassword);
-            request.setNickname(email.split("@")[0]);
+            User newUser = User.builder()
+                    .id(email) // ID는 email과 동일
+                    .email(email)
+                    .pw(hashedPassword) // 소셜 로그인 사용자는 임의 비밀번호 부여
+                    .nickname(email.split("@")[0]) // 기본 닉네임 설정
+                    .build();
 
-            register(request);
-
-            user = userRepository.findByEmail(email).get();
-
-//            user = User.builder()
-//                    .id(email) // ID는 email과 동일
-//                    .email(email)
-//                    .pw(hashedPassword) // 소셜 로그인 사용자는 임의 비밀번호 부여
-//                    .nickname(email.split("@")[0]) // 기본 닉네임 설정
-//                    .build();
-//            userRepository.save(user);
-        }
+            return userRepository.save(newUser); // 신규 사용자 저장 후 반환
+        });
 
         // JWT 생성
         String accessToken = jwtUtil.generateToken(user.getId(), "ACCESS");
         String refreshToken = jwtUtil.generateToken(user.getId(), "REFRESH");
 
-        // 리프레시 토큰 저장
+        // 리프레시 토큰 저장 후 DB 업데이트
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        String message = "소셜 로그인 성공";
-
-        return new LoginResponse(accessToken, message);
+        return new LoginResponse(accessToken, "소셜 로그인 성공");
     }
 
     // 아이디 중복 체크
