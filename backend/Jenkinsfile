@@ -4,6 +4,8 @@ pipeline {
     environment {
         // Docker 이미지 이름 (빌드 후, 해당 이미지를 사용하여 배포)
         DOCKER_IMAGE = "s12-webmobile1-sub1/s12p11e203:latest"
+        HOST_VOLUME_PATH = '/home/ubuntu/images'  // 호스트의 디렉터리 경로
+        CONTAINER_VOLUME_PATH = '/home/ubuntu/images' // 컨테이너의 디렉터리 경로
     }
 
     stages {
@@ -52,6 +54,8 @@ pipeline {
                            --name backend \
                            --network host \
                            -p 8089:8089 \
+                           -v ${HOST_VOLUME_PATH}:${CONTAINER_VOLUME_PATH} \
+                            ${IMAGE_NAME}
                            --env-file /tmp/deploy.env \
                            ${DOCKER_IMAGE}
                         """
