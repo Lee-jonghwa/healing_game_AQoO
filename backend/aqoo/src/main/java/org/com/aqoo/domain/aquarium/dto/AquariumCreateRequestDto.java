@@ -16,5 +16,5 @@ public class AquariumCreateRequestDto {
     private String userId;
 
     @NotNull(message = "Aquarium background ID is required")
-    private String aquariumBack; // 이미지 URL
+    private Integer aquariumBack; // DB에 등록된 배경 ID (예: 1, 2, 3)
 }
