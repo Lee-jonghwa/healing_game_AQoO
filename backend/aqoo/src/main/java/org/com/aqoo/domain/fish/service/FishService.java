@@ -160,9 +160,11 @@ public class FishService {
 
 
     public static File processImage(File inputFile, String outputFilePath) throws Exception {
-        String imageMagickPath = "/usr/bin/convert-im6.q16"; // ImageMagick이 설치된 경로
+        String imageMagickPath = "/usr/bin/convert-im6.q16";  // ImageMagick이 설치된 경로
         ConvertCmd cmd = new ConvertCmd();
-        cmd.setSearchPath(imageMagickPath);  // 경로 지정 (생략 가능)
+
+        // 명령어 경로를 명확하게 설정
+        cmd.setCommand(new String[]{imageMagickPath});  // 명확한 경로 설정
 
         IMOperation op = new IMOperation();
         op.addImage(inputFile.getAbsolutePath()); // 원본 이미지
@@ -172,14 +174,17 @@ public class FishService {
         op.addImage(outputFilePath); // 결과 이미지 저장
 
         try {
+            // 이미지 변환 실행
             cmd.run(op);
             System.out.println("✅ 이미지 변환 성공: " + outputFilePath);
             return new File(outputFilePath);
         } catch (Exception e) {
+            // 실패 시 오류 메시지 출력
             System.err.println("❌ 이미지 변환 실패: " + e.getMessage());
             e.printStackTrace();  // 상세한 오류 메시지 출력
-            throw e;
+            throw e;  // 예외를 다시 던져 호출자에게 알림
         }
     }
+
 
 }
