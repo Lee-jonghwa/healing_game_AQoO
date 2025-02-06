@@ -12,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +23,9 @@ public class EmailService {
     private final MailManager mailManager;
     private final UserRepository userRepository;
     private final ConcurrentHashMap<String, Boolean> emailAuthMap = new ConcurrentHashMap<>();
+
+    // 스케줄러 생성 (애플리케이션이 종료될 때 함께 종료되도록 설정)
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     // ID 검증 후 DB에 등록된 이메일과 요청 이메일 비교 후 인증번호 전송 서비스
     @Transactional
@@ -64,6 +70,9 @@ public class EmailService {
 
         // 인증번호 저장 (나중에 검증할 때 사용)
         emailAuthMap.put(key, true);
+
+        // 5분 후에 인증번호 삭제 (만료)
+        scheduler.schedule(() -> emailAuthMap.remove(key), 3, TimeUnit.MINUTES);
 
         return new EmailResponse("메일이 전송되었습니다.");
     }
