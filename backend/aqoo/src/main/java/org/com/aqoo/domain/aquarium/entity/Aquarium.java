@@ -33,13 +33,9 @@ public class Aquarium {
     @Column(name = "user_id", nullable = false, length = 50)
     private String userId;
 
-    // **추가된 필드**: 어항 배경의 외래 키 값을 직접 저장하기 위한 컬럼
-    @Column(name = "aquarium_background_id", nullable = false)
-    private Integer aquariumBackgroundId;
-
-    // 관계 설정 (읽기 전용)
+    // 연관관계를 통해 'aquarium_background_id' 컬럼을 관리
     @ManyToOne
-    @JoinColumn(name = "aquarium_background_id", foreignKey = @ForeignKey(name = "fk_aquarium_background"))
+    @JoinColumn(name = "aquarium_background_id", nullable = false, foreignKey = @ForeignKey(name = "fk_aquarium_background"))
     private AquariumBackground aquariumBackground;
 
     // 추가적인 논리적 필드 (DB 컬럼 X)
@@ -48,5 +44,4 @@ public class Aquarium {
 
     @Transient
     private int pollutionStatus;
-
 }
