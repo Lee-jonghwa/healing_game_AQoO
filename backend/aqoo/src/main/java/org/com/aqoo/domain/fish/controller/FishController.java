@@ -107,26 +107,32 @@ public class FishController {
             ObjectMapper objectMapper = new ObjectMapper();
             FishPaintingRequest fishData = objectMapper.readValue(fishDataJson, FishPaintingRequest.class);
 
-            // 이미지 저장 (예: EC2 /home/ubuntu/images/ 폴더에 저장)
+            // 이미지 저장 경로 설정
             String uploadDir = "/home/ubuntu/images/";
-            String filePath = uploadDir + imageFile.getOriginalFilename();
-            File destFile = new File(filePath);
-            imageFile.transferTo(destFile);
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs(); // 경로가 없으면 생성
+            }
 
-            // 원본 파일 저장
-            File originalFile = new File(uploadDir + "processed_" + imageFile.getOriginalFilename());
-            imageFile.transferTo(originalFile);
+            // 원본 이미지 저장
+            String originalFilePath = uploadDir + imageFile.getOriginalFilename();
+            File originalFile = new File(originalFilePath);
+            imageFile.transferTo(originalFile);  // 원본 이미지 저장
 
-            // 변환된 이미지 저장 경로
-            String outputFilePath = uploadDir + imageFile.getOriginalFilename();
+            // 변환된 이미지 파일명
+            String processedFilePath = uploadDir + "processed_" + imageFile.getOriginalFilename();
 
-            FishService.processImage(originalFile, outputFilePath);
+            // 이미지 변환 처리
+            File processedFile = FishService.processImage(originalFile, processedFilePath);
 
+            // 결과 반환
             return ResponseEntity.ok("Upload successful: " + fishData.getFishName());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed" + e.getMessage());
+            // 예외 발생 시, 상세 오류 메시지 포함하여 응답
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed: " + e.getMessage());
         }
     }
+
 
 
 }
