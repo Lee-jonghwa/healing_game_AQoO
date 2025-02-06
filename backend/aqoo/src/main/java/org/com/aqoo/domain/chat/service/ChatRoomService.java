@@ -1,6 +1,8 @@
 package org.com.aqoo.domain.chat.service;
 
 import org.com.aqoo.domain.chat.model.ChatRoom;
+import org.com.aqoo.util.ImageUrlUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ChatRoomService {
+
     private final Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
 
     /** 모든 채팅방 목록 조회 */

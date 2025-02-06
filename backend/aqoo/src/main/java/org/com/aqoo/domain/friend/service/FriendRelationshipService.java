@@ -9,6 +9,7 @@ import org.com.aqoo.domain.friend.dto.FindResponse;
 import org.com.aqoo.domain.friend.entity.FriendRelationship;
 import org.com.aqoo.repository.FriendRelationshipRepository;
 import org.com.aqoo.repository.UserRepository;
+import org.com.aqoo.util.ImageUrlUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,9 @@ public class FriendRelationshipService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private ImageUrlUtils imageUtils;
 
     @Transactional
     public String createFriendRelationship(FriendRequest request) {
@@ -112,7 +116,7 @@ public class FriendRelationshipService {
                             user.getId(),             // 친구의 ID
                             user.getNickname(),       // 친구의 닉네임
                             user.getLevel(),          // 친구의 레벨
-                            user.getMainFishImage()   // 친구의 메인 물고기 이미지
+                            imageUtils.toAbsoluteUrl(user.getMainFishImage())   // 친구의 메인 물고기 이미지
                     );
                     friendDetails.add(friendDto);
                 }
@@ -154,7 +158,7 @@ public class FriendRelationshipService {
                     isFriend ? 1 : 0,
                     user.getNickname(),
                     user.getLevel(),
-                    user.getMainFishImage()
+                    imageUtils.toAbsoluteUrl(user.getMainFishImage())
             );
             responseList.add(response);
         }
