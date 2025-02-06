@@ -160,11 +160,11 @@ public class FishService {
 
 
     public static File processImage(File inputFile, String outputFilePath) throws Exception {
-        String imageMagickPath = "/usr/bin/convert-im6.q16";  // ImageMagick이 설치된 경로
+        String imageMagickPath = "/usr/bin/convert";  // ImageMagick이 설치된 경로
         ConvertCmd cmd = new ConvertCmd();
 
         // 명령어 경로를 명확하게 설정
-        cmd.setCommand(new String[]{imageMagickPath});  // 명확한 경로 설정
+        cmd.setCommand("/usr/bin");  // 명확한 경로 설정
 
         IMOperation op = new IMOperation();
         op.addImage(inputFile.getAbsolutePath()); // 원본 이미지
