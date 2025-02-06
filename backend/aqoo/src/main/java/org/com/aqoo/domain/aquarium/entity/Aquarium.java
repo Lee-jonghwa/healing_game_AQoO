@@ -39,7 +39,7 @@ public class Aquarium {
 
     // 관계 설정 (읽기 전용)
     @ManyToOne
-    @JoinColumn(name = "aquarium_background_id", insertable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_aquarium_background"))
+    @JoinColumn(name = "aquarium_background_id", foreignKey = @ForeignKey(name = "fk_aquarium_background"))
     private AquariumBackground aquariumBackground;
 
     // 추가적인 논리적 필드 (DB 컬럼 X)
