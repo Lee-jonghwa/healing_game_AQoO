@@ -158,25 +158,25 @@ public class FishService {
         return fishType;
     }
 
-
     public static File processImage(File inputFile, String outputFilePath) throws Exception {
-        ConvertCmd cmd = new ConvertCmd();
+        // 이미지 변환을 위한 ProcessBuilder 객체 생성
+        ProcessBuilder processBuilder = new ProcessBuilder("/usr/bin/convert",
+                inputFile.getAbsolutePath(),
+                "-resize", "1000x1000",
+                outputFilePath);
 
-        // 명령어 경로를 명확하게 설정
-        cmd.setCommand("/usr/bin/convert");  // 명확한 경로 설정
-
-        IMOperation op = new IMOperation();
-        op.addImage(inputFile.getAbsolutePath()); // 원본 이미지
-        op.filter("point");
-        op.resize(70, 70);
-        op.resize(1000, 1000);
-        op.addImage(outputFilePath); // 결과 이미지 저장
+        // 환경 변수 설정 (명시적으로 /usr/bin 경로를 PATH에 추가)
+        processBuilder.environment().put("PATH", "/usr/bin:" + System.getenv("PATH"));
 
         try {
-            // 이미지 변환 실행
-            cmd.run(op);
+            // 프로세스를 실행
+            Process process = processBuilder.start();
+            // 프로세스가 끝날 때까지 기다림
+            process.waitFor();
+
+            // 이미지 변환 성공 메시지 출력
             System.out.println("✅ 이미지 변환 성공: " + outputFilePath);
-            return new File(outputFilePath);
+            return new File(outputFilePath);  // 변환된 파일 반환
         } catch (Exception e) {
             // 실패 시 오류 메시지 출력
             System.err.println("❌ 이미지 변환 실패: " + e.getMessage());
@@ -184,6 +184,7 @@ public class FishService {
             throw e;  // 예외를 다시 던져 호출자에게 알림
         }
     }
+
 
 
 }
