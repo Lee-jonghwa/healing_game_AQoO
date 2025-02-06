@@ -55,7 +55,7 @@ pipeline {
                            --network host \
                            -p 8089:8089 \
                            -v ${HOST_VOLUME_PATH}:${CONTAINER_VOLUME_PATH} \
-                            ${IMAGE_NAME}
+                            ${DOCKER_IMAGE}
                            --env-file /tmp/deploy.env \
                            ${DOCKER_IMAGE}
                         """
