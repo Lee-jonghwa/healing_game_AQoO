@@ -28,15 +28,15 @@ public class FriendRelationshipController {
 
     //친구 요청 보내기
     @PostMapping("/request")
-    public ResponseEntity<Map<String, String>> createFriendRequest(@RequestBody FriendRequest request) {
-        String message = friendRelationshipService.createFriendRelationship(request);
-
-        if (message.equals("친구 요청이 실패하였습니다.")) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", message));
-        } else {
-            return ResponseEntity.ok(Map.of("message", message));
+    public ResponseEntity<Map<String, ?>> createFriendRequest(@RequestBody FriendRequest request) {
+        try {
+            Map<String, Long> response = friendRelationshipService.createFriendRelationship(request);
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
+
 
     //친구 요청 수락하기
     @PostMapping("/accept")

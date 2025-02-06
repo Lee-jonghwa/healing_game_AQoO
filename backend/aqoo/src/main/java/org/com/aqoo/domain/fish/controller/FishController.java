@@ -79,7 +79,7 @@ public class FishController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "서버 오류로 물고기를 뽑을 수 없습니다."));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 

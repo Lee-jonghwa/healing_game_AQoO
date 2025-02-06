@@ -39,7 +39,7 @@ public class WebSocketEventListener {
 
             // 퇴장 메시지 전송
             ChatMessageDto leaveMessage = new ChatMessageDto(ChatMessageDto.MessageType.LEAVE, roomId, userId, userId + "님이 연결이 끊겼습니다.");
-            messagingTemplate.convertAndSend("/topic/" + roomId, leaveMessage);
+             messagingTemplate.convertAndSend("/topic/" + roomId, leaveMessage);
 
             // 채팅방에 남아있는 사용자가 없으면 삭제
             if (chatRoomService.isRoomEmpty(roomId)) {
