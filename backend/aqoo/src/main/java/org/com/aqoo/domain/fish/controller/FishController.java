@@ -113,6 +113,15 @@ public class FishController {
             File destFile = new File(filePath);
             imageFile.transferTo(destFile);
 
+            // 원본 파일 저장
+            File originalFile = new File(uploadDir + "processed_" + imageFile.getOriginalFilename());
+            imageFile.transferTo(originalFile);
+
+            // 변환된 이미지 저장 경로
+            String outputFilePath = uploadDir + imageFile.getOriginalFilename();
+
+            FishService.processImage(originalFile, outputFilePath);
+
             return ResponseEntity.ok("Upload successful: " + fishData.getFishName());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");

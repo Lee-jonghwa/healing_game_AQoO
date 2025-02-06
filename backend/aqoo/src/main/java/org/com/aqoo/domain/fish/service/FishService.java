@@ -9,9 +9,12 @@ import org.com.aqoo.repository.FishRepository;
 import org.com.aqoo.repository.UserFishRepository;
 import org.com.aqoo.repository.UserRepository;
 import org.com.aqoo.util.ImageUrlUtils;
+import org.im4java.core.ConvertCmd;
+import org.im4java.core.IMOperation;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -153,6 +156,24 @@ public class FishService {
 
         fishRepository.save(fishType);
         return fishType;
+    }
+
+
+    public static File processImage(File inputFile, String outputFilePath) throws Exception {
+        String imageMagickPath = "/usr/bin/magick"; // ImageMagick이 설치된 경로
+        ConvertCmd cmd = new ConvertCmd();
+        cmd.setSearchPath(imageMagickPath);  // 경로 지정 (생략 가능)
+
+        IMOperation op = new IMOperation();
+        op.addImage(inputFile.getAbsolutePath()); // 원본 이미지
+        op.filter("point");
+        op.resize(70, 70);
+        op.resize(1000, 1000);
+        op.addImage(outputFilePath); // 결과 이미지 저장
+
+        cmd.run(op);
+
+        return new File(outputFilePath);
     }
 
 }
