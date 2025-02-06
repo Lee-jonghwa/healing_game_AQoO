@@ -41,7 +41,7 @@ public class Aquarium {
 
     // 연관관계를 통해 'aquarium_background_id' 컬럼을 관리
     @ManyToOne
-    @JoinColumn(name = "aquarium_background_id", nullable = false, foreignKey = @ForeignKey(name = "fk_aquarium_background"))
+    @JoinColumn(name = "aquarium_background_id", insertable = false, updatable = false, foreignKey = @ForeignKey(name = "aquarium_background_id"))
     private AquariumBackground aquariumBackground;
 
     // 추가적인 논리적 필드 (DB 컬럼 X)
