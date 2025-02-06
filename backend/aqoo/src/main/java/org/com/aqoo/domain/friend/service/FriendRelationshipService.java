@@ -13,10 +13,7 @@ import org.com.aqoo.util.ImageUrlUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,16 +30,20 @@ public class FriendRelationshipService {
     private ImageUrlUtils imageUtils;
 
     @Transactional
-    public String createFriendRelationship(FriendRequest request) {
+    public Map<String, Long> createFriendRelationship(FriendRequest request) {
+        User user = userRepository.findById(request.getFriendId())
+                .orElseThrow(() -> new IllegalArgumentException("친구가 존재하지 않습니다."));
+
         // 기존 친구 관계 조회
         Optional<FriendRelationship> existingRelationship = checkFriendship(request.getUserId(), request.getFriendId());
+
         if (existingRelationship.isPresent()) {
             FriendRelationship relationship = existingRelationship.get();
-            //이미 친구 관계인 경우
+            // 이미 친구 관계인 경우
             if ("ACCEPTED".equals(relationship.getStatus())) {
-                return "이미 친구 관계입니다.";
+                throw new IllegalStateException("이미 친구 관계입니다.");
             }
-            //지난 요청이 있었던 경우
+            // 지난 요청이 있었던 경우
             if ("PENDING".equals(relationship.getStatus())) {
                 // 기존 관계 삭제
                 friendRelationshipRepository.delete(relationship);
@@ -53,14 +54,14 @@ public class FriendRelationshipService {
         FriendRelationship friendRelationship = new FriendRelationship();
         friendRelationship.setFriend1Id(request.getUserId());
         friendRelationship.setFriend2Id(request.getFriendId());
-        friendRelationship.setStatus(request.getStatus());
+        friendRelationship.setStatus("PENDING"); // 친구 요청 상태로 설정
 
-        try {
-            friendRelationshipRepository.save(friendRelationship);
-            return "친구 요청이 성공적으로 전송되었습니다.";
-        } catch (Exception e) {
-            return "친구 요청이 실패하였습니다.";
-        }
+        friendRelationship = friendRelationshipRepository.save(friendRelationship);
+
+        // 결과를 Map으로 변환하여 반환
+        Map<String, Long> response = new HashMap<>();
+        response.put("relationshipId", friendRelationship.getId());
+        return response;
     }
 
     @Transactional
