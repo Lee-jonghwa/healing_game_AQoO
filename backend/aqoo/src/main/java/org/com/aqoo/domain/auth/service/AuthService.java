@@ -149,16 +149,29 @@ public class AuthService {
             // 사용자 정보가 존재하면 JWT 생성
             user = optionalUser.get();
         } else {
+            System.out.println("소셜 로그인 시도한 유저 회원가입");
+
             // 사용자 정보가 없으면 신규 사용자 생성
             String rawPassword = PasswordGenerator.generatePasswordWithDateTime();
             String hashedPassword = passwordEncoder.encode(rawPassword);
-            user = User.builder()
-                    .id(email) // ID는 email과 동일
-                    .email(email)
-                    .pw(hashedPassword) // 소셜 로그인 사용자는 임의 비밀번호 부여
-                    .nickname(email.split("@")[0]) // 기본 닉네임 설정
-                    .build();
-            userRepository.save(user);
+
+            RegisterRequest request = new RegisterRequest();
+            request.setId(email);
+            request.setEmail(email);
+            request.setPw(hashedPassword);
+            request.setNickname(email.split("@")[0]);
+
+            register(request);
+
+            user = userRepository.findByEmail(email).get();
+
+//            user = User.builder()
+//                    .id(email) // ID는 email과 동일
+//                    .email(email)
+//                    .pw(hashedPassword) // 소셜 로그인 사용자는 임의 비밀번호 부여
+//                    .nickname(email.split("@")[0]) // 기본 닉네임 설정
+//                    .build();
+//            userRepository.save(user);
         }
 
         // JWT 생성
