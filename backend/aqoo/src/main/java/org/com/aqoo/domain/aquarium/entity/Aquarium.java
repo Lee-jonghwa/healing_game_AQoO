@@ -33,7 +33,11 @@ public class Aquarium {
     @Column(name = "user_id", nullable = false, length = 50)
     private String userId;
 
-    // ✅ 기존의 중복 컬럼 제거, 대신 @ManyToOne에서 관리
+    // **추가된 필드**: 어항 배경의 외래 키 값을 직접 저장하기 위한 컬럼
+    @Column(name = "aquarium_background_id", nullable = false)
+    private Integer aquariumBackgroundId;
+
+    // 관계 설정 (읽기 전용)
     @ManyToOne
     @JoinColumn(name = "aquarium_background_id", insertable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_aquarium_background"))
     private AquariumBackground aquariumBackground;
@@ -44,4 +48,5 @@ public class Aquarium {
 
     @Transient
     private int pollutionStatus;
+
 }

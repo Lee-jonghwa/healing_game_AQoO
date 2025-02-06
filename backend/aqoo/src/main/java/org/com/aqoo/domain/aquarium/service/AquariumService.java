@@ -3,6 +3,7 @@ package org.com.aqoo.domain.aquarium.service;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.aquarium.dto.*;
 import org.com.aqoo.domain.aquarium.entity.Aquarium;
+import org.com.aqoo.domain.aquarium.entity.AquariumBackground;
 import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.repository.AquariumRepository;
@@ -93,7 +94,9 @@ public class AquariumService {
         Aquarium aquarium = new Aquarium();
         aquarium.setAquariumName(requestDto.getAquariumName());
         aquarium.setUserId(requestDto.getUserId());
-        aquarium.getAquariumBackground().setId(Integer.parseInt(requestDto.getAquariumBack())); // 숫자로 변환
+
+        // 요청으로 전달받은 배경 ID 값을 그대로 사용하여 배경 엔티티의 프록시를 획득
+        aquarium.setAquariumBackgroundId(requestDto.getAquariumBack());
 
         // 기본값 설정
         aquarium.setLastFedTime(LocalDateTime.now());
