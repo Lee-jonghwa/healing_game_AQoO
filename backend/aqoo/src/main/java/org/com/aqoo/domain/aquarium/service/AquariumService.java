@@ -65,13 +65,10 @@ public class AquariumService {
     @Transactional(readOnly = true)
     public AquariumDetailResponseDto getAquariumDetails(Integer aquariumId) {
         // 어항 정보 조회
-        Optional<Aquarium> aquariumOpt = aquariumRepository.findById(aquariumId);
-        if (aquariumOpt.isEmpty()) {
-            throw new IllegalArgumentException("어항을 찾을 수 없습니다.");
-        }
-        Aquarium aquarium = aquariumOpt.get();
+        Aquarium aquarium = aquariumRepository.findById(aquariumId)
+                .orElseThrow(() -> new IllegalArgumentException("어항을 찾을 수 없습니다."));
 
-        // 어항 속 물고기 개수 조회
+        // 어항 속 물고기 개수 조회 (예시: Object[] { fishTypeId, count })
         List<Object[]> fishCounts = userFishRepository.countFishesInAquarium(aquariumId);
 
         List<FishCountDto> fishList = fishCounts.stream().map(fishData -> {
@@ -85,7 +82,20 @@ public class AquariumService {
             return new FishCountDto(fish.getFishName(), count);
         }).collect(Collectors.toList());
 
-        return new AquariumDetailResponseDto(aquarium.getAquariumBackground().getId(), fishList);
+        // 엔티티의 모든 정보를 DTO로 매핑
+        AquariumDetailResponseDto dto = new AquariumDetailResponseDto();
+        dto.setId(aquarium.getId());
+        dto.setAquariumName(aquarium.getAquariumName());
+        dto.setLastFedTime(aquarium.getLastFedTime());
+        dto.setLastWaterChangeTime(aquarium.getLastWaterChangeTime());
+        dto.setLastCleanedTime(aquarium.getLastCleanedTime());
+        dto.setUserId(aquarium.getUserId());
+        dto.setAquariumBackgroundId(aquarium.getAquariumBackgroundId());
+        dto.setWaterCondition(aquarium.getWaterCondition());
+        dto.setPollutionStatus(aquarium.getPollutionStatus());
+        dto.setFishes(fishList);
+
+        return dto;
     }
 
 
