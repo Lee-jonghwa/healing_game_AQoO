@@ -1,5 +1,6 @@
 package org.com.aqoo.domain.fish.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.fish.dto.*;
@@ -10,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -93,5 +96,28 @@ public class FishController {
                     .body(Map.of("error", "새로운 물고기 타입 추가에 실패했습니다."));
         }
     }
+
+    @PostMapping("/painting")
+    public ResponseEntity<String> uploadFish(
+            @RequestPart("fishData") String fishDataJson,
+            @RequestPart("image") MultipartFile imageFile) {
+
+        try {
+            // JSON 데이터 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            FishPaintingRequest fishData = objectMapper.readValue(fishDataJson, FishPaintingRequest.class);
+
+            // 이미지 저장 (예: EC2 /home/ubuntu/images/ 폴더에 저장)
+            String uploadDir = "/home/ubuntu/images/";
+            String filePath = uploadDir + imageFile.getOriginalFilename();
+            File destFile = new File(filePath);
+            imageFile.transferTo(destFile);
+
+            return ResponseEntity.ok("Upload successful: " + fishData.getFishName());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");
+        }
+    }
+
 
 }
