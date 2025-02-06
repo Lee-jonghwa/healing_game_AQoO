@@ -124,7 +124,7 @@ public class FishController {
 
             return ResponseEntity.ok("Upload successful: " + fishData.getFishName());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed" + e.getMessage());
         }
     }
 

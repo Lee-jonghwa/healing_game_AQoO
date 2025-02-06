@@ -160,7 +160,7 @@ public class FishService {
 
 
     public static File processImage(File inputFile, String outputFilePath) throws Exception {
-        String imageMagickPath = "/usr/bin/convert"; // ImageMagick이 설치된 경로
+        String imageMagickPath = "/usr/bin/convert-im6.q16"; // ImageMagick이 설치된 경로
         ConvertCmd cmd = new ConvertCmd();
         cmd.setSearchPath(imageMagickPath);  // 경로 지정 (생략 가능)
 
