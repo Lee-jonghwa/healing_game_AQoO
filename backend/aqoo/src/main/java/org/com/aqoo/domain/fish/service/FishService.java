@@ -163,7 +163,7 @@ public class FishService {
         ProcessBuilder processBuilder = new ProcessBuilder("/usr/bin/convert",
                 inputFile.getAbsolutePath(),  // 원본 이미지 파일 경로
                 "-filter", "point",           // 필터 적용 (point 필터)
-                "-resize", "70x70",           // 첫 번째 리사이즈 (70x70)
+                "-resize", "80x80",           // 첫 번째 리사이즈 (70x70)
                 "-resize", "1000x1000",       // 두 번째 리사이즈 (1000x1000)
                 outputFilePath);                // 출력 파일 경로
 
