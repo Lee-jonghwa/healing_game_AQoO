@@ -29,6 +29,9 @@ FROM eclipse-temurin:17-jdk as runtime
 # 작업 디렉토리 생성
 WORKDIR /app
 
+# ImageMagick 설치 추가 
+RUN apt-get update && apt-get install -y imagemagick && rm -rf /var/lib/apt/lists/*
+
 # 빌드된 JAR 파일 복사 (빌드 단계에서 생성된 JAR 파일을 실행 환경으로 이동)
 COPY --from=builder /app/build/libs/*.jar app.jar
 
