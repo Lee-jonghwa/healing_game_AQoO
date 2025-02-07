@@ -161,9 +161,11 @@ public class FishService {
     public static File processImage(File inputFile, String outputFilePath) throws Exception {
         // 이미지 변환을 위한 ProcessBuilder 객체 생성
         ProcessBuilder processBuilder = new ProcessBuilder("/usr/bin/convert",
-                inputFile.getAbsolutePath(),
-                "-resize", "1000x1000",
-                outputFilePath);
+                inputFile.getAbsolutePath(),  // 원본 이미지 파일 경로
+                "-filter", "point",           // 필터 적용 (point 필터)
+                "-resize", "70x70",           // 첫 번째 리사이즈 (70x70)
+                "-resize", "1000x1000",       // 두 번째 리사이즈 (1000x1000)
+                outputFilePath);                // 출력 파일 경로
 
         // 환경 변수 설정 (명시적으로 /usr/bin 경로를 PATH에 추가)
         processBuilder.environment().put("PATH", "/usr/bin:" + System.getenv("PATH"));
