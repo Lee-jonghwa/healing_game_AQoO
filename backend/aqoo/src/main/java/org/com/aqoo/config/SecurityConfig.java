@@ -21,8 +21,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                // 모든 요청에 대해 HTTPS를 강제 (HTTP로 요청하면 HTTPS로 리다이렉트)
-                .requiresChannel(channel -> channel.anyRequest().requiresSecure())
                 // CORS 설정
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
