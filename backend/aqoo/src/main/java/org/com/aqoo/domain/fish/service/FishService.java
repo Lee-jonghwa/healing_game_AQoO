@@ -127,11 +127,7 @@ public class FishService {
         Fish selectedFish = fishList.get(random.nextInt(fishList.size()));
 
         // 4. 물고기 저장
-        UserFish newone = new UserFish();
-        newone.setUserId(user.getId());
-        newone.setFishTypeId(selectedFish.getId());
-        UserFish userFish = userFishRepository.save(newone);
-
+        UserFish userFish = saveUserFish(user.getId(), selectedFish.getId());
         Integer userFishId = userFish.getId(); // 저장 후 ID 바로 가져오기
 
 
@@ -142,6 +138,14 @@ public class FishService {
                 selectedFish.getFishName(),
                 selectedFish.getRarity(),
                 imageUtils.toAbsoluteUrl(selectedFish.getImageUrl()));
+    }
+
+    public UserFish saveUserFish(String userId, Integer fishId){
+
+        UserFish newone = new UserFish();
+        newone.setUserId(userId);
+        newone.setFishTypeId(fishId);
+        return userFishRepository.save(newone);
     }
 
     @Transactional
@@ -163,7 +167,9 @@ public class FishService {
         ProcessBuilder processBuilder = new ProcessBuilder("/usr/bin/convert",
                 inputFile.getAbsolutePath(),  // 원본 이미지 파일 경로
                 "-filter", "point",           // 필터 적용 (point 필터)
-                "-resize", "80x80",           // 첫 번째 리사이즈 (70x70)
+                "-resize", "75x75",           // 첫 번째 리사이즈 (70x70)
+                "-colors", "12",
+                "+dither",
                 "-resize", "1000x1000",       // 두 번째 리사이즈 (1000x1000)
                 outputFilePath);                // 출력 파일 경로
 
