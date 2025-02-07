@@ -2,6 +2,7 @@ package org.com.aqoo.domain.notification.controller;
 
 import org.com.aqoo.domain.notification.dto.NotificationRequest;
 import org.com.aqoo.domain.notification.dto.NotificationResponse;
+import org.com.aqoo.domain.notification.dto.NotificationStatusRequest;
 import org.com.aqoo.domain.notification.dto.UserNotificationResponse;
 import org.com.aqoo.domain.notification.entity.Notification;
 import org.com.aqoo.domain.notification.service.NotificationService;
@@ -42,6 +43,28 @@ public class NotificationController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("error","알림 생성 중 오류가 발생했습니다."));
+        }
+    }
+
+    @PostMapping("/read")
+    public ResponseEntity<Object> readNotification(@RequestBody NotificationStatusRequest request) {
+        try {
+            String message = notificationService.readNotification(request.getNotificationId());
+            return ResponseEntity.ok().body(Map.of("message", message));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error","알림 읽음 처리 중 오류가 발생했습니다."));
+        }
+    }
+
+    @PostMapping("/delete")
+    public ResponseEntity<Object> deleteNotification(@RequestBody NotificationStatusRequest request) {
+        try {
+            String message = notificationService.deleteNotification(request.getNotificationId());
+            return ResponseEntity.ok().body(Map.of("message", message));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error","알림 삭제 중 오류가 발생했습니다."));
         }
     }
 }
