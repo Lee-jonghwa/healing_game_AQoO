@@ -43,7 +43,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         // 4. RefreshToken을 쿠키에 설정 (httpOnly, SameSite=None)
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                // .secure(true) // HTTPS 환경에서 활성화
+                 .secure(true) // HTTPS 환경에서 활성화
                 .sameSite("None")
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
