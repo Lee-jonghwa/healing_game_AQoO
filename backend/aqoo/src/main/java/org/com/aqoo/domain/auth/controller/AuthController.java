@@ -33,7 +33,7 @@ public class AuthController {
         // RefreshToken을 쿠키에 저장
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-//          .secure(true) // HTTPS 사용 시 활성화
+          .secure(true) // HTTPS 사용 시 활성화
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7일(단위: 초)
                 .build();
