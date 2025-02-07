@@ -48,10 +48,11 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .build();
+
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
         // 5. 프론트엔드 최종 리다이렉트 URL 설정
-        String frontendRedirectUrl = "http://i12e203.p.ssafy.io/login/social-login-callback";
+        String frontendRedirectUrl = "https://i12e203.p.ssafy.io/login/social-login-callback";
         String redirectUrl = frontendRedirectUrl +
                 "?accessToken=" + URLEncoder.encode(loginResponse.getAccessToken(), StandardCharsets.UTF_8) +
                 "&userId=" + URLEncoder.encode(loginResponse.getUserId(), StandardCharsets.UTF_8) +
