@@ -92,10 +92,6 @@ public class FriendRelationshipController {
             // 친구 검색
             List<FindResponse> friends = friendRelationshipService.findUsers(userId, keyword);
 
-            if (friends.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "검색된 사용자가 없습니다."));
-            }
-
             return ResponseEntity.ok(friends);
         } catch (Exception e) {
            e.printStackTrace();
