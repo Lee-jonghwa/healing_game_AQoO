@@ -106,6 +106,7 @@ public class FishController {
             // JSON 데이터 파싱
             ObjectMapper objectMapper = new ObjectMapper();
             FishPaintingRequest fishData = objectMapper.readValue(fishDataJson, FishPaintingRequest.class);
+            String imagePath = imageFile.getOriginalFilename();
 
             // 이미지 저장 경로 설정
             String uploadDir = "/home/ubuntu/images/";
@@ -115,15 +116,24 @@ public class FishController {
             }
 
             // 원본 이미지 저장
-            String originalFilePath = uploadDir + imageFile.getOriginalFilename();
+            String originalFilePath = uploadDir + "ori_" + imagePath;
             File originalFile = new File(originalFilePath);
             imageFile.transferTo(originalFile);  // 원본 이미지 저장
 
             // 변환된 이미지 파일명
-            String processedFilePath = uploadDir + "processed_" + imageFile.getOriginalFilename();
+            String processedFilePath = uploadDir + imagePath;
 
             // 이미지 변환 처리
             File processedFile = FishService.processImage(originalFile, processedFilePath);
+
+            //물고기 타입에 추가
+            FishTypeRequest request = new FishTypeRequest(fishData.getFishName(),
+                    "/" + imagePath,
+                    fishData.getUserId());
+            Fish newType = fishService.saveFishType(request);
+
+            //유저 물고기에 추가
+            fishService.saveUserFish(fishData.getUserId(), newType.getId());
 
             // 결과 반환
             return ResponseEntity.ok("Upload successful: " + fishData.getFishName());
