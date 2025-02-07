@@ -12,6 +12,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Component
@@ -27,34 +29,38 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
                                         Authentication authentication) throws IOException {
         System.out.println("✅ OAuth2 SuccessHandler 동작");
 
-        // 1. Authentication 객체에서 OAuth2User 정보 가져오기
+        // 1. OAuth2User 추출
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        // 2. 사용자 이메일 추출 (구글 / 네이버 대응)
+        // 2. 사용자 이메일 추출 (구글/네이버 대응)
         String email = extractEmailFromOAuth2User(oAuth2User);
         System.out.println("📧 Extracted Email: " + email);
 
-        // 3. JWT AccessToken & RefreshToken 생성
+        // 3. JWT 토큰(AccessToken) 및 RefreshToken 생성
         LoginResponse loginResponse = authService.handleOAuthLogin(email);
         String refreshToken = authService.getRefreshToken(email);
 
-        // 4. RefreshToken을 쿠키로 생성해서 담기
+        // 4. RefreshToken을 쿠키에 설정 (httpOnly, SameSite=None)
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-//                .secure(true) // HTTPS 사용 시 활성화
-                .sameSite("None") // 크로스 도메인 쿠키 전송 허용
+                // .secure(true) // HTTPS 환경에서 활성화
+                .sameSite("None")
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
                 .build();
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
-        // 5. JSON 응답으로 내려주기 (리다이렉트 X)
-        response.setContentType("application/json;charset=UTF-8");
-        objectMapper.writeValue(response.getWriter(), loginResponse);
+        // 5. 프론트엔드 최종 리다이렉트 URL 설정
+        String frontendRedirectUrl = "http://i12e203.p.ssafy.io/login/social-login-callback";
+        String redirectUrl = frontendRedirectUrl +
+                "?accessToken=" + URLEncoder.encode(loginResponse.getAccessToken(), StandardCharsets.UTF_8) +
+                "&userId=" + URLEncoder.encode(loginResponse.getUserId(), StandardCharsets.UTF_8) +
+                "&nickName=" + URLEncoder.encode(loginResponse.getNickName(), StandardCharsets.UTF_8);
+        response.sendRedirect(redirectUrl);
     }
 
     /**
-     * OAuth2User에서 이메일 정보 추출 (구글 / 네이버 대응)
+     * OAuth2User에서 이메일 정보 추출 (구글/네이버 대응)
      */
     private String extractEmailFromOAuth2User(OAuth2User oAuth2User) {
         if (oAuth2User.getAttribute("email") != null) {

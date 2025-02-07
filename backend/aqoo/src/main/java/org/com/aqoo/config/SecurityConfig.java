@@ -15,13 +15,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter; // 필터 주입
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomOAuth2AuthenticationSuccessHandler customOAuth2AuthenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                // CORS 설정
+                // CORS 설정: 프론트엔드 도메인을 허용 (쿠키 전송 포함)
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
                     configuration.setAllowedOrigins(List.of(
@@ -37,19 +37,14 @@ public class SecurityConfig {
                     configuration.setAllowCredentials(true);
                     return configuration;
                 }))
-                // CSRF 비활성화 (REST API의 경우)
+                // CSRF 비활성화 (API 서버이므로)
                 .csrf(csrf -> csrf.disable())
-                // 요청에 대한 인가 설정
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
+                // 모든 요청에 대해 인증 없이 접근 허용 (필요시 개별 엔드포인트별 접근 정책 추가)
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
+                // JWT 인증 필터 추가 (UsernamePasswordAuthenticationFilter 앞에)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                // OAuth2 로그인 성공 핸들러 설정
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(customOAuth2AuthenticationSuccessHandler)
-                )
+                // OAuth2 로그인 성공 시 커스텀 핸들러 적용
+                .oauth2Login(oauth2 -> oauth2.successHandler(customOAuth2AuthenticationSuccessHandler))
                 .build();
     }
 }
