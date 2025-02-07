@@ -1,0 +1,116 @@
+import React, { useState, useRef } from "react";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+
+const App = () => {
+    const [userData, setUserData] = useState({
+        username: "",
+        connected: false,
+        message: "",
+        roomId: "public", // 기본 방 ID
+    });
+    const [messages, setMessages] = useState([]);
+    const stompClientRef = useRef(null);
+
+    const connect = () => {
+        const sock = new SockJS("http://localhost:8080/ws");
+        stompClientRef.current = new Client({
+            webSocketFactory: () => sock,
+            debug: (str) => console.log(str), // 디버그 로그 출력
+            reconnectDelay: 5000, // 자동 재연결 딜레이 설정
+        });
+
+        stompClientRef.current.onConnect = () => {
+            console.log("Connected to WebSocket");
+            setUserData((prevState) => ({
+                ...prevState,
+                connected: true,
+            }));
+
+            // 방 구독
+            stompClientRef.current.subscribe(`/topic/${userData.roomId}`, onMessageReceived);
+
+            // 사용자 추가 메시지 전송
+            stompClientRef.current.publish({
+                destination: `/app/chat.addUser/${userData.roomId}`,
+                body: JSON.stringify({ sender: userData.username, type: "JOIN" }),
+            });
+        };
+
+        stompClientRef.current.onStompError = (frame) => {
+            console.error("STOMP error:", frame);
+            alert("WebSocket 연결에 문제가 발생했습니다.");
+        };
+
+        stompClientRef.current.activate();
+    };
+
+    const onMessageReceived = (payload) => {
+        const message = JSON.parse(payload.body);
+        setMessages((prevMessages) => [...prevMessages, message]);
+    };
+
+    const handleSendMessage = () => {
+        if (stompClientRef.current) {
+            const chatMessage = {
+                sender: userData.username,
+                content: userData.message,
+                type: "CHAT",
+            };
+            stompClientRef.current.publish({
+                destination: `/app/chat.sendMessage/${userData.roomId}`,
+                body: JSON.stringify(chatMessage),
+            });
+            setUserData({ ...userData, message: "" });
+        }
+    };
+
+    return (
+        <div>
+            {!userData.connected ? (
+                <div>
+                    <h1>Join Chat</h1>
+                    <input
+                        type="text"
+                        placeholder="Enter your name"
+                        value={userData.username}
+                        onChange={(e) =>
+                            setUserData({ ...userData, username: e.target.value })
+                        }
+                    />
+                    <input
+                        type="text"
+                        placeholder="Enter Room ID (default: public)"
+                        value={userData.roomId}
+                        onChange={(e) =>
+                            setUserData({ ...userData, roomId: e.target.value })
+                        }
+                    />
+                    <button onClick={connect}>Connect</button>
+                </div>
+            ) : (
+                <div>
+                    <h1>Chat Room: {userData.roomId}</h1>
+                    <div style={{ border: "1px solid #ccc", padding: "10px", height: "300px", overflowY: "scroll" }}>
+                        {messages.map((msg, index) => (
+                            <div key={index}>
+                                <b>{msg.sender}</b>: {msg.content}
+                            </div>
+                        ))}
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Type a message"
+                        value={userData.message}
+                        onChange={(e) =>
+                            setUserData({ ...userData, message: e.target.value })
+                        }
+                    />
+                    <button onClick={handleSendMessage}>Send</button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default App;
