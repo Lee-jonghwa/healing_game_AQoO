@@ -7,6 +7,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @RequiredArgsConstructor
@@ -17,18 +22,33 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable() // REST API이므로 CSRF 비활성화
+        return http
+                // CORS 기본 설정 사용
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration configuration = new CorsConfiguration();
+                    configuration.setAllowedOrigins(List.of("http://localhost:3000")); // 모든 출처 허용
+                    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
+                    configuration.setAllowCredentials(true);
+                    return configuration;
+                }))
+                // REST API 특성상 CSRF 비활성화
+                .csrf(csrf -> csrf.disable())
+                // 요청에 대한 인가 설정
                 .authorizeHttpRequests(authorize -> authorize
-                                .requestMatchers("/**").permitAll() // 테스트를 위해 모두 허용
-//                                .requestMatchers("/api/v1/auth/**", "/oauth2/**").permitAll() // 인증 API 경로는 모두 허용
-                                .anyRequest().authenticated() // 나머지 경로는 인증 필요
+                        // 테스트를 위해 모든 경로 허용 (실제 운영 환경에서는 필요한 경로만 허용하도록 수정)
+                        .requestMatchers("/**").permitAll()
+                        // 특정 API 경로만 허용할 경우 아래와 같이 설정 가능
+                        // .requestMatchers("/api/v1/auth/**", "/oauth2/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
+                // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // OAuth2 로그인 성공 핸들러 설정
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(customOAuth2AuthenticationSuccessHandler)
-                );
-        return http.build();
+                )
+                .build();
     }
 
 }

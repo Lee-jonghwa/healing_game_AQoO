@@ -1,12 +1,13 @@
 package org.com.aqoo.domain.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import org.com.aqoo.domain.aquarium.dto.AquariumCreateRequestDto;
+import org.com.aqoo.domain.aquarium.entity.Aquarium;
+import org.com.aqoo.domain.aquarium.service.AquariumService;
 import org.com.aqoo.domain.auth.dto.*;
 import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.repository.UserRepository;
-import org.com.aqoo.util.ImageUrlUtils;
 import org.com.aqoo.util.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +51,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final AquariumService aquariumService;
 
     //로그인 요청 서비스
     public LoginResponse login(LoginRequest request) {
@@ -78,7 +78,7 @@ public class AuthService {
 
         String message = "accessToken 발급 성공";
         // 응답 생성
-        return new LoginResponse(accessToken, message);
+        return new LoginResponse(accessToken, user.getId() , user.getNickname(), message);
     }
 
     // db에 저장된 리프레시 토큰 불러오기
@@ -98,11 +98,14 @@ public class AuthService {
     }
 
     //회원가입 요청 서비스
+    @Transactional
     public RegisterResponse register(RegisterRequest request) {
+        // 1. 사용자 존재 여부 확인 (동시성 문제는 DB의 유니크 제약조건으로 보완)
         if (userRepository.existsById(request.getId())) {
             throw new IllegalArgumentException("User ID already exists");
         }
 
+        // 2. 새 사용자 생성 (아직 어항 ID는 미설정)
         User newUser = User.builder()
                 .id(request.getId())
                 .pw(passwordEncoder.encode(request.getPw()))
@@ -110,9 +113,32 @@ public class AuthService {
                 .nickname(request.getNickname())
                 .build();
 
+        // 3. 사용자 먼저 저장 (DB에 영속화)
+        newUser = userRepository.save(newUser);
+        // (필요하다면 flush()를 통해 DB에 즉시 반영: userRepository.flush();)
+
+        // 4. 어항 생성 요청 DTO 작성
+        AquariumCreateRequestDto aquariumCreateRequestDto = new AquariumCreateRequestDto();
+        aquariumCreateRequestDto.setUserId(request.getId());
+        aquariumCreateRequestDto.setAquariumName(request.getId() + " 의 어항");
+        aquariumCreateRequestDto.setAquariumBack(1);
+
+        // 5. 어항 생성 및 반환값 활용
+        Aquarium createdAquarium = aquariumService.createAquarium(aquariumCreateRequestDto);
+        if (createdAquarium == null) {
+            throw new IllegalStateException("Aquarium creation failed");
+        }
+
+        // 6. 새 사용자에 메인 어항 ID 설정
+        newUser.setMainAquarium(createdAquarium.getId());
+
+        // 7. 변경된 사용자 정보 업데이트 (영속성 컨텍스트가 있으므로 트랜잭션 커밋 시 반영됨)
         userRepository.save(newUser);
+
         return new RegisterResponse("User registered successfully");
     }
+
+
 
     //토큰 재발급 요청 서비스
     public String refreshToken(String refreshToken) {
@@ -141,33 +167,55 @@ public class AuthService {
     // 소셜 로그인 서비스
     @Transactional
     public LoginResponse handleOAuthLogin(String email) {
-        // DB에서 사용자 정보 조회 (없으면 새 유저 생성)
+        // DB에서 사용자 정보 조회, 없으면 신규 생성
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             System.out.println("소셜 로그인 시도한 유저 회원가입");
 
+            // 임의 비밀번호 생성 및 암호화
             String rawPassword = PasswordGenerator.generatePasswordWithDateTime();
             String hashedPassword = passwordEncoder.encode(rawPassword);
 
+            // 신규 유저 생성 (아직 mainAquarium 설정 전)
             User newUser = User.builder()
-                    .id(email) // ID는 email과 동일
+                    .id(email)                     // ID는 email과 동일
                     .email(email)
-                    .pw(hashedPassword) // 소셜 로그인 사용자는 임의 비밀번호 부여
-                    .nickname(email.split("@")[0]) // 기본 닉네임 설정
+                    .pw(hashedPassword)             // 소셜 로그인 사용자는 임의 비밀번호 부여
+                    .nickname(email.split("@")[0])  // 기본 닉네임 설정
                     .build();
 
-            return userRepository.save(newUser); // 신규 사용자 저장 후 반환
+            // 1. 먼저 사용자 저장 → DB에 존재하는 상태가 되어 외래키 제약조건 충족
+            newUser = userRepository.save(newUser);
+            // (필요하다면 userRepository.flush()를 호출해 바로 반영할 수 있음)
+
+            // 2. 어항 생성 요청 DTO 작성
+            AquariumCreateRequestDto aquariumCreateRequestDto = new AquariumCreateRequestDto();
+            aquariumCreateRequestDto.setUserId(email);
+            aquariumCreateRequestDto.setAquariumName(email.split("@")[0] + "의 어항");
+            aquariumCreateRequestDto.setAquariumBack(1);
+
+            // 3. 어항 생성 및 반환값 활용
+            Aquarium createdAquarium = aquariumService.createAquarium(aquariumCreateRequestDto);
+            if (createdAquarium == null) {
+                throw new IllegalStateException("Aquarium creation failed");
+            }
+
+            // 4. 신규 유저에 메인 어항 ID 설정 후 다시 저장
+            newUser.setMainAquarium(createdAquarium.getId());
+            return userRepository.save(newUser);
         });
 
-        // JWT 생성
+        // JWT 토큰 생성
         String accessToken = jwtUtil.generateToken(user.getId(), "ACCESS");
         String refreshToken = jwtUtil.generateToken(user.getId(), "REFRESH");
 
-        // 리프레시 토큰 저장 후 DB 업데이트
+        // 리프레시 토큰 업데이트 (user는 이미 영속 상태이므로 변경만 해도 트랜잭션 커밋 시 반영됨)
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new LoginResponse(accessToken, "소셜 로그인 성공");
+        return new LoginResponse(accessToken, user.getId(), user.getNickname(), "소셜 로그인 성공");
     }
+
+
 
     // 아이디 중복 체크
     public boolean isUserIdAvailable(String userId) {
