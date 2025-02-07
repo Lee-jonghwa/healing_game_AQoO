@@ -26,7 +26,7 @@ public class SecurityConfig {
                 // CORS 기본 설정 사용
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.setAllowedOrigins(List.of("http://localhost:3000","https://i12e203.p.ssafy.io")); // 모든 출처 허용
+                    configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://i12e203.p.ssafy.io:3000")); // 모든 출처 허용
                     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
                     configuration.setAllowCredentials(true);
