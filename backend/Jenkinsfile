@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+
+    environment {
+        // Docker 이미지 이름 (빌드 후, 해당 이미지를 사용하여 배포)
+        DOCKER_IMAGE = "s12-webmobile1-sub1/s12p11e203:latest"
+        HOST_VOLUME_PATH = '/home/ubuntu/images'  // 호스트의 디렉터리 경로
+        CONTAINER_VOLUME_PATH = '/home/ubuntu/images' // 컨테이너의 디렉터리 경로
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // GitLab에서 코드를 체크아웃 (Jenkinsfile은 backend 폴더 내에 위치했다고 가정)
+                checkout scm
+            }
+        }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "Building Docker image: ${DOCKER_IMAGE}"
+                    // Dockerfile은 backend/aqoo 폴더에 있으므로 해당 디렉토리에서 빌드
+                    dir('backend/aqoo') {
+                        sh "docker build -t ${DOCKER_IMAGE} ."
+                    }
+                }
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                // 테스트 명령어 추가 가능 (예: 단위 테스트, 통합 테스트 등)
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                script {
+                    // 기존 컨테이너(backend)가 있으면 중지 및 삭제
+                    sh "docker stop backend || true"
+                    sh "docker rm backend || true"
+                    
+                    withCredentials([file(credentialsId: 'backend-env-file', variable: 'DEPLOY_ENV_FILE')]) {
+                        // /tmp 디렉토리는 일반적으로 쓰기 권한이 있으므로, 여기로 파일을 복사합니다.
+                        // cp 대신 cat 명령어를 사용하여 파일 내용을 /tmp/deploy.env에 작성합니다.
+                        sh "cat ${DEPLOY_ENV_FILE} > /tmp/deploy.env"
+                        echo ".env file copied to /tmp/deploy.env"
+                        
+                        // 배포: 새 컨테이너 실행 시 --env-file 옵션 사용하여 환경변수 주입
+                        sh """
+                           docker run -d \
+                           --name backend \
+                           --network host \
+                           -p 8089:8089 \
+                           -v ${HOST_VOLUME_PATH}:${CONTAINER_VOLUME_PATH} \
+                           --env-file /tmp/deploy.env \
+                           ${DOCKER_IMAGE}
+                        """
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+    }
+}
