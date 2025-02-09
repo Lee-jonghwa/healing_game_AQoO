@@ -13,7 +13,7 @@ import lombok.*;
 public class FriendRelationship {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     @Column(name = "friend1_id", length = 50)
     private String friend1Id;

@@ -91,11 +91,32 @@ public class AquariumService {
         dto.setLastCleanedTime(aquarium.getLastCleanedTime());
         dto.setUserId(aquarium.getUserId());
         dto.setAquariumBackgroundId(aquarium.getAquariumBackgroundId());
-        dto.setWaterCondition(aquarium.getWaterCondition());
-        dto.setPollutionStatus(aquarium.getPollutionStatus());
+        dto.setWaterStatus(getElapsedTimeScore(aquarium.getLastWaterChangeTime(), 24));
+        dto.setPollutionStatus(getElapsedTimeScore(aquarium.getLastCleanedTime(), 12));
+        dto.setFeedStatus(getElapsedTimeScore(aquarium.getLastFedTime(), 4));
         dto.setFishes(fishList);
 
         return dto;
+    }
+
+    // 마지막 어항 관리 시간 바탕으로 어항 상태 계산하기
+    // 밥 먹기 : 4시간, 물 갈기 : 24시간, 청소하기 : 12시간
+    public static int getElapsedTimeScore(LocalDateTime savedTime, int timeInterval) {
+        long hoursElapsed = Duration.between(savedTime, LocalDateTime.now()).toHours();
+
+        if (hoursElapsed < timeInterval) {
+            return 5;
+        } else if (hoursElapsed < 2 * timeInterval) {
+            return 4;
+        } else if (hoursElapsed < 3 * timeInterval) {
+            return 3;
+        } else if (hoursElapsed < 4 * timeInterval) {
+            return 2;
+        } else if (hoursElapsed < 5 * timeInterval) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
 
@@ -109,9 +130,9 @@ public class AquariumService {
         aquarium.setAquariumBackgroundId(requestDto.getAquariumBack());
 
         // 기본값 설정
-        aquarium.setLastFedTime(LocalDateTime.now());
-        aquarium.setLastWaterChangeTime(LocalDateTime.now());
-        aquarium.setLastCleanedTime(LocalDateTime.now());
+        aquarium.setLastFedTime(LocalDateTime.now().minusHours(5));
+        aquarium.setLastWaterChangeTime(LocalDateTime.now().minusHours(25));
+        aquarium.setLastCleanedTime(LocalDateTime.now().minusHours(13));
 
         return aquariumRepository.save(aquarium);
     }

@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class RelationshipIdRequest {
-    private Long relationshipId;
+    private int relationshipId;
 }

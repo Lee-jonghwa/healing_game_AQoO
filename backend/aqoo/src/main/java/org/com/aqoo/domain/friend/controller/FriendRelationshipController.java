@@ -28,9 +28,9 @@ public class FriendRelationshipController {
 
     //친구 요청 보내기
     @PostMapping("/request")
-    public ResponseEntity<Map<String, ?>> createFriendRequest(@RequestBody FriendRequest request) {
+    public ResponseEntity<Map<String, ?>> createFriendRequest(@RequestBody FriendRequest request) throws Exception {
         try {
-            Map<String, Long> response = friendRelationshipService.createFriendRelationship(request);
+            Map<String, Integer> response = friendRelationshipService.createFriendRelationship(request);
             return ResponseEntity.ok(response);
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
@@ -40,7 +40,7 @@ public class FriendRelationshipController {
 
     //친구 요청 수락하기
     @PostMapping("/accept")
-    public ResponseEntity<Map<String, String>> acceptFriendRequest(@RequestBody RelationshipIdRequest request) {
+    public ResponseEntity<Map<String, String>> acceptFriendRequest(@RequestBody RelationshipIdRequest request) throws Exception {
         String message = friendRelationshipService.acceptFriendRequest(request.getRelationshipId());
 
         if (message.equals("친구 요청 수락에 실패하였습니다.")) {
@@ -52,8 +52,8 @@ public class FriendRelationshipController {
 
     //친구 요청 거절하기 / 친구 삭제하기
     @DeleteMapping("/delete")
-    public ResponseEntity<Map<String, String>> deleteFriendRelationship(@RequestBody Map<String, Long> request) {
-        Long relationshipId = request.get("relationshipId");
+    public ResponseEntity<Map<String, String>> deleteFriendRelationship(@RequestBody Map<String, Integer> request) {
+        int relationshipId = request.get("relationshipId");
         String message = friendRelationshipService.deleteFriendRelationship(relationshipId);
 
         if (message.equals("친구 삭제하기에 성공했습니다.")) {
