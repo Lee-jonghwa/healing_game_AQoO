@@ -110,4 +110,10 @@ public class UserService {
     public boolean getAccountStatus(String userId){
         return userRepository.findById(userId).get().getStatus(); // 회원탈퇴시 false 리턴
     }
+
+    public void changeStatus(String userId){
+        User user = userRepository.findById(userId).get();
+        user.setStatus(!user.getStatus());
+        userRepository.save(user);
+    }
 }
