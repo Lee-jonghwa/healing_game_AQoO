@@ -1,10 +1,15 @@
 package org.com.aqoo.domain.chat.service;
 
+import org.com.aqoo.domain.chat.dto.InviteRequest;
 import org.com.aqoo.domain.chat.dto.RoomUpdate;
 import org.com.aqoo.domain.chat.model.ChatRoom;
+import org.com.aqoo.domain.push.dto.PushRequest;
+import org.com.aqoo.domain.push.service.PushService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,6 +25,9 @@ public class ChatRoomService {
     private final Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
     // messagingTemplate을 이용하여 각종 메시지를 브로드캐스트
     private final SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private PushService pushService;
 
     public ChatRoomService(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
@@ -147,6 +155,20 @@ public class ChatRoomService {
             return new RoomUpdate(roomId, "USER_LIST", userList);
         }
         return null;
+    }
+
+    public Map<String, String> inviteFriend(InviteRequest request) throws Exception {
+        //친구 요청 알람 보내기
+        String sender = request.getHostId();
+        String recipient = request.getGuestId();
+        PushRequest pushRequest =
+                new PushRequest(sender, recipient, "GAME INVITE", request.getRoomId());
+        pushService.sendPush(pushRequest);
+
+        // 결과를 Map으로 변환하여 반환
+        Map<String, String> response = new HashMap<>();
+        response.put("message", request.getGuestId() + "님을 초대했습니다.");
+        return response;
     }
 
 

@@ -64,7 +64,7 @@ public class PushService {
         List<UserToken> userTokens = userTokenRepository.findByUserId(request.getRecipientId());
 
         if (userTokens.isEmpty()) {
-            System.out.println("해당 유저의 등록된 FCM 토큰이 없습니다.");
+            System.out.println(request.getRecipientId() + " 유저의 등록된 FCM 토큰이 없습니다.");
             return;
         }
 
@@ -109,7 +109,8 @@ public class PushService {
 
     private static String generateFeedMessage(String data) {
         return switch (data) {
-            case "4" -> "어항의 먹이 상태가 아주 좋습니다.";
+            case "5" -> "어항의 먹이 상태가 아주 좋습니다.";
+            case "4" -> "어항의 먹이 상태가 좋습니다.";
             case "3" -> "어항의 먹이 상태가 양호합니다.";
             case "2" -> "어항의 먹이가 조금 부족합니다.";
             case "1" -> "어항의 먹이가 거의 없습니다. 먹이를 주세요!";
@@ -120,7 +121,8 @@ public class PushService {
 
     private static String generateCleanMessage(String data) {
         return switch (data) {
-            case "4" -> "어항이 아주 깨끗합니다.";
+            case "5" -> "어항이 아주 깨끗합니다.";
+            case "4" -> "어항이 깨끗합니다.";
             case "3" -> "어항이 깨끗한 상태입니다.";
             case "2" -> "어항이 조금 더러워지고 있습니다.";
             case "1" -> "어항이 많이 더러워졌습니다. 청소가 필요합니다!";
@@ -131,7 +133,8 @@ public class PushService {
 
     private static String generateWaterMessage(String data) {
         return switch (data) {
-            case "4" -> "어항의 물 상태가 아주 좋습니다.";
+            case "5" -> "어항의 물 상태가 아주 좋습니다.";
+            case "4" -> "어항의 물 상태가 좋습니다.";
             case "3" -> "어항의 물 상태가 양호합니다.";
             case "2" -> "어항의 물이 조금 탁해지고 있습니다.";
             case "1" -> "어항의 물이 많이 더러워졌습니다. 물을 갈아주세요!";

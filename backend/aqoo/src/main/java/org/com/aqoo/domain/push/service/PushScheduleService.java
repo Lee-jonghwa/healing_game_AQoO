@@ -28,8 +28,10 @@ public class PushScheduleService {
 
     // 어항 테이블을 2시간마다 조회하고 알림 처리하는 메서드
     // @Scheduled(fixedRate = 2 * 60 * 60 * 1000)  // 2시간마다 실행
-    @Scheduled(fixedRate = 2 * 60 * 1000) //2분마다 실행 테스트
+    @Scheduled(fixedRate = 5 * 60 * 1000) //5분마다 실행 테스트
     public void checkAndSendNotifications() {
+
+        System.out.println("어항 상태 점검 시간");
         LocalDateTime now = LocalDateTime.now();
         List<Aquarium> aquariums = aquariumRepository.findAll();  // 모든 어항 조회
 
@@ -48,6 +50,7 @@ public class PushScheduleService {
             int warningLevel = getWarningLevel(interval, intervals);
 
             try {
+                System.out.println(userId + "님께 " + type + " 푸시 알람을 전송합니다. 현재 상태는 : " + warningLevel);
                 pushService.sendPush(new PushRequest(null, userId, type, Integer.toString(warningLevel)));
             } catch (Exception e) {
                 throw new RuntimeException(e);
