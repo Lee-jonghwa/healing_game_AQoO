@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -129,6 +132,24 @@ public class ChatRoomService {
             // 최신 사용자 목록을 브로드캐스트
             broadcastUserList(roomId);
         }
+    }
+
+    public void handleDisconnect(String roomId, String userId) {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.schedule(() -> {
+            // 재연결하지 않았다면 최종적으로 사용자 제거
+            if (!isUserReconnected(roomId, userId)) {
+                removeMember(roomId, userId);
+                // 필요 시 leave 메시지 브로드캐스트 등 추가 작업 수행
+            }
+        }, 10, TimeUnit.SECONDS);
+    }
+
+    // 재연결 여부를 확인하는 예시 메소드 (구현은 상황에 맞게)
+    private boolean isUserReconnected(String roomId, String userId) {
+        // 예: 현재 채팅방의 멤버 목록에 userId가 있는지 확인
+        ChatRoom room = getRoom(roomId);
+        return room != null && room.getMembers().contains(userId);
     }
 
 
