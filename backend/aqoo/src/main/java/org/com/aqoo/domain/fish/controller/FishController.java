@@ -70,9 +70,14 @@ public class FishController {
 
     @GetMapping("/gotcha")
     public ResponseEntity<?> gotchaFish(@RequestHeader(value = "Cookie", required = false) String cookieHeader) {
-        if (cookieHeader == null || !cookieHeader.contains("refreshToken")) {
-            System.out.println("헤더가 없거나 쿠키가 없거나");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "헤더가 없거나 쿠키가 없거나"));
+        if (cookieHeader == null) {
+            System.out.println("헤더 없음");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "헤더 없음"));
+        }
+        
+        if(!cookieHeader.contains("refreshToken")){
+            System.out.println("쿠키 없음");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "쿠키 없음"));
         }
 
         // refreshToken 추출
