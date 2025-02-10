@@ -18,6 +18,8 @@ public class NotificationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+    @Autowired
+    private FirebaseService firebaseService;
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest notificationRequest) {

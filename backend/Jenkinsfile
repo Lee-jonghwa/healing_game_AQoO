@@ -6,6 +6,7 @@ pipeline {
         DOCKER_IMAGE = "s12-webmobile1-sub1/s12p11e203:latest"
         HOST_VOLUME_PATH = '/home/ubuntu/images'  // 호스트의 디렉터리 경로
         CONTAINER_VOLUME_PATH = '/home/ubuntu/images' // 컨테이너의 디렉터리 경로
+        SERVICE_ACCOUNT_KEY_PATH = '/home/ubuntu/keys/serviceAccountKey.json'  // 서비스 계정 키 경로
     }
 
     stages {
@@ -55,6 +56,7 @@ pipeline {
                            --network host \
                            -p 8089:8089 \
                            -v ${HOST_VOLUME_PATH}:${CONTAINER_VOLUME_PATH} \
+                           -v ${SERVICE_ACCOUNT_KEY_PATH}:/home/ubuntu/keys/serviceAccountKey.json \
                            --env-file /tmp/deploy.env \
                            ${DOCKER_IMAGE}
                         """
