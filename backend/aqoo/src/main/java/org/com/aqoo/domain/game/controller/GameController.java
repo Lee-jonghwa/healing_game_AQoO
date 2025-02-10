@@ -21,7 +21,7 @@ public class GameController {
      */
     @MessageMapping("/game.start")
     public void startGame(@Payload StartGameMessage message) {
-        System.out.println("game.start 수신");
+        System.out.println("game.start 수신: " + message);
         gameService.startGame(message.getRoomId());
     }
 
@@ -31,7 +31,7 @@ public class GameController {
      */
     @MessageMapping("/game.press")
     public void press(@Payload PressMessage message) {
-        System.out.println("game.press 수신");
+        System.out.println("game.press 수신: " + message);
         gameService.processPress(message);
     }
 }
