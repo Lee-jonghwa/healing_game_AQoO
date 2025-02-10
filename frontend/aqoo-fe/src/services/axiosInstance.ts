@@ -51,7 +51,7 @@ axiosInstance.interceptors.response.use(
 
           // ✅ 토큰 삭제 후 로그인 페이지로 이동
           localStorage.removeItem("accessToken");
-          window.location.href = "/login";
+          window.location.href = "/user/login";
           return Promise.reject(error);
         }
 
