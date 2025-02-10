@@ -1,6 +1,7 @@
 package org.com.aqoo.domain.auth.controller;
 
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.*;
@@ -23,7 +24,7 @@ public class AuthController {
 
     // 일반 로그인
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request,HttpServletResponse httpResponse) {
         // 로그인 처리
         LoginResponse response = authService.login(request);
 
@@ -31,17 +32,21 @@ public class AuthController {
         String refreshToken = authService.getRefreshToken(request.getId());
 
         // RefreshToken을 쿠키에 저장
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(true) // HTTPS 사용 시 활성화
-                .sameSite("None")
-                .path("/")
-                .maxAge(7 * 24 * 60 * 60) // 7일(단위: 초)
-                .build();
 
-        return ResponseEntity.ok()
-                .header("Set-Cookie", refreshTokenCookie.toString())
-                .body(response);
+//        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+//                .httpOnly(true)
+//          .secure(true) // HTTPS 사용 시 활성화
+//                .path("/")
+//                .maxAge(7 * 24 * 60 * 60) // 7일(단위: 초)
+//                .build();
+        Cookie refreshTokenCookie = new Cookie("refreshToken",refreshToken);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60);
+        refreshTokenCookie.setSecure(true);
+        refreshTokenCookie.setHttpOnly(true);
+        httpResponse.addCookie(refreshTokenCookie);
+
+        return ResponseEntity.ok().body(response);
     }
 
     // 로그아웃
