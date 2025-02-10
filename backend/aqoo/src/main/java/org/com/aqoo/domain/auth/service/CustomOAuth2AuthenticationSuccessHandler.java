@@ -46,19 +46,18 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         }
 
         LoginResponse loginResponse = null;
-        if(isNewUser == false){ // 기존 회원인 경우
+        if (isNewUser == false) { // 기존 회원인 경우
             String refreshToken = authService.getRefreshToken(email);
-            String accessToken =  jwtUtil.generateToken(email,"ACCESS");
+            String accessToken = jwtUtil.generateToken(email, "ACCESS");
             String nickName = userRepository.findById(email).get().getNickname();
 
-            loginResponse = new LoginResponse(accessToken,email,nickName,"기존 회원");
+            loginResponse = new LoginResponse(accessToken, email, nickName, "기존 회원");
             // RefreshToken 쿠키 설정
             setRefreshTokenCookie(response, refreshToken);
 
-        }else if(isNewUser == true){ // 신규 회원인 경우
-            // userId, isNew
-
-            loginResponse = new LoginResponse("",email,"","신규 회원");
+        } else if (isNewUser == true) { // 신규 회원인 경우
+            // 신규 회원인 경우 accessToken, nickName은 빈 문자열로 설정합니다.
+            loginResponse = new LoginResponse("", email, "", "신규 회원");
         }
 
         // 6. 최종 프론트엔드 리다이렉트 URL 생성 및 리다이렉트
@@ -118,20 +117,31 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
      */
     private String loginFrontendRedirectUrl(LoginResponse loginResponse, boolean isNewUser) {
         String frontendRedirectUrl = "https://i12e203.p.ssafy.io/user/login/social-login-callback";
-        // accessToken이 null이면 빈 문자열로 대체
-        String accessToken = loginResponse.getAccessToken() == null ? "" : loginResponse.getAccessToken();
-        if(isNewUser){
+
+        // 안전하게 인코딩하기 위한 헬퍼 메서드 사용
+        String accessToken = safeEncode(loginResponse.getAccessToken());
+        String userId = safeEncode(loginResponse.getUserId());
+        String nickName = safeEncode(loginResponse.getNickName());
+
+        if (isNewUser) {
             return frontendRedirectUrl +
-                    "&userId=" + URLEncoder.encode(loginResponse.getUserId(), StandardCharsets.UTF_8) +
-                    "&nickName=" + URLEncoder.encode(loginResponse.getNickName(), StandardCharsets.UTF_8) +
+                    "?userId=" + userId +
+                    "&nickName=" + nickName +
                     "&isNewUser=" + isNewUser;
         }
 
         return frontendRedirectUrl +
-                "?accessToken=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8) +
-                "&userId=" + URLEncoder.encode(loginResponse.getUserId(), StandardCharsets.UTF_8) +
-                "&nickName=" + URLEncoder.encode(loginResponse.getNickName(), StandardCharsets.UTF_8) +
+                "?accessToken=" + accessToken +
+                "&userId=" + userId +
+                "&nickName=" + nickName +
                 "&isNewUser=" + isNewUser;
     }
 
+    /**
+     * 안전하게 문자열을 인코딩하는 헬퍼 메서드.
+     * 입력이 null인 경우 빈 문자열로 대체합니다.
+     */
+    private String safeEncode(String s) {
+        return URLEncoder.encode(s == null ? "" : s, StandardCharsets.UTF_8);
+    }
 }
