@@ -1,6 +1,7 @@
 package org.com.aqoo.domain.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.com.aqoo.domain.auth.dto.EmailResponse;
 import org.com.aqoo.domain.auth.dto.EmailSendRequest;
 import org.com.aqoo.domain.auth.dto.EmailVerifyRequest;
@@ -16,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
@@ -46,6 +48,9 @@ public class EmailService {
         UUID uuid = UUID.randomUUID();
         String key = uuid.toString().substring(0, 7);
 
+        // 생성된 인증번호를 로그로 출력
+        log.info("Generated verification code for user {}: {}", request.getUserId(), key);
+
         // 📧 이메일 제목 설정
         String subject = "🐟 AQoO - 이메일 인증 코드";
 
@@ -71,7 +76,7 @@ public class EmailService {
         // 인증번호 저장 (나중에 검증할 때 사용)
         emailAuthMap.put(key, true);
 
-        // 5분 후에 인증번호 삭제 (만료)
+        // 3분 후에 인증번호 삭제 (만료)
         scheduler.schedule(() -> emailAuthMap.remove(key), 3, TimeUnit.MINUTES);
 
         return new EmailResponse("메일이 전송되었습니다.");
@@ -86,7 +91,7 @@ public class EmailService {
             throw new IllegalArgumentException("인증번호가 잘못되었습니다.");
         }
 
-        // 인증 성공 시, 맵에서 해당 이메일 삭제
+        // 인증 성공 시, 맵에서 해당 인증번호 삭제
         emailAuthMap.remove(request.getAuthPassword());
         return new EmailResponse("인증 성공");
     }
