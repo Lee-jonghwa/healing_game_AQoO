@@ -9,6 +9,6 @@ public class NotificationRequest {
 
     private String userId;
     private String type;
-    private int data;
+    private String data;
     private String message;
 }

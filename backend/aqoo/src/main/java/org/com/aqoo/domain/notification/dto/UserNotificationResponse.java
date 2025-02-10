@@ -9,12 +9,12 @@ public class UserNotificationResponse {
     private Long id;
     private String userId;
     private String type;
-    private int data;
+    private String data;
     private String message;
     private boolean status;
     private LocalDateTime createdAt;
 
-    public UserNotificationResponse(Long id, String userId, String type, int data, String message, boolean status, LocalDateTime createdAt) {
+    public UserNotificationResponse(Long id, String userId, String type, String data, String message, boolean status, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.type = type;
