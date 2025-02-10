@@ -72,7 +72,7 @@ public class AuthController {
     // 회원가입
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
-        if(request.isSocialJoin()){
+        if(request.isSocialLogin()){
             request.setPw(authService.getRandomPassword());
         }
         System.out.println("요청 : " + request.toString());
