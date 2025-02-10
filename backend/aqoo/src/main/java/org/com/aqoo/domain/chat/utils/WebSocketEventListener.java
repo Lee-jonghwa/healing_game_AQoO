@@ -78,21 +78,24 @@ public class WebSocketEventListener {
     }
 
     /**
-     * 클라이언트가 /user/queue/userList 구독을 시작할 때마다 최신 USER_LIST 메시지를 전송
-     * (구독이 완료된 클라이언트에게 사용자 목록을 재전송하여, 초기 연결 시 최신 데이터를 보장)
+     * 클라이언트가 "/topic/room/{roomId}"를 구독할 때마다 최신 USER_LIST 메시지를 브로드캐스트합니다.
+     * 이 방식은 새 구독자가 생기면 해당 채널을 구독 중인 모든 클라이언트가 사용자 목록을 갱신하도록 합니다.
      */
     @EventListener
     public void handleSessionSubscribeEvent(SessionSubscribeEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String destination = headerAccessor.getDestination();
-        if (destination != null && destination.equals("/user/queue/userList")) {
-            String sessionId = headerAccessor.getSessionId();
-            String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
-            if (roomId != null) {
-                logger.info("Session {} subscribed to {}. Sending updated USER_LIST for room {}", sessionId, destination, roomId);
+        // 목적지가 "/topic/room/{roomId}" 형식인지 확인합니다.
+        if (destination != null && destination.matches("/topic/room/[^/]+$")) {
+            // 예: destination = "/topic/room/a2cc0b87-c917-4bc8-9500-d4e379b89cc7"
+            String[] parts = destination.split("/");
+            if (parts.length >= 3) {
+                String roomId = parts[parts.length - 1];  // 마지막 부분이 roomId
+                logger.info("새 구독자가 생겼습니다. Destination: {}. 방 {}의 최신 사용자 목록을 브로드캐스트합니다.", destination, roomId);
                 RoomUpdate update = chatRoomService.createUserListUpdate(roomId);
                 if (update != null) {
-                    messagingTemplate.convertAndSendToUser(sessionId, "/queue/userList", update);
+                    // 모든 클라이언트가 해당 채널을 구독 중이므로, convertAndSend를 사용하여 브로드캐스트합니다.
+                    messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
                 }
             }
         }
