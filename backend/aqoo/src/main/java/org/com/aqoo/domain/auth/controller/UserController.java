@@ -2,6 +2,7 @@ package org.com.aqoo.domain.auth.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.*;
+import org.com.aqoo.domain.auth.service.AuthService;
 import org.com.aqoo.domain.auth.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,16 @@ public class UserController {
     public ResponseEntity<ExpUpResponse> increaseExp(@RequestBody ExpUpRequest request) {
         ExpUpResponse response = userService.increaseUserExp(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/isActivate/{email}")
+    public ResponseEntity<Boolean> getUserStatus(@PathVariable String email) {
+        return ResponseEntity.ok(userService.getAccountStatus(email));
+    }
+
+    @GetMapping("/isJoined/{email}")
+    public ResponseEntity<Boolean> isArleadyAccount(@PathVariable String email) {
+        return ResponseEntity.ok(userService.isAlreadyJoin(email));
     }
 
 }

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -167,8 +168,14 @@ public class AuthService {
     // 소셜 로그인 서비스
     @Transactional
     public LoginResponse handleOAuthLogin(String email) {
-        // DB에서 사용자 정보 조회, 없으면 신규 생성
-        User user = userRepository.findByEmail(email).orElseGet(() -> {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        User user;
+        boolean isNewUser = false;
+
+        if (optionalUser.isPresent()) {
+            user = optionalUser.get();
+        } else {
+            isNewUser = true;
             System.out.println("소셜 로그인 시도한 유저 회원가입");
 
             // 임의 비밀번호 생성 및 암호화
@@ -183,9 +190,8 @@ public class AuthService {
                     .nickname(email.split("@")[0])  // 기본 닉네임 설정
                     .build();
 
-            // 1. 먼저 사용자 저장 → DB에 존재하는 상태가 되어 외래키 제약조건 충족
+            // 1. 먼저 사용자 저장하여 DB에 반영 (외래키 제약조건 충족)
             newUser = userRepository.save(newUser);
-            // (필요하다면 userRepository.flush()를 호출해 바로 반영할 수 있음)
 
             // 2. 어항 생성 요청 DTO 작성
             AquariumCreateRequestDto aquariumCreateRequestDto = new AquariumCreateRequestDto();
@@ -201,21 +207,20 @@ public class AuthService {
 
             // 4. 신규 유저에 메인 어항 ID 설정 후 다시 저장
             newUser.setMainAquarium(createdAquarium.getId());
-            return userRepository.save(newUser);
-        });
+            user = userRepository.save(newUser);
+        }
 
         // JWT 토큰 생성
         String accessToken = jwtUtil.generateToken(user.getId(), "ACCESS");
         String refreshToken = jwtUtil.generateToken(user.getId(), "REFRESH");
 
-        // 리프레시 토큰 업데이트 (user는 이미 영속 상태이므로 변경만 해도 트랜잭션 커밋 시 반영됨)
+        // 리프레시 토큰 업데이트 (영속 상태인 user의 변경은 트랜잭션 커밋 시 반영됨)
         user.setRefreshToken(refreshToken);
         userRepository.save(user);
 
-        return new LoginResponse(accessToken, user.getId(), user.getNickname(), "소셜 로그인 성공");
+        String message = isNewUser ? "소셜 로그인 및 신규 회원가입 성공" : "소셜 로그인 성공";
+        return new LoginResponse(accessToken, user.getId(), user.getNickname(), message);
     }
-
-
 
     // 아이디 중복 체크
     public boolean isUserIdAvailable(String userId) {
