@@ -120,6 +120,12 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         String frontendRedirectUrl = "https://i12e203.p.ssafy.io/user/login/social-login-callback";
         // accessToken이 null이면 빈 문자열로 대체
         String accessToken = loginResponse.getAccessToken() == null ? "" : loginResponse.getAccessToken();
+        if(isNewUser){
+            return frontendRedirectUrl +
+                    "&userId=" + URLEncoder.encode(loginResponse.getUserId(), StandardCharsets.UTF_8) +
+                    "&nickName=" + URLEncoder.encode(loginResponse.getNickName(), StandardCharsets.UTF_8) +
+                    "&isNewUser=" + isNewUser;
+        }
 
         return frontendRedirectUrl +
                 "?accessToken=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8) +
