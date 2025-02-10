@@ -70,19 +70,11 @@ public class FriendRelationshipService {
         friendRelationship = friendRelationshipRepository.save(friendRelationship);
 
         //친구 요청 알람 보내기
-        String type = "FRIEND REQUEST";
-        String title = "친구 요청 알람";
-        String message = request.getFriendId() + "님께서 친구요청을 보냈습니다.";
-
+        String sender = request.getUserId();
+        String recipient = request.getFriendId();
         PushRequest pushRequest =
-                new PushRequest(type, title, message);
-        pushService.sendPush(request.getUserId(), pushRequest);
-
-        //친구 요청 알람 저장
-        NotificationRequest notification =
-                new NotificationRequest(request.getFriendId(), type, friendRelationship.getId(),
-                        message);
-        notificationService.createNotification(notification);
+                new PushRequest(sender, recipient, "FRIEND REQUEST", friendRelationship.getId());
+        pushService.sendPush(pushRequest);
 
         // 결과를 Map으로 변환하여 반환
         Map<String, Integer> response = new HashMap<>();
@@ -103,23 +95,12 @@ public class FriendRelationshipService {
             friendRelationship.setStatus("ACCEPTED");
             friendRelationshipRepository.save(friendRelationship);
 
-            String sender = userRepository.findById(friendRelationship.getFriend1Id()).get().getId();
-            String recipient = userRepository.findById(friendRelationship.getFriend2Id()).get().getId();
-
             //친구 수락 알람
-            String type = "FRIEND ACCEPT";
-            String title = "친구 수락 알람";
-            String message = recipient + "님께서 친구요청을 수락했습니다.";
-
+            String sender = friendRelationship.getFriend2Id();
+            String recipient = friendRelationship.getFriend1Id();
             PushRequest pushRequest =
-                    new PushRequest(type, title, message);
-            pushService.sendPush(sender, pushRequest);
-
-            //친구 수락 알람 저장
-            NotificationRequest notification =
-                    new NotificationRequest(sender, type, friendRelationship.getId(),
-                            message);
-            notificationService.createNotification(notification);
+                    new PushRequest(sender, recipient, "FRIEND ACCEPT", friendRelationship.getId());
+            pushService.sendPush(pushRequest);
 
             return "친구 요청이 성공적으로 수락되었습니다.";
         }

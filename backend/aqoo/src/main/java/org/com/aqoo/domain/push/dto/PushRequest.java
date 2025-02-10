@@ -6,7 +6,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PushRequest {
+    private String senderId;
+    private String recipientId;
     private String type;
-    private String title;
-    private String body;
+    private int data;
 }
