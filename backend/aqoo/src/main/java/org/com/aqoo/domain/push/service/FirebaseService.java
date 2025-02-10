@@ -14,15 +14,23 @@ public class FirebaseService {
         try {
             // 서비스 계정 키 파일 경로
             String serviceAccountPath = "/home/ubuntu/keys/serviceAccountKey.json";
-
-            // 서비스 계정 키 파일을 읽어오는 코드
+            String alterPath = "src/main/resources/serviceAccountKey.json";
             FileInputStream serviceAccount = null;
+
+            // 첫 번째 경로에서 서비스 계정 키 파일 읽기 시도
             try {
                 serviceAccount = new FileInputStream(serviceAccountPath);
                 System.out.println("서비스 계정 키 파일을 읽었습니다: " + serviceAccountPath);
             } catch (IOException e) {
-                System.out.println("파일을 읽는 중 오류가 발생했습니다: " + e.getMessage());
-                throw new RuntimeException("서비스 계정 키 파일을 열 수 없습니다.", e);
+                System.out.println("첫 번째 경로에서 파일을 읽는 중 오류가 발생했습니다: " + e.getMessage());
+                // 첫 번째 경로에서 실패하면 두 번째 경로로 시도
+                try {
+                    serviceAccount = new FileInputStream(alterPath);
+                    System.out.println("서비스 계정 키 파일을 읽었습니다: " + alterPath);
+                } catch (IOException ex) {
+                    System.out.println("두 번째 경로에서도 파일을 읽는 중 오류가 발생했습니다: " + ex.getMessage());
+                    throw new RuntimeException("서비스 계정 키 파일을 열 수 없습니다.", ex);
+                }
             }
 
             // GoogleCredentials 사용하여 FirebaseOptions 설정
