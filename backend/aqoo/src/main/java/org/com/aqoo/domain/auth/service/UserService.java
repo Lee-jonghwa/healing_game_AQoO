@@ -102,4 +102,12 @@ public class UserService {
         // 5. 응답 반환
         return new ExpUpResponse(newExp, expToNextLevel, expProgress, level, "경험치 상승 반영 완료");
     }
+
+    public boolean isAlreadyJoin(String email) {
+        return userRepository.existsById(email); // 이미 존재하는 이메일이면 true 리턴
+    }
+
+    public boolean getAccountStatus(String userId){
+        return userRepository.findById(userId).get().getStatus(); // 회원탈퇴시 false 리턴
+    }
 }
