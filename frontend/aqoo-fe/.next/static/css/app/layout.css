@@ -513,11 +513,11 @@ video {
 .-top-1 {
   top: -0.25rem;
 }
-.bottom-10 {
-  bottom: 2.5rem;
-}
 .bottom-4 {
   bottom: 1rem;
+}
+.bottom-\[-50px\] {
+  bottom: -50px;
 }
 .bottom-\[130px\] {
   bottom: 130px;
@@ -534,8 +534,8 @@ video {
 .left-4 {
   left: 1rem;
 }
-.left-7 {
-  left: 1.75rem;
+.left-5 {
+  left: 1.25rem;
 }
 .left-\[100px\] {
   left: 100px;
@@ -546,9 +546,6 @@ video {
 .right-3 {
   right: 0.75rem;
 }
-.right-7 {
-  right: 1.75rem;
-}
 .right-\[100px\] {
   right: 100px;
 }
@@ -557,6 +554,24 @@ video {
 }
 .top-4 {
   top: 1rem;
+}
+.top-5 {
+  top: 1.25rem;
+}
+.bottom-5 {
+  bottom: 1.25rem;
+}
+.top-\[-40px\] {
+  top: -40px;
+}
+.bottom-10 {
+  bottom: 2.5rem;
+}
+.right-10 {
+  right: 2.5rem;
+}
+.right-5 {
+  right: 1.25rem;
 }
 .z-10 {
   z-index: 10;
@@ -659,6 +674,9 @@ video {
 .h-\[600px\] {
   height: 600px;
 }
+.h-\[60px\] {
+  height: 60px;
+}
 .h-auto {
   height: auto;
 }
@@ -667,6 +685,12 @@ video {
 }
 .h-screen {
   height: 100vh;
+}
+.h-\[500px\] {
+  height: 500px;
+}
+.h-\[80px\] {
+  height: 80px;
 }
 .max-h-\[200px\] {
   max-height: 200px;
@@ -716,6 +740,9 @@ video {
 .w-96 {
   width: 24rem;
 }
+.w-\[250px\] {
+  width: 250px;
+}
 .w-\[300px\] {
   width: 300px;
 }
@@ -733,6 +760,9 @@ video {
 }
 .w-screen {
   width: 100vw;
+}
+.w-\[800px\] {
+  width: 800px;
 }
 .max-w-2xl {
   max-width: 42rem;
@@ -757,6 +787,9 @@ video {
 }
 .-translate-x-1\/2 {
   --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+.transform {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 .transform-gpu {
@@ -1003,11 +1036,17 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(250 204 21 / var(--tw-bg-opacity, 1));
 }
+.bg-opacity-30 {
+  --tw-bg-opacity: 0.3;
+}
 .bg-opacity-50 {
   --tw-bg-opacity: 0.5;
 }
 .bg-opacity-70 {
   --tw-bg-opacity: 0.7;
+}
+.bg-opacity-80 {
+  --tw-bg-opacity: 0.8;
 }
 .bg-gradient-to-r {
   background-image: linear-gradient(to right, var(--tw-gradient-stops));
@@ -1067,6 +1106,10 @@ video {
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
+}
+.px-5 {
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
 }
 .px-6 {
   padding-left: 1.5rem;

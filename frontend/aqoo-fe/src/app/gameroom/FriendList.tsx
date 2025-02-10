@@ -4,7 +4,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
-import { usersState } from "@/store/participantAtom";
+import { usersState, User } from "@/store/participantAtom";
 
 interface Friend {
   id: string; // 친구 관계 아이디
@@ -12,11 +12,6 @@ interface Friend {
   nickname: string;
   level: number;
   mainFishImage?: string | null;
-}
-
-interface User extends Friend {
-  ready: boolean;
-  isHost: boolean;
 }
 
 export default function FriendList() {
@@ -49,7 +44,7 @@ export default function FriendList() {
       .get(`${API_BASE_URL}/friends/${loggedInUser}`)
       .then((response) => {
         console.log("loggedInUser", loggedInUser);
-        console.log("✅ 친구 목록 조회 성공:", response.data);
+        console.log("친구 목록 조회 성공:", response.data);
         setMyFriends(response.data.friends);
       })
       .catch((error) => {
@@ -63,6 +58,8 @@ export default function FriendList() {
   
     const newUser: User = {
       ...friend,
+      // mainFishImage가 null일 경우 undefined로 변환
+      mainFishImage: friend.mainFishImage ?? undefined,
       ready: false,
       isHost: false,
     };
@@ -112,7 +109,7 @@ export default function FriendList() {
                 className={`px-3 py-1 text-sm rounded-md ${
                   users.some((u) => u.friendId === friend.friendId)
                     ? "bg-white text-black border border-black shadow-[2px_2px_0_rgba(0,0,0,0.3)] cursor-default"
-                    : "bg-white text-black border border-black cursor-default"
+                    : "bg-white text-black border border-black cursor-pointer"
                 }`}
               >
                 {users.some((u) => u.friendId === friend.friendId) ? "✔" : "추가"}
