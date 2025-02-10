@@ -9,5 +9,5 @@ public class PushRequest {
     private String senderId;
     private String recipientId;
     private String type;
-    private int data;
+    private String data;
 }

@@ -48,6 +48,18 @@ public class PushService {
         String title = getMessageTitle(type);
         String body = getMessageBody(type, request.getSenderId(), request.getData());
 
+        // 알람 저장
+        if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
+            String recipient = request.getRecipientId();
+            String data = request.getData();
+
+            NotificationRequest notification =
+                    new NotificationRequest(recipient, type, data, body);
+
+            notificationService.createNotification(notification);
+        }
+
+        // push 알람 보내기
         // userId로 모든 FCM 토큰 조회
         List<UserToken> userTokens = userTokenRepository.findByUserId(request.getRecipientId());
 
@@ -62,24 +74,12 @@ public class PushService {
                     .putData("type", type)
                     .putData("title", title)
                     .putData("body", body)
-                    .putData("click_action", "https://i12e203.p.ssafy.io/main") //게임 메인 페이지로 이동
+                    .putData("click_action", "https://i12e12, 24, 203.p.ssafy.io/main") //게임 메인 페이지로 이동
                     .build();
 
             // FCM으로 메시지 전송
             String response = FirebaseMessaging.getInstance().send(message);
             System.out.println("FCM 메시지 전송 성공 (토큰: " + userToken.getToken() + "): " + response);
-        }
-
-        if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
-            //친구 수락 알람 저장
-
-            String recipient = request.getRecipientId();
-            int data = request.getData();
-
-            NotificationRequest notification =
-                    new NotificationRequest(recipient, type, data, body);
-
-            notificationService.createNotification(notification);
         }
     }
 
@@ -95,7 +95,7 @@ public class PushService {
         };
     }
 
-    public static String getMessageBody(String type, String sender, Integer data) {
+    public static String getMessageBody(String type, String sender, String data) {
         return switch (type) {
             case "FRIEND REQUEST" -> sender + "님께서 친구를 요청하였습니다.";
             case "FRIEND ACCEPT" -> sender + "님께서 친구를 수락하였습니다.";
@@ -107,35 +107,35 @@ public class PushService {
         };
     }
 
-    private static String generateFeedMessage(int data) {
+    private static String generateFeedMessage(String data) {
         return switch (data) {
-            case 4 -> "어항의 먹이 상태가 아주 좋습니다.";
-            case 3 -> "어항의 먹이 상태가 양호합니다.";
-            case 2 -> "어항의 먹이가 조금 부족합니다.";
-            case 1 -> "어항의 먹이가 거의 없습니다. 먹이를 주세요!";
-            case 0 -> "어항의 먹이가 없습니다! 빨리 먹이를 주세요!";
+            case "4" -> "어항의 먹이 상태가 아주 좋습니다.";
+            case "3" -> "어항의 먹이 상태가 양호합니다.";
+            case "2" -> "어항의 먹이가 조금 부족합니다.";
+            case "1" -> "어항의 먹이가 거의 없습니다. 먹이를 주세요!";
+            case "0" -> "어항의 먹이가 없습니다! 빨리 먹이를 주세요!";
             default -> "어항의 먹이 상태를 확인할 수 없습니다.";
         };
     }
 
-    private static String generateCleanMessage(int data) {
+    private static String generateCleanMessage(String data) {
         return switch (data) {
-            case 4 -> "어항이 아주 깨끗합니다.";
-            case 3 -> "어항이 깨끗한 상태입니다.";
-            case 2 -> "어항이 조금 더러워지고 있습니다.";
-            case 1 -> "어항이 많이 더러워졌습니다. 청소가 필요합니다!";
-            case 0 -> "어항이 매우 지저분합니다! 지금 바로 청소하세요!";
+            case "4" -> "어항이 아주 깨끗합니다.";
+            case "3" -> "어항이 깨끗한 상태입니다.";
+            case "2" -> "어항이 조금 더러워지고 있습니다.";
+            case "1" -> "어항이 많이 더러워졌습니다. 청소가 필요합니다!";
+            case "0" -> "어항이 매우 지저분합니다! 지금 바로 청소하세요!";
             default -> "어항의 청소 상태를 확인할 수 없습니다.";
         };
     }
 
-    private static String generateWaterMessage(int data) {
+    private static String generateWaterMessage(String data) {
         return switch (data) {
-            case 4 -> "어항의 물 상태가 아주 좋습니다.";
-            case 3 -> "어항의 물 상태가 양호합니다.";
-            case 2 -> "어항의 물이 조금 탁해지고 있습니다.";
-            case 1 -> "어항의 물이 많이 더러워졌습니다. 물을 갈아주세요!";
-            case 0 -> "어항의 물이 매우 오염되었습니다! 당장 물을 갈아주세요!";
+            case "4" -> "어항의 물 상태가 아주 좋습니다.";
+            case "3" -> "어항의 물 상태가 양호합니다.";
+            case "2" -> "어항의 물이 조금 탁해지고 있습니다.";
+            case "1" -> "어항의 물이 많이 더러워졌습니다. 물을 갈아주세요!";
+            case "0" -> "어항의 물이 매우 오염되었습니다! 당장 물을 갈아주세요!";
             default -> "어항의 물 상태를 확인할 수 없습니다.";
         };
     }
