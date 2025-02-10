@@ -60,8 +60,10 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             loginResponse = new LoginResponse("", email, "", "신규 회원");
         }
 
+
         // 6. 최종 프론트엔드 리다이렉트 URL 생성 및 리다이렉트
         String redirectUrl = loginFrontendRedirectUrl(loginResponse, isNewUser);
+        System.out.println("OAuth 로그인 응답 : " + redirectUrl );
         response.sendRedirect(redirectUrl);
     }
 
