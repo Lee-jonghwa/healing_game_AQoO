@@ -5,84 +5,87 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.com.aqoo.domain.game.dto.PressMessage;
 import org.com.aqoo.domain.game.dto.RoomResponse;
-import org.com.aqoo.domain.game.entity.GameRoom;
 import org.com.aqoo.domain.game.entity.Player;
+import org.com.aqoo.domain.chat.service.ChatRoomService;
+import org.com.aqoo.domain.chat.model.ChatRoom;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @AllArgsConstructor
 public class GameService {
 
-    // 메모리 내에서 게임방을 관리 (roomId를 키로 사용하는 ConcurrentHashMap)
-    private final Map<String, GameRoom> roomMap = new ConcurrentHashMap<>();
-
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatRoomService chatRoomService;
+
+    // 각 방의 점수를 관리하는 Map: roomId -> (userName -> score)
+    private final Map<String, Map<String, Integer>> scoreMap = new ConcurrentHashMap<>();
 
     /**
-     * 방 생성: 고유 roomId를 생성하고, 최초 생성한 플레이어를 추가 후 메모리에 저장
-     */
-    @Transactional
-    public GameRoom createRoom(String userName) {
-        String roomId = UUID.randomUUID().toString().substring(0, 8);  // 간단한 8자리 roomId 생성
-        GameRoom room = new GameRoom(roomId, false);
-        // 최초 플레이어 추가
-        room.addPlayer(new Player(userName, 0));
-        roomMap.put(roomId, room);
-        System.out.println("room:"+ roomMap.get(roomId));
-        return room;
-    }
-
-    /**
-     * 방 입장: 기존 방에 플레이어 추가 후 업데이트
-     */
-    @Transactional
-    public GameRoom joinRoom(String roomId, String userName) {
-        GameRoom room = roomMap.get(roomId);
-        if (room != null) {
-            room.addPlayer(new Player(userName, 0));
-        }
-        return room;
-    }
-
-    /**
-     * 게임 시작: 해당 방의 상태를 변경 후, 게임 시작 이벤트를 브로드캐스트
+     * 게임 시작: 채팅방에 참여한 모든 사용자를 게임 참가자로 간주하고 초기 점수를 0으로 설정한 후,
+     * "GAME_STARTED" 메시지와 함께 플레이어 목록을 브로드캐스트합니다.
      */
     @Transactional
     public void startGame(String roomId) {
-        GameRoom room = roomMap.get(roomId);
-        System.out.println("room: " + room);
-        if (room != null && !room.isGameStarted()) {
+        log.info("startGame() called for roomId: {}", roomId);
+        ChatRoom chatRoom = chatRoomService.getRoom(roomId);
+        if (chatRoom != null) {
+            Map<String, Integer> roomScore = new ConcurrentHashMap<>();
+            chatRoom.getMembers().forEach(member -> roomScore.put(member, 0));
+            scoreMap.put(roomId, roomScore);
 
-            room.setGameStarted(true);
-            // 방의 모든 클라이언트에게 게임 시작 이벤트 전달
-            System.out.println("방의 모든 클라이언트에게 게임 시작 이벤트 전달");
-            messagingTemplate.convertAndSend("/topic/room/" + roomId,
-                    new RoomResponse(room.getRoomId(), room.getPlayers(), "GAME_STARTED"));
+            List<Player> players = roomScore.entrySet().stream()
+                    .map(e -> new Player(e.getKey(), e.getValue()))
+                    .collect(Collectors.toList());
+
+            RoomResponse response = new RoomResponse(roomId, players, "GAME_STARTED");
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+            log.info("Broadcasted GAME_STARTED message for roomId: {}", roomId);
+        } else {
+            log.error("ChatRoom not found for roomId: {}", roomId);
         }
     }
 
     /**
-     * 스페이스바 연타 이벤트 처리: 해당 플레이어의 점수를 업데이트 후 브로드캐스트
+     * 스페이스바 연타 이벤트 처리: 받은 PressMessage를 기반으로 해당 플레이어의 점수를 업데이트한 후,
+     * 업데이트된 플레이어 목록을 생성하고, "PRESS_UPDATED" 또는 "GAME_ENDED" 메시지를 브로드캐스트합니다.
      */
     @Transactional
     public void processPress(PressMessage pressMessage) {
-        GameRoom room = roomMap.get(pressMessage.getRoomId());
-        if (room != null && room.isGameStarted()) {
-            for (Player player : room.getPlayers()) {
-                if (player.getUserName().equals(pressMessage.getUserName())) {
-                    player.addPressCount(pressMessage.getPressCount());
-                    break;
-                }
+        String roomId = pressMessage.getRoomId();
+        String user = pressMessage.getUserName();
+        int press = pressMessage.getPressCount();
+
+        log.info("processPress() called: roomId={}, userName={}, pressCount={}", roomId, user, press);
+
+        Map<String, Integer> roomScore = scoreMap.get(roomId);
+        if (roomScore != null) {
+            roomScore.merge(user, press, Integer::sum);
+            int currentScore = roomScore.get(user);
+            log.info("Updated score for {}: {}", user, currentScore);
+
+            List<Player> players = roomScore.entrySet().stream()
+                    .map(e -> new Player(e.getKey(), e.getValue()))
+                    .collect(Collectors.toList());
+
+            if (currentScore >= 100) {
+                RoomResponse response = new RoomResponse(roomId, players, "GAME_ENDED");
+                // 필요 시 response.setWinner(user);
+                messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+                log.info("Broadcasted GAME_ENDED message for roomId: {} with winner: {}", roomId, user);
+            } else {
+                RoomResponse response = new RoomResponse(roomId, players, "PRESS_UPDATED");
+                messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+                log.info("Broadcasted PRESS_UPDATED message for roomId: {}", roomId);
             }
-            // 업데이트된 방 상태를 해당 방 구독자에게 브로드캐스트
-            messagingTemplate.convertAndSend("/topic/room/" + room.getRoomId(),
-                    new RoomResponse(room.getRoomId(), room.getPlayers(), "PRESS_UPDATED"));
+        } else {
+            log.error("No score map found for roomId: {}", roomId);
         }
     }
 }

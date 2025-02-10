@@ -1,16 +1,19 @@
 package org.com.aqoo.domain.game.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.com.aqoo.domain.game.entity.Player;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 public class RoomResponse {
-    // 클라이언트에게 전송할 방 상태 정보
     private String roomId;
     private List<Player> players;
-    private String message;  // 예: "ROOM_CREATED", "GAME_STARTED", "PRESS_UPDATED" 등
+    private String message;
+    // 필요 시 승리자를 명시하기 위한 필드를 추가할 수 있습니다.
+    // private String winner;
 }

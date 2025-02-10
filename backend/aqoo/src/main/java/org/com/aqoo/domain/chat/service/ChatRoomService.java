@@ -1,19 +1,26 @@
 package org.com.aqoo.domain.chat.service;
 
+import org.com.aqoo.domain.chat.dto.RoomUpdate;
 import org.com.aqoo.domain.chat.model.ChatRoom;
-import org.com.aqoo.util.ImageUrlUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatRoomService {
 
     private final Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
+    // messagingTemplate을 이용하여 각종 메시지를 브로드캐스트
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public ChatRoomService(SimpMessagingTemplate messagingTemplate) {
+        this.messagingTemplate = messagingTemplate;
+    }
 
     /** 모든 채팅방 목록 조회 */
     public List<ChatRoom> getAllRooms() {
@@ -25,6 +32,7 @@ public class ChatRoomService {
         String roomId = UUID.randomUUID().toString();
         ChatRoom room = new ChatRoom(roomId, ownerId);
         chatRooms.put(roomId, room);
+        System.out.println("Created room: " + roomId);
         return room;
     }
 
@@ -37,14 +45,27 @@ public class ChatRoomService {
     public void addMember(String roomId, String userId) {
         chatRooms.computeIfAbsent(roomId, k -> new ChatRoom(roomId, userId))
                 .addMember(userId);
+        broadcastUserList(roomId);
     }
 
     /** 채팅방 멤버 제거 */
     public void removeMember(String roomId, String userId) {
         ChatRoom room = chatRooms.get(roomId);
         if (room != null) {
-            room.removeMember(userId);
+            // 방장이 퇴장한 경우, 남아 있는 멤버 중 한 명을 새 방장으로 지정 (예: 첫 번째 멤버)
+            if (userId.equals(room.getOwnerId())) {
+                room.removeMember(userId);
+                if (!room.getMembers().isEmpty()) {
+                    String newOwner = room.getMembers().iterator().next();
+                    room.setOwnerId(newOwner);
+                }
+            } else {
+                room.removeMember(userId);
+            }
         }
+        // 준비 상태에서도 해당 사용자 제거
+        unmarkReady(roomId, userId);
+        broadcastUserList(roomId);
     }
 
     /** 채팅방이 비었는지 확인 */
@@ -58,5 +79,57 @@ public class ChatRoomService {
         chatRooms.remove(roomId);
         System.out.println("채팅방 " + roomId + " 삭제됨");
     }
+
+    /** 준비 상태 표시: 해당 채팅방에서 사용자가 준비되었다고 표시 */
+    public void markReady(String roomId, String userId) {
+        ChatRoom room = chatRooms.get(roomId);
+        if (room != null) {
+            room.markReady(userId);
+            broadcastUserList(roomId);
+        }
+    }
+
+    /** 준비 상태 해제 */
+    public void unmarkReady(String roomId, String userId) {
+        ChatRoom room = chatRooms.get(roomId);
+        if (room != null) {
+            room.unmarkReady(userId);
+            broadcastUserList(roomId);
+        }
+    }
+
+    /** 모든 멤버가 준비되었는지 확인 */
+    public boolean areAllReady(String roomId) {
+        ChatRoom room = chatRooms.get(roomId);
+        return room != null && room.areAllReady();
+    }
+
+    /** 사용자 목록 업데이트를 브로드캐스트 */
+    private void broadcastUserList(String roomId) {
+        ChatRoom room = chatRooms.get(roomId);
+        if (room != null) {
+            List<RoomUpdate.UserInfo> userList = room.getMembers().stream()
+                    .map(userName -> {
+                        boolean isHost = userName.equals(room.getOwnerId());
+                        boolean ready = room.getReadyMembers().contains(userName);
+                        return new RoomUpdate.UserInfo(userName, ready, isHost);
+                    })
+                    .collect(Collectors.toList());
+
+            RoomUpdate update = new RoomUpdate(roomId, "USER_LIST", userList);
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
+        }
+    }
+
+    /** 게임 종료 후 사용자 준비 상태 전원 해제 */
+    public void clearReadyStatus(String roomId) {
+        ChatRoom room = getRoom(roomId);
+        if (room != null) {
+            room.getReadyMembers().clear();
+            // 최신 사용자 목록을 브로드캐스트
+            broadcastUserList(roomId);
+        }
+    }
+
 
 }
