@@ -31,24 +31,18 @@ public class AuthController {
 
         // RefreshToken을 DB에서 가져오기
         String refreshToken = authService.getRefreshToken(request.getId());
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(true)             // HTTPS 환경에서만 전송
+                .path("/")                // 전체 도메인에서 유효
+                .maxAge(7 * 24 * 60 * 60)  // 7일
+                .sameSite("None")         // 크로스 사이트 요청에도 쿠키 전송 허용
+                .build();
 
-        // RefreshToken을 쿠키에 저장
+        // 쿠키 헤더 추가
+        httpResponse.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
-//        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-//                .httpOnly(true)
-//          .secure(true) // HTTPS 사용 시 활성화
-//                .path("/")
-//                .maxAge(7 * 24 * 60 * 60) // 7일(단위: 초)
-//                .build();
-        Cookie refreshTokenCookie = new Cookie("refreshToken",refreshToken);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60);
-        refreshTokenCookie.setSecure(true);
-        refreshTokenCookie.setHttpOnly(true);
-        httpResponse.setHeader("Set-Cookie", "Secure; SameSite=None");
-        httpResponse.addCookie(refreshTokenCookie);
-
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(response);
     }
 
     // 로그아웃
