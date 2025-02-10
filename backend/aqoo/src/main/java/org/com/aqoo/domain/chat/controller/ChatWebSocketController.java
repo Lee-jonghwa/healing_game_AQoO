@@ -90,4 +90,11 @@ public class ChatWebSocketController {
         // 선택적으로, clear 이후 사용자 목록 업데이트 메시지(USER_LIST)를 브로드캐스트할 수 있음
     }
 
+    /** 채팅방에서 사용자 추방 (Kick) 처리 */
+    @MessageMapping("/chat.kickUser")
+    public void kickUser(ChatMessageDto chatMessage, SimpMessageHeaderAccessor headerAccessor) {
+        System.out.println("chat.kickUser 실행");
+        // chatMessage의 sender가 방장임을 전제하고, targetUser를 추방 대상으로 지정
+        chatRoomService.kickUser(chatMessage.getRoomId(), chatMessage.getTargetUser(), chatMessage.getSender());
+    }
 }

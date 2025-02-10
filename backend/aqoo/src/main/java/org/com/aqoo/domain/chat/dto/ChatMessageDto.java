@@ -14,11 +14,13 @@ public class ChatMessageDto {
     private String sender;
     private String content;
     private MessageType type;
+    private String targetUser;
 
     public enum MessageType {
         CHAT,
         JOIN,
         LEAVE,
-        READY
+        READY,
+        USER_KICKED
     }
 }

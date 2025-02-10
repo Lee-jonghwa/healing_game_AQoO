@@ -65,7 +65,8 @@ public class WebSocketEventListener {
                             roomId,
                             userId,
                             userId + "님이 연결이 끊겼습니다.",
-                            ChatMessageDto.MessageType.LEAVE
+                            ChatMessageDto.MessageType.LEAVE,
+                            ""
                     );
                     messagingTemplate.convertAndSend("/topic/" + roomId, leaveMessage);
 
