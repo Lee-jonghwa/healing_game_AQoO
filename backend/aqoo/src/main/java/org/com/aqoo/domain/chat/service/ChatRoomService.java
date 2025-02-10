@@ -136,6 +136,7 @@ public class ChatRoomService {
     public RoomUpdate createUserListUpdate(String roomId) {
         ChatRoom room = getRoom(roomId);
         if (room != null) {
+            System.out.println("RoomUpdat 실행");
             List<RoomUpdate.UserInfo> userList = room.getMembers().stream()
                     .map(userName -> {
                         boolean isHost = userName.equals(room.getOwnerId());
