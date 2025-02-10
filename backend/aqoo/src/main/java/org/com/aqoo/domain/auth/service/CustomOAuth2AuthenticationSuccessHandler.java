@@ -123,13 +123,6 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         String userId = safeEncode(loginResponse.getUserId());
         String nickName = safeEncode(loginResponse.getNickName());
 
-        if (isNewUser) {
-            return frontendRedirectUrl +
-                    "?userId=" + userId +
-                    "&nickName=" + nickName +
-                    "&isNewUser=" + isNewUser;
-        }
-
         return frontendRedirectUrl +
                 "?accessToken=" + accessToken +
                 "&userId=" + userId +
