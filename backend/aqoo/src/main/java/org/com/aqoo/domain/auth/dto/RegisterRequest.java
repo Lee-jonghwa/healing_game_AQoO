@@ -10,7 +10,7 @@ public class RegisterRequest {
     private String pw;
     private String email;
     private String nickname;
-    
+
     @JsonProperty("isSocialLogin")
     private boolean isSocialLogin;
 }
