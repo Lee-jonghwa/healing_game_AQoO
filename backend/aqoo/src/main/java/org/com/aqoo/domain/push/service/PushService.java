@@ -21,8 +21,8 @@ public class PushService {
     private UserTokenRepository userTokenRepository;
     @Autowired
     private NotificationService notificationService;
-    //@Autowired
-    //private FirebaseService firebaseService;  // FirebaseService 추가
+    @Autowired
+    private FirebaseService firebaseService;  // FirebaseService 추가
 
     public UserToken createUserToken(String userId, String token) {
         // 중복 토큰 방지 (이미 존재하면 덮어쓰기 or 예외 발생)

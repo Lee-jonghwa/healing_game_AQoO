@@ -4,6 +4,7 @@ import org.com.aqoo.domain.notification.dto.NotificationRequest;
 import org.com.aqoo.domain.notification.dto.NotificationResponse;
 import org.com.aqoo.domain.notification.dto.UserNotificationResponse;
 import org.com.aqoo.domain.notification.entity.Notification;
+import org.com.aqoo.domain.push.service.FirebaseService;
 import org.com.aqoo.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,6 @@ public class NotificationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
-    @Autowired
-    private FirebaseService firebaseService;
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest notificationRequest) {
