@@ -69,9 +69,15 @@ public class FishController {
     }
 
     @GetMapping("/gotcha")
-    public ResponseEntity<?> gotchaFish(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
+    public ResponseEntity<?> gotchaFish(@RequestHeader(value = "Cookie", required = false) String cookieHeader) {
+        if (cookieHeader == null || !cookieHeader.contains("refreshToken")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "헤더가 없거나 쿠키가 없거나"));
+        }
+
+        // refreshToken 추출
+        String refreshToken = extractRefreshToken(cookieHeader);
         if (refreshToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인 필요"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "리프레시 토큰 안넘어옴"));
         }
 
         try {
@@ -86,6 +92,17 @@ public class FishController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    // 쿠키에서 refreshToken 값을 추출하는 유틸리티 함수
+    private String extractRefreshToken(String cookieHeader) {
+        for (String cookie : cookieHeader.split("; ")) {
+            if (cookie.startsWith("refreshToken=")) {
+                return cookie.substring("refreshToken=".length());
+            }
+        }
+        return null;
+    }
+
 
     @PostMapping("/newtype")
     public ResponseEntity<?> addFishType(@RequestBody FishTypeRequest request) {
