@@ -7,6 +7,10 @@ import org.com.aqoo.domain.friend.dto.FriendInfo;
 import org.com.aqoo.domain.friend.dto.FriendRequest;
 import org.com.aqoo.domain.friend.dto.FindResponse;
 import org.com.aqoo.domain.friend.entity.FriendRelationship;
+import org.com.aqoo.domain.notification.dto.NotificationRequest;
+import org.com.aqoo.domain.notification.service.NotificationService;
+import org.com.aqoo.domain.push.dto.PushRequest;
+import org.com.aqoo.domain.push.service.PushService;
 import org.com.aqoo.repository.FriendRelationshipRepository;
 import org.com.aqoo.repository.UserRepository;
 import org.com.aqoo.util.ImageUrlUtils;
@@ -29,8 +33,14 @@ public class FriendRelationshipService {
     @Autowired
     private ImageUrlUtils imageUtils;
 
+    @Autowired
+    private PushService pushService;
+
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
-    public Map<String, Long> createFriendRelationship(FriendRequest request) {
+    public Map<String, Integer> createFriendRelationship(FriendRequest request) throws Exception {
         User user = userRepository.findById(request.getFriendId())
                 .orElseThrow(() -> new IllegalArgumentException("친구가 존재하지 않습니다."));
 
@@ -56,16 +66,24 @@ public class FriendRelationshipService {
         friendRelationship.setFriend2Id(request.getFriendId());
         friendRelationship.setStatus("PENDING"); // 친구 요청 상태로 설정
 
+        //db에 친구 관계 저장
         friendRelationship = friendRelationshipRepository.save(friendRelationship);
 
+        //친구 요청 알람 보내기
+        String sender = request.getUserId();
+        String recipient = request.getFriendId();
+        PushRequest pushRequest =
+                new PushRequest(sender, recipient, "FRIEND REQUEST", friendRelationship.getId());
+        pushService.sendPush(pushRequest);
+
         // 결과를 Map으로 변환하여 반환
-        Map<String, Long> response = new HashMap<>();
+        Map<String, Integer> response = new HashMap<>();
         response.put("relationshipId", friendRelationship.getId());
         return response;
     }
 
     @Transactional
-    public String acceptFriendRequest(Long relationshipId) {
+    public String acceptFriendRequest(int relationshipId) throws Exception {
         Optional<FriendRelationship> relationship = friendRelationshipRepository.findById(relationshipId);
 
         if (relationship.isPresent()) {
@@ -76,13 +94,21 @@ public class FriendRelationshipService {
             }
             friendRelationship.setStatus("ACCEPTED");
             friendRelationshipRepository.save(friendRelationship);
+
+            //친구 수락 알람
+            String sender = friendRelationship.getFriend2Id();
+            String recipient = friendRelationship.getFriend1Id();
+            PushRequest pushRequest =
+                    new PushRequest(sender, recipient, "FRIEND ACCEPT", friendRelationship.getId());
+            pushService.sendPush(pushRequest);
+
             return "친구 요청이 성공적으로 수락되었습니다.";
         }
 
         return "친구 요청 수락에 실패하였습니다.";
     }
 
-    public String deleteFriendRelationship(Long relationshipId) {
+    public String deleteFriendRelationship(int relationshipId) {
         Optional<FriendRelationship> relationship = friendRelationshipRepository.findById(relationshipId);
 
         if (relationship.isEmpty()) {

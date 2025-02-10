@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface FriendRelationshipRepository extends JpaRepository<FriendRelationship, Long> {
+public interface FriendRelationshipRepository extends JpaRepository<FriendRelationship, Integer> {
 
     //friend1_id 또는 friend2_id에 userId가 포함되며, status가 "ACCEPTED"인 모든 친구 관계를 반환
     @Query("SELECT fr FROM FriendRelationship fr WHERE (fr.friend1Id = :userId OR fr.friend2Id = :userId) AND fr.status = :status")

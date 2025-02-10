@@ -46,8 +46,11 @@ public class Aquarium {
 
     // 추가적인 논리적 필드 (DB 컬럼 X)
     @Transient
-    private int waterCondition;
+    private int waterStatus;
 
     @Transient
     private int pollutionStatus;
+
+    @Transient
+    private int feedStatus;
 }

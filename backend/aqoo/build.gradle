@@ -82,8 +82,13 @@ dependencies {
 
     // Java Activation Framework (JAF) - 일부 메일 관련 기능에 필요할 수도 있음
     implementation 'jakarta.activation:jakarta.activation-api:2.1.1'
+
     // 이미지 변환할 때 image magick 오픈 소스에 접근
     implementation 'org.im4java:im4java:1.4.0'
+
+    // Firebase
+    implementation 'com.google.firebase:firebase-admin:9.0.0' // Firebase Admin SDK
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.13.0' // Google Auth 라이브러리
 }
 
 tasks.named('test') {

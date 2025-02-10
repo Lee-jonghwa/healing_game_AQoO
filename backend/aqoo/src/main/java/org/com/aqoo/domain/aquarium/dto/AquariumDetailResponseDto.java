@@ -20,7 +20,8 @@ public class AquariumDetailResponseDto {
     private LocalDateTime lastCleanedTime;
     private String userId;
     private Integer aquariumBackgroundId;
-    private int waterCondition;
+    private int waterStatus;
     private int pollutionStatus;
+    private int feedStatus;
     private List<FishCountDto> fishes;
 }
