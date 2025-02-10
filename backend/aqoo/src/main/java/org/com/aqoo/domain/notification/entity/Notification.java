@@ -24,7 +24,7 @@ public class Notification {
     private String type;
 
     @Column(nullable = false)
-    private int data;
+    private String data;
 
     @Column(nullable = false)
     private String message;
