@@ -57,6 +57,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         }else if(isNewUser == true){ // 신규 회원인 경우
             // userId, isNew
+
             loginResponse = new LoginResponse("",email,"","신규 회원");
         }
 
@@ -117,10 +118,14 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
      */
     private String loginFrontendRedirectUrl(LoginResponse loginResponse, boolean isNewUser) {
         String frontendRedirectUrl = "https://i12e203.p.ssafy.io/user/login/social-login-callback";
+        // accessToken이 null이면 빈 문자열로 대체
+        String accessToken = loginResponse.getAccessToken() == null ? "" : loginResponse.getAccessToken();
+
         return frontendRedirectUrl +
-                "?accessToken=" + URLEncoder.encode(loginResponse.getAccessToken(), StandardCharsets.UTF_8) +
+                "?accessToken=" + URLEncoder.encode(accessToken, StandardCharsets.UTF_8) +
                 "&userId=" + URLEncoder.encode(loginResponse.getUserId(), StandardCharsets.UTF_8) +
                 "&nickName=" + URLEncoder.encode(loginResponse.getNickName(), StandardCharsets.UTF_8) +
                 "&isNewUser=" + isNewUser;
     }
+
 }
