@@ -75,6 +75,9 @@ public class AuthController {
         if(request.isSocialLogin()){
             request.setPw(authService.getRandomPassword());
         }
+        System.out.println("요청 : " + request.toString());
+
+
         RegisterResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }
