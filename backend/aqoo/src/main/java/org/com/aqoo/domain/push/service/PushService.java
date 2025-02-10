@@ -48,6 +48,18 @@ public class PushService {
         String title = getMessageTitle(type);
         String body = getMessageBody(type, request.getSenderId(), request.getData());
 
+        // 알람 저장
+        if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
+            String recipient = request.getRecipientId();
+            String data = request.getData();
+
+            NotificationRequest notification =
+                    new NotificationRequest(recipient, type, data, body);
+
+            notificationService.createNotification(notification);
+        }
+
+        // push 알람 보내기
         // userId로 모든 FCM 토큰 조회
         List<UserToken> userTokens = userTokenRepository.findByUserId(request.getRecipientId());
 
@@ -68,17 +80,6 @@ public class PushService {
             // FCM으로 메시지 전송
             String response = FirebaseMessaging.getInstance().send(message);
             System.out.println("FCM 메시지 전송 성공 (토큰: " + userToken.getToken() + "): " + response);
-        }
-
-        if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
-            //알람 저장
-            String recipient = request.getRecipientId();
-            String data = request.getData();
-
-            NotificationRequest notification =
-                    new NotificationRequest(recipient, type, data, body);
-
-            notificationService.createNotification(notification);
         }
     }
 
