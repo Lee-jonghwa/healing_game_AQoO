@@ -51,23 +51,14 @@ public class WebSocketEventListener {
             chatRoomService.removeMember(roomId, userId);
 
             // 퇴장 메시지 전송
-<<<<<<< HEAD
+            // ChatMessageDto 생성자 순서: roomId, sender, content, type
             ChatMessageDto leaveMessage = new ChatMessageDto(
-                    ChatMessageDto.MessageType.LEAVE,
                     roomId,
                     userId,
-                    userId + "님이 연결이 끊겼습니다."
+                    userId + "님이 연결이 끊겼습니다.",
+                    ChatMessageDto.MessageType.LEAVE
             );
             messagingTemplate.convertAndSend("/topic/" + roomId, leaveMessage);
-=======
-            ChatMessageDto leaveMessage = new ChatMessageDto();
-            leaveMessage.setType(ChatMessageDto.MessageType.LEAVE);
-            leaveMessage.setRoomId(roomId);
-            leaveMessage.setSender(userId);
-            leaveMessage.setContent(userId + "님이 연결이 끊겼습니다.");
-            messagingTemplate.convertAndSend("/topic/" + roomId, leaveMessage);
-
->>>>>>> 7c23d41f3952e989608e5bc1bf06f6bdb2da811d
 
             // 채팅방에 남은 사용자가 없으면 채팅방 삭제
             if (chatRoomService.isRoomEmpty(roomId)) {
