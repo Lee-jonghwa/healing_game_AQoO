@@ -36,6 +36,7 @@ public class GameService {
         log.info("startGame() called for roomId: {}", roomId);
         ChatRoom chatRoom = chatRoomService.getRoom(roomId);
         if (chatRoom != null) {
+            System.out.println("채팅방 멤버: "+chatRoom.getMembers());
             Map<String, Integer> roomScore = new ConcurrentHashMap<>();
             chatRoom.getMembers().forEach(member -> roomScore.put(member, 0));
             scoreMap.put(roomId, roomScore);
