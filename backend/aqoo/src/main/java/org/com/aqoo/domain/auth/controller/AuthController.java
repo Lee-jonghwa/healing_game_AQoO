@@ -32,6 +32,7 @@ public class AuthController {
         String refreshToken = authService.getRefreshToken(request.getId());
 
         // RefreshToken을 쿠키에 저장
+
 //        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
 //                .httpOnly(true)
 //          .secure(true) // HTTPS 사용 시 활성화

@@ -36,6 +36,7 @@ public class GameService {
         log.info("startGame() called for roomId: {}", roomId);
         ChatRoom chatRoom = chatRoomService.getRoom(roomId);
         if (chatRoom != null) {
+            System.out.println("채팅방 멤버: "+chatRoom.getMembers());
             Map<String, Integer> roomScore = new ConcurrentHashMap<>();
             chatRoom.getMembers().forEach(member -> roomScore.put(member, 0));
             scoreMap.put(roomId, roomScore);
@@ -44,10 +45,12 @@ public class GameService {
                     .map(e -> new Player(e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
 
+            System.out.println("players:"+players);
             RoomResponse response = new RoomResponse(roomId, players, "GAME_STARTED");
             messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
             log.info("Broadcasted GAME_STARTED message for roomId: {}", roomId);
         } else {
+            System.out.println("게임 실행 실패");
             log.error("ChatRoom not found for roomId: {}", roomId);
         }
     }
