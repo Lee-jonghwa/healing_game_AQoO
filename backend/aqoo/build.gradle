@@ -1,0 +1,96 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'org.com'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17) // Java 17 사용
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral() // 중앙 저장소에서 의존성 다운로드
+}
+
+dependencies {
+    // 환경 변수 의존성
+    implementation 'io.github.cdimascio:dotenv-java:2.2.0'
+
+    // Spring Boot Data JPA - 데이터베이스 작업 및 ORM 지원
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Spring Boot Web - 웹 애플리케이션 개발
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Boot WebSocket - 실시간 통신(WebSocket) 지원
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Spring Security - 인증 및 권한 관리
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // Spring Boot Thymeleaf - 서버사이드 템플릿 엔진
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    // Thymeleaf Spring Security 통합 지원
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
+    // Spring Boot OAuth2 Client - 소셜 로그인 지원 (구글, 네이버, 카카오 등)
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // JWT (JSON Web Token) - 인증 토큰 생성 및 검증
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    // Lombok - 코드 작성 간 편의성을 위한 어노테이션 라이브러리
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Spring Boot DevTools - 개발 편의성 도구 (자동 리로드 등)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // MySQL Connector - MySQL 데이터베이스 연결
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // Spring Boot Test - 테스트용 의존성
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Spring Security Test - 테스트 시 보안 기능 지원
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // JUnit Launcher - 테스트 실행기
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // SLF4J API (필수)
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Spring Boot Mail Starter (JavaMail 사용)
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // Java Activation Framework (JAF) - 일부 메일 관련 기능에 필요할 수도 있음
+    implementation 'jakarta.activation:jakarta.activation-api:2.1.1'
+
+    // 이미지 변환할 때 image magick 오픈 소스에 접근
+    implementation 'org.im4java:im4java:1.4.0'
+
+    // Firebase
+    implementation 'com.google.firebase:firebase-admin:9.0.0' // Firebase Admin SDK
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.13.0' // Google Auth 라이브러리
+}
+
+tasks.named('test') {
+    useJUnitPlatform() // JUnit 플랫폼 사용
+}
