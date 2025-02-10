@@ -116,7 +116,7 @@ public class AuthService {
                 .id(request.getId())
                 .pw(passwordEncoder.encode(request.getPw()))
                 .email(request.getEmail())
-                .nickname(request.getNickname())
+                .nickname(request.getNickName())
                 .build();
 
         // 3. 사용자 먼저 저장 (DB에 영속화)
