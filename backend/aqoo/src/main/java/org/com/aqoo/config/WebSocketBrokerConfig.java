@@ -23,9 +23,16 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // WebSocket 연결 엔드포인트
         registry.addEndpoint("/ws") // webSocket 엔드포인트 설정
-                .setAllowedOriginPatterns("*") // 테스트 모든 도메인 허용
+                .setAllowedOriginPatterns(
+                        "http://localhost:3000",
+                        "https://localhost:3000",
+                        "https://i12e203.p.ssafy.io:3000",
+                        "http://i12e203.p.ssafy.io:3000",
+                        "https://i12e203.p.ssafy.io",
+                        "http://i12e203.p.ssafy.io"
+                )
 //			.setAllowedOriginPatterns("http://localhost:3000") // 특정 도메인 허용
-                .addInterceptors(new WebSocketHandshakeInterceptor())
+//                .addInterceptors(new WebSocketHandshakeInterceptor())
                 .withSockJS(); //SockJS 폴백 지원
     }
 }
