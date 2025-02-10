@@ -22,6 +22,7 @@ public class AuthController {
 
     private final AuthService authService;
 
+
     // 일반 로그인
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request,HttpServletResponse httpResponse) {
@@ -71,6 +72,9 @@ public class AuthController {
     // 회원가입
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
+        if(request.isSocialLogin()){
+            request.setPw(authService.getRandomPassword());
+        }
         RegisterResponse response = authService.register(request);
         return ResponseEntity.ok(response);
     }
