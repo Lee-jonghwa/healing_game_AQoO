@@ -33,10 +33,10 @@ public class AuthController {
         String refreshToken = authService.getRefreshToken(request.getId());
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-//                .secure(true)             // HTTPS 환경에서만 전송
+                .secure(true)             // HTTPS 환경에서만 전송
                 .path("/")                // 전체 도메인에서 유효
                 .maxAge(7 * 24 * 60 * 60)  // 7일
-                .sameSite("Strict")         // 크로스 사이트 요청에도 쿠키 전송 허용
+                .sameSite("None")         // 크로스 사이트 요청에도 쿠키 전송 허용
                 .build();
 
         // 쿠키 헤더 추가
