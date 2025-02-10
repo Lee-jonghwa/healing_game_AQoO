@@ -82,6 +82,11 @@ public class AuthService {
         return new LoginResponse(accessToken, user.getId() , user.getNickname(), message);
     }
 
+    public String getRandomPassword(){
+        return PasswordGenerator.generatePasswordWithDateTime();
+    }
+
+
     // db에 저장된 리프레시 토큰 불러오기
     public String getRefreshToken(String userId) {
         User user = userRepository.findById(userId)

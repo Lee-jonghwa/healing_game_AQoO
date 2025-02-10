@@ -9,4 +9,5 @@ public class RegisterRequest {
     private String pw;
     private String email;
     private String nickname;
+    private boolean isSocialLogin;
 }
