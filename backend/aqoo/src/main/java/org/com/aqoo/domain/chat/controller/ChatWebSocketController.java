@@ -26,7 +26,11 @@ public class ChatWebSocketController {
     @MessageMapping("/chat.joinRoom")
     public void joinRoom(ChatMessageDto chatMessage, SimpMessageHeaderAccessor headerAccessor) {
         System.out.println("chat.joinRoom 실행");
+
+        // 사용자를 채팅방에 추가
         chatRoomService.addMember(chatMessage.getRoomId(), chatMessage.getSender());
+
+        // JOIN 메시지 생성 및 브로드캐스트
         chatMessage.setType(ChatMessageDto.MessageType.JOIN);
         chatMessage.setContent(chatMessage.getSender() + "님이 참가했습니다.");
 
@@ -34,7 +38,11 @@ public class ChatWebSocketController {
         headerAccessor.getSessionAttributes().put("roomId", chatMessage.getRoomId());
 
         messagingTemplate.convertAndSend("/topic/" + chatMessage.getRoomId(), chatMessage);
+
+        // 추가: 최신 사용자 목록을 즉시 브로드캐스트
+        chatRoomService.broadcastUserList(chatMessage.getRoomId());
     }
+
 
     /** 채팅방 준비 */
     @MessageMapping("/chat.ready")

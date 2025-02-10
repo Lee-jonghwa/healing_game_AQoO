@@ -108,17 +108,19 @@ public class ChatRoomService {
     }
 
     /** 사용자 목록 업데이트를 브로드캐스트 */
-    private void broadcastUserList(String roomId) {
+    public void broadcastUserList(String roomId) {
         ChatRoom room = chatRooms.get(roomId);
         if (room != null) {
+            // 사용자 목록을 구성 (예: RoomUpdate.UserInfo는 별도의 DTO로 구성)
             List<RoomUpdate.UserInfo> userList = room.getMembers().stream()
                     .map(userName -> {
-                        boolean isHost = userName.equals(room.getOwnerId());
+                        boolean isHost = userName.equals(room.getOwnerId()); // 또는 roomOwners.get(roomId) 사용
                         boolean ready = room.getReadyMembers().contains(userName);
                         return new RoomUpdate.UserInfo(userName, ready, isHost);
                     })
                     .collect(Collectors.toList());
 
+            // RoomUpdate DTO: roomId, message("USER_LIST"), userList
             RoomUpdate update = new RoomUpdate(roomId, "USER_LIST", userList);
             messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
         }
@@ -151,6 +153,8 @@ public class ChatRoomService {
         ChatRoom room = getRoom(roomId);
         return room != null && room.getMembers().contains(userId);
     }
+
+
 
 
 }
