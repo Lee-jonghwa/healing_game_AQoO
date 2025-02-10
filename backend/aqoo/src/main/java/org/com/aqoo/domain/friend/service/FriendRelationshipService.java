@@ -73,7 +73,7 @@ public class FriendRelationshipService {
         String sender = request.getUserId();
         String recipient = request.getFriendId();
         PushRequest pushRequest =
-                new PushRequest(sender, recipient, "FRIEND REQUEST", friendRelationship.getId());
+                new PushRequest(sender, recipient, "FRIEND REQUEST", Integer.toString(friendRelationship.getId()));
         pushService.sendPush(pushRequest);
 
         // 결과를 Map으로 변환하여 반환
@@ -99,7 +99,7 @@ public class FriendRelationshipService {
             String sender = friendRelationship.getFriend2Id();
             String recipient = friendRelationship.getFriend1Id();
             PushRequest pushRequest =
-                    new PushRequest(sender, recipient, "FRIEND ACCEPT", friendRelationship.getId());
+                    new PushRequest(sender, recipient, "FRIEND ACCEPT", Integer.toString(friendRelationship.getId()));
             pushService.sendPush(pushRequest);
 
             return "친구 요청이 성공적으로 수락되었습니다.";

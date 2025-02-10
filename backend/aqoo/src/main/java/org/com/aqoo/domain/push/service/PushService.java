@@ -71,8 +71,7 @@ public class PushService {
         }
 
         if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
-            //친구 수락 알람 저장
-
+            //알람 저장
             String recipient = request.getRecipientId();
             String data = request.getData();
 
