@@ -107,21 +107,10 @@ public class ChatRoomService {
         return room != null && room.areAllReady();
     }
 
-    /** 사용자 목록 업데이트를 브로드캐스트 */
+    /** USER_LIST 메시지를 생성하고 브로드캐스트 */
     public void broadcastUserList(String roomId) {
-        ChatRoom room = chatRooms.get(roomId);
-        if (room != null) {
-            // 사용자 목록을 구성 (예: RoomUpdate.UserInfo는 별도의 DTO로 구성)
-            List<RoomUpdate.UserInfo> userList = room.getMembers().stream()
-                    .map(userName -> {
-                        boolean isHost = userName.equals(room.getOwnerId()); // 또는 roomOwners.get(roomId) 사용
-                        boolean ready = room.getReadyMembers().contains(userName);
-                        return new RoomUpdate.UserInfo(userName, ready, isHost);
-                    })
-                    .collect(Collectors.toList());
-
-            // RoomUpdate DTO: roomId, message("USER_LIST"), userList
-            RoomUpdate update = new RoomUpdate(roomId, "USER_LIST", userList);
+        RoomUpdate update = createUserListUpdate(roomId);
+        if (update != null) {
             messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
         }
     }
@@ -136,25 +125,28 @@ public class ChatRoomService {
         }
     }
 
-    public void handleDisconnect(String roomId, String userId) {
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.schedule(() -> {
-            // 재연결하지 않았다면 최종적으로 사용자 제거
-            if (!isUserReconnected(roomId, userId)) {
-                removeMember(roomId, userId);
-                // 필요 시 leave 메시지 브로드캐스트 등 추가 작업 수행
-            }
-        }, 10, TimeUnit.SECONDS);
-    }
-
     // 재연결 여부를 확인하는 예시 메소드 (구현은 상황에 맞게)
-    private boolean isUserReconnected(String roomId, String userId) {
+    public boolean isUserReconnected(String roomId, String userId) {
         // 예: 현재 채팅방의 멤버 목록에 userId가 있는지 확인
         ChatRoom room = getRoom(roomId);
         return room != null && room.getMembers().contains(userId);
     }
 
-
+    /** 최신 사용자 목록을 생성하여 RoomUpdate로 반환 */
+    public RoomUpdate createUserListUpdate(String roomId) {
+        ChatRoom room = getRoom(roomId);
+        if (room != null) {
+            List<RoomUpdate.UserInfo> userList = room.getMembers().stream()
+                    .map(userName -> {
+                        boolean isHost = userName.equals(room.getOwnerId());
+                        boolean ready = room.getReadyMembers().contains(userName);
+                        return new RoomUpdate.UserInfo(userName, ready, isHost);
+                    })
+                    .collect(Collectors.toList());
+            return new RoomUpdate(roomId, "USER_LIST", userList);
+        }
+        return null;
+    }
 
 
 }
