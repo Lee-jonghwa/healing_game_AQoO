@@ -2,10 +2,14 @@ package org.com.aqoo.domain.chat.controller;
 
 import lombok.AllArgsConstructor;
 import org.com.aqoo.domain.chat.dto.ChatRoomDto;
+import org.com.aqoo.domain.chat.dto.InviteRequest;
 import org.com.aqoo.domain.chat.service.ChatRoomService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,5 +40,15 @@ public class ChatRoomController {
         System.out.println("새 채팅방 생성");
         var room = chatRoomService.createRoom(userId);
         return new ChatRoomDto(room.getId(), room.getOwnerId(), room.getMembers());
+    }
+
+    @PostMapping("/invite")
+    public ResponseEntity<Map<String, ?>> inviteFriend(@RequestBody InviteRequest request) {
+        try {
+            Map<String, String> response = chatRoomService.inviteFriend(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
     }
 }
