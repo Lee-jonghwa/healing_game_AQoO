@@ -12,7 +12,7 @@ export default function AuthAndUsersTestPage() {
 
   const handleLogout = async () => {
     await logout();
-    router.push("/login");
+    router.push("/user/login");
   };
 
   return (

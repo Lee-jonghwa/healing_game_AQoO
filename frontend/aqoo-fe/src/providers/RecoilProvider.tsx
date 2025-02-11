@@ -8,7 +8,7 @@ import { queryClient } from "./queryClient";
 export default function RecoilProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <RecoilRoot>{children}</RecoilRoot>
+      <RecoilRoot key="global-recoil">{children}</RecoilRoot>
     </QueryClientProvider>
   );
 }

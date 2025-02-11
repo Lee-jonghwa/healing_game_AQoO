@@ -28,7 +28,7 @@ export default function Navbar() {
     <>
       <nav className="absolute top-4 left-4 z-10 flex justify-between w-full px-10">
         {/* 🏠 로고 */}
-        <Link href="/">
+        <Link href={auth.isAuthenticated ? "/main" : "/"}>
           <span className="text-white text-5xl hover:text-yellow-300">AQoO</span>
         </Link>
 

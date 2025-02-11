@@ -1,7 +1,7 @@
 // app/layout.tsx
-"use client"; // ✅ 클라이언트 컴포넌트 설정
+"use client"; // 클라이언트 컴포넌트 설정
 
-import "@/styles/globals.css"; // ✅ Tailwind를 적용하려면 반드시 추가해야 함!
+import "@/styles/globals.css"; // Tailwind를 적용하려면 반드시 추가해야 함!
 
 import Navbar from "@/components/NavBar";
 import RecoilProvider from "@/providers/RecoilProvider";
