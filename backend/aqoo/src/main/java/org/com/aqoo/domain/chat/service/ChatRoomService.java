@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -171,5 +168,26 @@ public class ChatRoomService {
         return response;
     }
 
-
+    /** 채팅방에서 사용자 추방 (Kick) 처리 */
+    public void kickUser(String roomId, String targetUser, String requester) {
+        ChatRoom room = getRoom(roomId);
+        if (room != null) {
+            // 요청자가 방장이 아니라면 추방 불가
+            if (!room.getOwnerId().equals(requester)) {
+                System.out.println("추방 요청 실패: 요청자 " + requester + "는 방장이 아님");
+                return;
+            }
+            // 방장이 자신을 추방하는 경우 방지
+            if (targetUser.equals(requester)) {
+                System.out.println("추방 요청 실패: 방장은 자신을 추방할 수 없음");
+                return;
+            }
+            // 대상 사용자 제거
+            removeMember(roomId, targetUser);
+            // 추방 메시지 브로드캐스트 (RoomUpdate를 이용하여 targetUser 정보를 포함)
+            RoomUpdate update = new RoomUpdate(roomId, "USER_KICKED", null);
+            update.setTargetUser(targetUser);
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
+        }
+    }
 }

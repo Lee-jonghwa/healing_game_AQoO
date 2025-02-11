@@ -9,11 +9,17 @@ import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
 public class RoomUpdate {
     private String roomId;
     private String message; // 예: "USER_LIST"
     private List<UserInfo> users;
+    private String targetUser;
+
+    public RoomUpdate(String roomId, String message, List<UserInfo> users) {
+        this.roomId = roomId;
+        this.message = message;
+        this.users = users;
+    }
 
     @Getter
     @Setter
