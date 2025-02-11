@@ -1,8 +1,12 @@
+import { useAuth } from "@/hooks/useAuth";
+
 // ✅ 테스트용 API 호출 (임시 userId 사용, header 없음)
-export const fetchUserFishCollectionTest = async () => {
+export const fetchUserFishCollectionTest = async (userId: string) => {
   try {
-    const testUserId = "ejoyee"; // ✅ 테스트용 userId (임의 값)
-    const apiUrl = `https://i12e203.p.ssafy.io/api/v1/fish/collection/${testUserId}`;
+    if (!userId) {
+      throw new Error("사용자 아이디가 필요합니다.");
+    }
+    const apiUrl = `https://i12e203.p.ssafy.io/api/v1/fish/collection/${userId}`;
 
     const res = await fetch(apiUrl, {
       method: "GET",
@@ -23,10 +27,12 @@ export const fetchUserFishCollectionTest = async () => {
 };
 
 // ✅ 테스트용 API 호출 (임시 userId 사용, header 없음)
-export const fetchCustomFishCollectionTest = async () => {
+export const fetchCustomFishCollectionTest = async (userId: string) => {
   try {
-    const testUserId = "ejoyee"; // ✅ 테스트용 userId (임의 값)
-    const apiUrl = `https://i12e203.p.ssafy.io/api/v1/fish/custom/${testUserId}`;
+    if (!userId) {
+      throw new Error("사용자 아이디가 필요합니다.");
+    }
+    const apiUrl = `https://i12e203.p.ssafy.io/api/v1/fish/custom/${userId}`;
 
     const res = await fetch(apiUrl, {
       method: "GET",

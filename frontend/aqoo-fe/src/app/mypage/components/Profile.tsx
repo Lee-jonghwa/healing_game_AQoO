@@ -1,9 +1,75 @@
 "use client";
-
+import React, { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import { Fish } from "lucide-react";
 
-export default function Profile() {
+interface UserData {
+  id: string;
+  email: string;
+  nickname: string;
+  mainFishImage: string;
+  level: number;
+}
+
+/**
+ * Promise를 감싸서 Suspense에서 사용 가능한 객체를 반환하는 헬퍼 함수
+ */
+function wrapPromise<T>(promise: Promise<T>): { read(): T } {
+  let status: "pending" | "success" | "error" = "pending";
+  let result: T;
+  const suspender = promise.then(
+    (r: T) => {
+      status = "success";
+      result = r;
+    },
+    (e: any) => {
+      status = "error";
+      result = e;
+    }
+  );
+  return {
+    read() {
+      if (status === "pending") {
+        throw suspender;
+      } else if (status === "error") {
+        throw result;
+      } else if (status === "success") {
+        return result;
+      }
+      throw new Error("Unexpected status");
+    },
+  };
+}
+
+/**
+ * API에서 유저 정보를 불러오는 함수
+ */
+function fetchUserData(userId: string): Promise<any> {
+  const token = localStorage.getItem("accessToken");
+  const SERVER_API = "https://i12e203.p.ssafy.io";
+  return fetch(`${SERVER_API}/api/v1/users/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("유저 정보를 불러오는데 실패했습니다.");
+    }
+    return response.json().then((data) => {
+      console.log("Fetched user data:", data);
+      return data;
+    });
+  });
+}
+
+/**
+ * 실제 UI를 렌더링하는 컴포넌트
+ */
+function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal: number }) {
   return (
     <div
       className="
@@ -36,7 +102,7 @@ export default function Profile() {
             "
           >
             <Image
-              src="/images/대표이미지샘플.png"
+              src={userData.mainFishImage}
               alt="대표 이미지"
               width={130}
               height={130}
@@ -56,7 +122,7 @@ export default function Profile() {
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
-            레벨: 1234
+            레벨: {userData.level}
           </p>
           <p
             className="
@@ -67,7 +133,7 @@ export default function Profile() {
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
-            닉네임: 회사랑김싸피
+            닉네임: {userData.nickname}
           </p>
           <p
             className="
@@ -78,7 +144,7 @@ export default function Profile() {
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
-            총 물고기 갯수: 100 마리
+            총 물고기 갯수: {fishTotal} 마리
           </p>
         </div>
       </div>
@@ -99,5 +165,41 @@ export default function Profile() {
         </Link>
       </div>
     </div>
+  );
+}
+
+/**
+ * Profile 컴포넌트는 auth.user가 준비되었을 때,
+ * useState와 useEffect를 사용해 리소스를 한 번만 생성합니다.
+ */
+function Profile({ fishTotal }: { fishTotal: number }) {
+  const { auth } = useAuth();
+  const userId = auth.user?.id;
+  const [resource, setResource] = useState<{ read: () => any } | null>(null);
+
+  useEffect(() => {
+    if (userId && !resource) {
+      setResource(wrapPromise(fetchUserData(userId)));
+    }
+  }, [userId, resource]);
+
+  if (!auth.user || !resource) {
+    console.log(`auth.user: ${auth.user}`);
+    console.log(`resource: ${resource}`);
+    return <div>로딩 중...</div>;
+  }
+
+  const userData = resource.read();
+  return <ProfileContent userData={userData} fishTotal={fishTotal} />;
+}
+
+/**
+ * Suspense를 사용해 로딩 상태를 처리하는 Wrapper 컴포넌트
+ */
+export default function ProfileWrapper({ fishTotal }: { fishTotal: number }) {
+  return (
+    <Suspense fallback={<div>로딩 중...</div>}>
+      <Profile fishTotal={fishTotal} />
+    </Suspense>
   );
 }
