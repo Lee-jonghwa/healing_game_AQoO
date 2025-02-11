@@ -22,6 +22,10 @@ export default function BackgroundItemCard({
   onMouseLeave,
   onClick,
 }: BackgroundItemCardProps) {
+  const customLoader = ({ src }: { src: string }) => {
+    return src; // ✅ 원본 URL 그대로 사용하도록 설정
+  };
+
   return (
     <div
       className={`
@@ -33,7 +37,11 @@ export default function BackgroundItemCard({
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      <Image src={imageSrc} alt={name} fill className="rounded-xl" />
+      
+      <Image 
+      loader={customLoader} // ✅ 커스텀 로더 추가
+      unoptimized
+      src={imageSrc} alt={name} fill className="rounded-xl" />
       <div
         className={`
           absolute inset-0 rounded-xl border-[6px] transition-all duration-300 pointer-events-none
