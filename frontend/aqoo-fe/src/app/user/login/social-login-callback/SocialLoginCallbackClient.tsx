@@ -31,7 +31,7 @@ export default function SocialLoginCallbackClient() {
     // 라우팅 로직
     if (isNewUser && accessToken === "" && nickName === "" && userId) {
       router.replace(`/user/join?email=${encodeURIComponent(userId)}`);
-    } else if (accessToken && userId) { //정상 로그인시 메인페이지로 이동동
+    } else if (accessToken && userId) { //정상 로그인시 메인페이지로 이동
       router.replace("/main");
     } else {
       router.replace("/user/login");

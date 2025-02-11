@@ -6,14 +6,23 @@ import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils"; // 손
 import { useEffect, useRef, useState } from "react";
 
 import { Camera } from "@mediapipe/camera_utils"; // 카메라 사용 라이브러리
+import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
+
+const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 export default function CleanComponent({
   onClose,
   onCleanSuccess, // ✅ 어항 상태 업데이트를 위한 콜백
+  handleIncreaseExp, // ✅ 경험치 증가 함수 추가
+  aquariumId, // ✅ aquariumId를 props로 추가
 }: {
   onClose: () => void;
   onCleanSuccess: () => void; // ✅ 어항 상태 & 유저 경험치 업데이트 요청
+  handleIncreaseExp: (earnedExp: number) => Promise<void>; // ✅ 추가
+  aquariumId: number; // ✅ `aquariumId`를 필수 prop으로 설정
 }) {
+  const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // 오류 메시지 저장
@@ -21,8 +30,6 @@ export default function CleanComponent({
   // 현재 선택된 제스처(손 흔들기 / 주먹 쥐기)
   const [selectedGesture, setSelectedGesture] = useState<"handMotion" | "rockGesture" | null>(null);
   const [isCameraReady, setIsCameraReady] = useState(false); // 📌 카메라 준비 상태 추가
-
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   // 좌우 반전 여부
   const [isMirrored, setIsMirrored] = useState<boolean>(true);
@@ -171,21 +178,15 @@ export default function CleanComponent({
       try {
         // ✅ 1. 어항 청소 API 호출
         await axios.post(`${API_BASE_URL}/aquariums/update`, {
-          aquariumId: 6, // ✅ TODO 실제 ID로 변경
+          aquariumId: aquariumId,
           type: "clean",
           data: "",
         });
 
         console.log("✅ 어항 청소 성공");
 
-        // ✅ 2. 경험치 지급 API 호출
-        await axios.post(`${API_BASE_URL}/users/exp-up`, {
-          // TODO 지금 더미라 userId 받아와야 함
-          userId: "ejoyee", // ✅ 실제 유저 ID로 변경
-          earnedExp: 10,
-        });
-
-        console.log("✅ 경험치 지급 성공");
+        // ✅ 2. 경험치 10 증가 및 레벨업 감지
+        await handleIncreaseExp(10);
 
         // ✅ 3. 어항 상태 & 유저 정보 업데이트 요청
         onCleanSuccess();

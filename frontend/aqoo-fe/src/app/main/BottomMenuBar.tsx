@@ -3,9 +3,8 @@
 import { AquariumData, UserInfo } from "@/types";
 import { useEffect, useState } from "react";
 
-import axios from "axios";
-
 import MenuButton from "./MenuButton";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
@@ -63,23 +62,23 @@ export default function BottomMenuBar({
   const expProgress = (userInfo.exp / expToNextLevel) * 100;
 
   // 🚀 경험치 바 최소 5% 보장
-  const progressBarWidth = Math.max(5, Math.min(expProgress, 100));
+  const progressBarWidth = Math.max(0, Math.min(expProgress, 100));
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[1400px] bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md">
       {/* 좌측 메뉴 */}
       <div className="flex space-x-2 md:space-x-4">
         {/* ✅ MyPage는 페이지 이동 */}
-        <MenuButton icon="/icon-fishTank.png" label="MyPage" onClick={() => router.push("/mypage")} />
+        <MenuButton icon="/icon/icon-fishTank.png" label="MyPage" onClick={() => router.push("/mypage")} />
 
         {/* ✅ 친구 목록 */}
-        <MenuButton icon="/friendIcon.png" label="Friends" onClick={() => setActiveComponent("friends")} />
+        <MenuButton icon="/icon/friendIcon.png" label="Friends" onClick={() => setActiveComponent("friends")} />
 
         {/* ✅ Push 알림 */}
-        <MenuButton icon="/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
+        <MenuButton icon="/icon/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
 
         {/* ✅ Game 히스토리 */}
-        <MenuButton icon="/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
+        <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
       </div>
       {/* 중앙: 사용자 정보 */}
       <div className="flex flex-col items-center text-center">
@@ -112,22 +111,27 @@ export default function BottomMenuBar({
       </div>
       {/* 중앙: 어항 상태 바 */}
       <div className="flex flex-col space-y-1 p-1">
-        <StatusBar icon="waterIcon.png" label="어항 수질" value={aquariumData?.waterStatus ?? 0} color="bg-blue-900" />
         <StatusBar
-          icon="cleanIcon.png"
+          icon="icon/waterIcon.png"
+          label="어항 수질"
+          value={aquariumData?.waterStatus ?? 0}
+          color="bg-blue-900"
+        />
+        <StatusBar
+          icon="icon/cleanIcon.png"
           label="청결도"
           value={aquariumData?.pollutionStatus ?? 0}
           color="bg-indigo-400"
         />
-        <StatusBar icon="feedIcon.png" label="포만감" value={aquariumData?.feedStatus ?? 0} color="bg-cyan-400" />{" "}
+        <StatusBar icon="icon/feedIcon.png" label="포만감" value={aquariumData?.feedStatus ?? 0} color="bg-cyan-400" />{" "}
       </div>
 
       {/* 우측 메뉴 */}
       {/* TODO 상태가 full일 경우는 동작할 수 없도록 막아야 함 */}
       <div className="flex space-x-2 md:space-x-4">
-        <MenuButton icon="/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
-        <MenuButton icon="/cleanIcon.png" label="Clean" onClick={() => setActiveComponent("clean")} />
-        <MenuButton icon="/feedIcon.png" label="Feed" onClick={() => handleAquariumUpdate("feed")} />
+        <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
+        <MenuButton icon="/icon/cleanIcon.png" label="Clean" onClick={() => setActiveComponent("clean")} />
+        <MenuButton icon="/icon/feedIcon.png" label="Feed" onClick={() => handleAquariumUpdate("feed")} />
       </div>
     </div>
   );
