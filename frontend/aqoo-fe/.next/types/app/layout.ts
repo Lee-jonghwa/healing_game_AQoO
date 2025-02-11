@@ -1,4 +1,4 @@
-// File: C:\Users\SSAFY\Desktop\S12P11E203\frontend\aqoo-fe\src\app\layout.tsx
+// File: C:\Users\SSAFY\Desktop\CYH\game-front\S12P11E203\frontend\aqoo-fe\src\app\layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
