@@ -7,18 +7,19 @@ interface BasicCollectionTabProps {
   userFishList: { fishTypeId: number; fishTypeName: string; fishImage: string; cnt: number }[];
 }
 
-export default function BasicCollectionTab({ userFishList = [] }: BasicCollectionTabProps) {
+export default function BasicCollectionTab({ allFishList = [], userFishList = [] }: BasicCollectionTabProps) {
   return (
     <div id="one-panel" className="flex flex-wrap">
-      {Array(50)
-        .fill(null)
-        .map((_, index) => {
-          const fish = userFishList[index]; // 현재 index에 해당하는 물고기 가져오기
-          const imageSrc = fish ? `${fish.fishImage}` : "/images/배경샘플.png"; // 물고기가 없으면 기본 배경 이미지 사용
-          const name = fish ? fish.fishTypeName : `미등록`; // 물고기가 없으면 기본 이름
-          const count = fish ? fish.cnt : 0; // 기본 수량 (물고기가 없으면 0)
-          return <CollectionItemCard key={index} imageSrc={imageSrc} name={name} count={count} />;
-        })}
+      {allFishList.map((fish, index) => {
+        // userFishList에서 해당 fishName과 일치하는 물고기 찾기
+        const userFish = userFishList.find((userFish) => userFish.fishTypeName === fish.fishName);
+
+        const imageSrc = userFish ? userFish.fishImage : "/images/배경샘플.png";
+        const name = userFish ? userFish.fishTypeName : fish.fishName;
+        const count = userFish ? userFish.cnt : 0;
+
+        return <CollectionItemCard key={fish.id} imageSrc={imageSrc} name={name} count={count} />;
+      })}
     </div>
   );
 }
