@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import BasicCollectionTab from "./BasicCollectionTab";
 import CustomCollectionTab from "./CustomCollectionTab";
+import { Suspense } from "react";
 
 interface MyCollectionProps {
   allFishList: { id: number; fishName: string; imageUrl: string; rarity: string }[];
@@ -11,7 +12,7 @@ interface MyCollectionProps {
   customFishList: { fishTypeId: number; fishTypeName: string; fishImage: string }[];
 }
 
-export default function MyCollection({ allFishList, userFishList, customFishList }: MyCollectionProps) {
+function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCollectionProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedTab = searchParams.get("tab") || "basic";
@@ -91,5 +92,14 @@ export default function MyCollection({ allFishList, userFishList, customFishList
         </div>
       </div>
     </div>
+  );
+}
+
+// Suspense 경계로 감싼 MyCollection 컴포넌트
+export default function MyCollection({ allFishList, userFishList, customFishList }: MyCollectionProps) {
+  return (
+    <Suspense fallback={<div>Loading collection...</div>}>
+      <MyCollectionContent allFishList={allFishList} userFishList={userFishList} customFishList={customFishList} />
+    </Suspense>
   );
 }
