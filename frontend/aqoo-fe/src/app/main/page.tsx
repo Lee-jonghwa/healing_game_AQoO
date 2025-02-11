@@ -297,8 +297,13 @@ function Fish({ fish }: { fish: FishData }) {
     moveFish();
   }, []);
 
+  const customLoader = ({ src }: { src: string }) => {
+    return src; // ✅ 원본 URL 그대로 사용하도록 설정
+  };
+
   return (
     <Image
+      loader={customLoader} // ✅ 커스텀 로더 추가
       ref={fishRef}
       src={fish.fishImage}
       alt={fish.fishTypeId.toString()}
@@ -306,6 +311,7 @@ function Fish({ fish }: { fish: FishData }) {
       height={64} // 필요에 맞게 조정
       className="absolute max-w-64 max-h-16 transform-gpu"
       onClick={handleClick}
+      unoptimized // ✅ Next.js 최적화 비활성화
     />
 
     // <Image src={fish.fishImage} alt={fish.fishTypeName} fill className="absolute max-w-64 h-16 transform-gpu"></Image>
