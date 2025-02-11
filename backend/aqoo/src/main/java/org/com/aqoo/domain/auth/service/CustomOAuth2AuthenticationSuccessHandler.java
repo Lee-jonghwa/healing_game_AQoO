@@ -50,7 +50,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         LoginResponse loginResponse = null;
         if (isNewUser == false) { // 기존 회원인 경우
-            String refreshToken = authService.getRefreshToken(email);
+            String refreshToken = jwtUtil.generateToken(email, "REFRESH");
             String accessToken = jwtUtil.generateToken(email, "ACCESS");
             String nickName = userRepository.findById(email).get().getNickname();
 
