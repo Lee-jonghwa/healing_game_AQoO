@@ -33,7 +33,7 @@ export default function EditProfilePage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isMyFishModalOpen, setIsMyFishModalOpen] = useState(false);
-  const SERVER_API = process.env.NEXT_PUBLIC_API_SERVER;
+  const SERVER_API = "https://i12e203.p.ssafy.io";
 
   useEffect(() => {
     const fetchUserData = async () => {

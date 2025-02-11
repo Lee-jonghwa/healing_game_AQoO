@@ -2,7 +2,7 @@
 export const fetchUserFishCollectionTest = async () => {
   try {
     const testUserId = "ejoyee"; // ✅ 테스트용 userId (임의 값)
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_SERVER}/api/v1/fish/collection/${testUserId}`;
+    const apiUrl = `https://i12e203.p.ssafy.io/api/v1/fish/collection/${testUserId}`;
 
     const res = await fetch(apiUrl, {
       method: "GET",
@@ -26,7 +26,7 @@ export const fetchUserFishCollectionTest = async () => {
 export const fetchCustomFishCollectionTest = async () => {
   try {
     const testUserId = "ejoyee"; // ✅ 테스트용 userId (임의 값)
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_SERVER}/api/v1/fish/custom/${testUserId}`;
+    const apiUrl = `https://i12e203.p.ssafy.io/api/v1/fish/custom/${testUserId}`;
 
     const res = await fetch(apiUrl, {
       method: "GET",
@@ -49,7 +49,7 @@ export const fetchCustomFishCollectionTest = async () => {
 // ✅ 테스트용 API 호출 (header 없음)
 export const fetchAllFishCollectionTest = async () => {
   try {
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_SERVER}/api/v1/fish/all-collection`;
+    const apiUrl = `https://i12e203.p.ssafy.io/api/v1/fish/all-collection`;
     console.log(`api요청:${apiUrl}`);
 
     const res = await fetch(apiUrl, {
