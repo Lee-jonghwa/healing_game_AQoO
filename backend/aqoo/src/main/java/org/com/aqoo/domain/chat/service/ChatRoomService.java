@@ -51,10 +51,15 @@ public class ChatRoomService {
 
     /** 채팅방 멤버 추가 */
     public void addMember(String roomId, String userId) {
-        chatRooms.computeIfAbsent(roomId, k -> new ChatRoom(roomId, userId))
-                .addMember(userId);
+        ChatRoom room = chatRooms.get(roomId);
+        if (room == null) {
+            // 방이 존재하지 않는 경우, 예외를 던지거나 에러 처리를 수행합니다.
+            throw new IllegalStateException("해당 채팅방은 존재하지 않거나 이미 삭제되었습니다.");
+        }
+        room.addMember(userId);
         broadcastUserList(roomId);
     }
+
 
     /** 채팅방 멤버 제거 */
     public void removeMember(String roomId, String userId) {
