@@ -13,7 +13,6 @@ import PasswordChangeModal from "./PasswordChangeModal";
 import DeleteAccountModal from "./DeleteAccountModal";
 import MyFishChangeModal from "./MyFishChangeModal";
 
-// 사용자 정보 타입 정의
 interface ProfileFormInputs {
   nickname: string;
 }
@@ -138,13 +137,20 @@ function EditProfilePage() {
   }, [userData, setValue]);
 
   const onSubmit: SubmitHandler<ProfileFormInputs> = async (data) => {
-    setIsProcessing(true);
+    setIsLoading(true);
     try {
-      // axiosInstance 인터셉터가 토큰을 헤더에 자동 추가하므로 POST 요청에 별도 옵션 없이 사용
-      await axiosInstance.post("/users", {
-        id: userData?.id || "",
-        nickname: data.nickname,
-        mainFishImage: userData?.mainFishImage || "",
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(`${SERVER_API}/api/v1/users`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: userData?.id || "",
+          nickname: data.nickname,
+          mainFishImage: userData?.mainFishImage || "",
+        }),
       });
 
       if (!response.ok) {
@@ -158,7 +164,7 @@ function EditProfilePage() {
       alert("회원 정보 수정 실패");
       console.error(error);
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
     }
   };
 
@@ -173,18 +179,24 @@ function EditProfilePage() {
           <div className="w-[250px] h-[250px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
             <div className="w-[220px] h-[220px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
               {userData?.mainFishImage ? (
-                <Image src={userData.mainFishImage} alt="대표 물고기" width={200} height={200} />
+                <Image
+                  src={userData.mainFishImage}
+                  alt="대표 물고기"
+                  className="w-24 h-24 object-cover rounded-md"
+                  width={200}
+                  height={200}
+                />
               ) : (
-                <p className="text-gray-500">이미지가 없습니다.</p>
+                <p className="text-gray-500">로딩 중...</p>
               )}
             </div>
           </div>
           <ModalButtons
             text="대표 물고기 변경"
-            isLoading={isProcessing}
+            isLoading={isLoading}
             color="none"
             onClick={() => setIsMyFishModalOpen(true)}
-            isSpecial
+            isSpecial={true}
           />
         </div>
 
@@ -200,13 +212,13 @@ function EditProfilePage() {
             <div className="flex justify-between gap-4 mt-4">
               <ModalButtons
                 text="비밀번호 변경"
-                isLoading={isProcessing}
+                isLoading={isLoading}
                 color="blue"
                 onClick={() => setIsPasswordModalOpen(true)}
               />
               <ModalButtons
                 text="회원 탈퇴"
-                isLoading={isProcessing}
+                isLoading={isLoading}
                 color="red"
                 onClick={() => setIsDeleteModalOpen(true)}
               />
