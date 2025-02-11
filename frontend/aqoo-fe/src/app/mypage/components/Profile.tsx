@@ -52,7 +52,6 @@ export default function Profile() {
               min-w-[200px] h-10 flex-shrink-0 mt-2 mb-2 px-2
               flex items-center
               text-[#070707] text-center text-2xl font-[400] leading-normal
-              font-[NeoDunggeunmo_Pro]
               rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
@@ -64,7 +63,6 @@ export default function Profile() {
               min-w-[200px] h-10 flex-shrink-0 mb-2 px-2
               flex items-center
               text-[#070707] text-center text-2xl font-[400] leading-normal
-              font-[NeoDunggeunmo_Pro]
               rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
@@ -76,7 +74,6 @@ export default function Profile() {
               min-w-[200px] h-10 flex-shrink-0 mb-2 px-2
               flex items-center
               text-[#070707] text-center text-2xl font-[400] leading-normal
-              font-[NeoDunggeunmo_Pro]
               rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
@@ -96,7 +93,6 @@ export default function Profile() {
             [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
             flex items-center justify-center
             text-[#070707] text-center font-[400] text-2xl
-            font-[NeoDunggeunmo_Pro]
           "
         >
           회원정보수정
