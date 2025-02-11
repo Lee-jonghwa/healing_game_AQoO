@@ -55,8 +55,11 @@ public class FriendRelationshipService {
             }
             // 지난 요청이 있었던 경우
             if ("PENDING".equals(relationship.getStatus())) {
-                // 기존 관계 삭제
-                friendRelationshipRepository.delete(relationship);
+                if (relationship.getFriend1Id().equals(request.getUserId())) {
+                    throw new IllegalStateException("이미 요청한 친구입니다.");
+                } else if (relationship.getFriend1Id().equals(request.getFriendId())) {
+                    friendRelationshipRepository.delete(relationship);
+                }
             }
         }
 
