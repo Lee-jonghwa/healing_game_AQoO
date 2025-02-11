@@ -1,17 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-export default function CustomFishNamePages() {
+export default function CustomFishNamePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const fishImage = searchParams.get("fishImage");
 
+  // ✅ useState로 URL Query에서 fishImage 가져오기 (useSearchParams 직접 사용 안 함)
+  const [fishImage, setFishImage] = useState<string | null>(null);
   const [fishName, setFishName] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // ✅ useEffect에서 클라이언트에서 실행되도록 처리 (SSR 오류 방지)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      setFishImage(urlParams.get("fishImage"));
+    }
+  }, []);
 
   const handleSaveName = () => {
     if (!fishName.trim()) {
@@ -37,15 +45,19 @@ export default function CustomFishNamePages() {
       <h2 className="text-3xl font-bold text-center mb-4">🐠 물고기 이름 짓기</h2>
 
       {/* ✅ Next.js 최적화된 Image 사용 */}
-      {fishImage && (
+      {fishImage ? (
         <Image
           src={fishImage}
           alt="Custom Fish"
           width={96}
           height={96}
           className="mb-4 rounded-full shadow-lg"
-          priority // ✅ LCP 최적화
+          priority
         />
+      ) : (
+        <div className="w-24 h-24 mb-4 flex items-center justify-center bg-gray-300 rounded-full">
+          <span className="text-gray-600">이미지 없음</span>
+        </div>
       )}
 
       {/* ✅ 입력 필드 */}
@@ -65,10 +77,13 @@ export default function CustomFishNamePages() {
       {/* ✅ 에러 메시지 UI 추가 */}
       {errorMessage && <p className="text-red-500 mt-2">{errorMessage}</p>}
 
-      {/* ✅ 저장 버튼 */}
+      {/* ✅ 저장 버튼 (fishName이 비어있으면 비활성화) */}
       <button
         onClick={handleSaveName}
-        className="mt-4 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+        disabled={!fishName.trim()} // ✅ 빈 값이면 버튼 비활성화
+        className={`mt-4 px-6 py-3 rounded-lg transition ${
+          fishName.trim() ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-400 text-gray-200 cursor-not-allowed"
+        }`}
       >
         저장하기
       </button>
