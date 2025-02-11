@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import FriendList from "@/app/gameRoom/FriendList";
-import ParticipantList from "@/app/gameRoom/ParticipantList";
+import FriendList from "@/app/gameroom/FriendList";
+import ParticipantList from "@/app/gameroom/ParticipantList";
 import { useRecoilState } from "recoil";
 import { useRouter } from "next/navigation";
 import { usersState } from "@/store/participantAtom";
