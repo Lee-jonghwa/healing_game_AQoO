@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.com.aqoo.domain.auth.dto.LoginResponse;
+import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.repository.UserRepository;
 import org.com.aqoo.util.JwtUtil;
 import org.springframework.http.ResponseCookie;
@@ -52,9 +53,10 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         if (isNewUser == false) { // 기존 회원인 경우
             String refreshToken = jwtUtil.generateToken(email, "REFRESH");
             String accessToken = jwtUtil.generateToken(email, "ACCESS");
-            String nickName = userRepository.findById(email).get().getNickname();
+            User user = userRepository.findById(email).get();
+            String nickName = user.getNickname();
 
-            loginResponse = new LoginResponse(accessToken, email, nickName, "기존 회원");
+            loginResponse = new LoginResponse(accessToken, email, nickName,"기존 회원");
             log.info("Generated refresh token for existing user {}: {}", email, refreshToken);
 
             // RefreshToken 쿠키 설정
@@ -62,7 +64,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         } else if (isNewUser == true) { // 신규 회원인 경우
             // 신규 회원인 경우 accessToken, nickName은 빈 문자열로 설정합니다.
-            loginResponse = new LoginResponse("", email, "", "신규 회원");
+            loginResponse = new LoginResponse("", email, "","신규 회원");
         }
 
         log.info("LoginResponse - accessToken: {}, userId: {}, nickName: {}, userStatus: {}",

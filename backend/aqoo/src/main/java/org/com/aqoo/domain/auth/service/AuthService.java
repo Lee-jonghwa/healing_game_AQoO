@@ -79,7 +79,7 @@ public class AuthService {
 
         String message = "accessToken 발급 성공";
         // 응답 생성
-        return new LoginResponse(accessToken, user.getId() , user.getNickname(), user.getIsFirstLogin()==1,message);
+        return new LoginResponse(accessToken, user.getId() , user.getNickname(), message);
     }
 
     public String getRandomPassword(){
