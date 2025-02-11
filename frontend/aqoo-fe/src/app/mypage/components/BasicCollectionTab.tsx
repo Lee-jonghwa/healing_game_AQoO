@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import CollectionItemCard from "./CollectionItemCard";
 
 interface BasicCollectionTabProps {
@@ -8,10 +7,7 @@ interface BasicCollectionTabProps {
   userFishList: { fishTypeId: number; fishTypeName: string; fishImage: string; cnt: number }[];
 }
 
-export default function BasicCollectionTab({ allFishList = [], userFishList = [] }: BasicCollectionTabProps) {
-  // 서버에 주고 받을 필요가 없음
-  // const SERVER = process.env.NEXT_PUBLIC_API_SERVER;
-
+export default function BasicCollectionTab({ userFishList = [] }: BasicCollectionTabProps) {
   return (
     <div id="one-panel" className="flex flex-wrap">
       {Array(50)

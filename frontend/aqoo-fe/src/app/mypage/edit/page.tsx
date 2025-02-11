@@ -11,29 +11,15 @@ import Buttons from "./Buttons";
 import PasswordChangeModal from "./PasswordChangeModal";
 import DeleteAccountModal from "./DeleteAccountModal";
 import MyFishChangeModal from "./MyFishChangeModal";
-import MyFishlist from "../components/MyFishList";
 
 import Image from "next/image";
-import Link from "next/link";
 
 interface ProfileFormInputs {
   nickname: string;
 }
 
-const EditPage = () => {
-  const server = "https://i12e203.p.ssafy.io";
-  const userId = "moolgogi2";
-  const token = "your-access-token";
-
-  return (
-    <div>
-      <h1>내 어항</h1>
-      <MyFishlist server={server} userId={userId} token={token} />
-    </div>
-  );
-};
-
 export default function EditProfilePage() {
+  // const { auth } = useAuth();
   const { register, handleSubmit, setValue } = useForm<ProfileFormInputs>();
   const { fetchUser, auth } = useAuth();
   const router = useRouter();
@@ -47,12 +33,13 @@ export default function EditProfilePage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isMyFishModalOpen, setIsMyFishModalOpen] = useState(false);
+  const SERVER_API = process.env.NEXT_PUBLIC_API_SERVER;
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("accessToken");
-        const response = await fetch(`/api/v1/users/${auth.user?.id}`, {
+        const response = await fetch(`${SERVER_API}/api/v1/users/${auth.user?.id}`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -61,6 +48,8 @@ export default function EditProfilePage() {
         });
 
         if (!response.ok) {
+          console.log(auth);
+          console.log(`사용자: ${auth.user?.id}`);
           throw new Error("유저 정보를 불러오는데 실패했습니다.");
         }
 
@@ -78,7 +67,7 @@ export default function EditProfilePage() {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("accessToken");
-      const response = await fetch("/api/v1/users", {
+      const response = await fetch(`${SERVER_API}/api/v1/users`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -92,6 +81,7 @@ export default function EditProfilePage() {
       });
 
       if (!response.ok) {
+        console.log(data);
         throw new Error("회원 정보 수정 실패");
       }
 
@@ -99,7 +89,7 @@ export default function EditProfilePage() {
       alert("회원 정보 수정 성공!");
       router.push("/profile");
     } catch (error) {
-      alert(error.message || "회원 정보 수정 실패");
+      alert("회원 정보 수정 실패");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -152,7 +142,13 @@ export default function EditProfilePage() {
                     "
             >
               {userData?.mainFishImage ? (
-                <Image src={userData.mainFishImage} alt="대표 물고기" className="w-24 h-24 object-cover rounded-md" />
+                <Image
+                  src={userData.mainFishImage}
+                  alt="대표 물고기"
+                  className="w-24 h-24 object-cover rounded-md"
+                  width={200}
+                  height={200}
+                />
               ) : (
                 <p className="text-gray-500">로딩 중...</p>
               )}

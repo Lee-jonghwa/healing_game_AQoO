@@ -6,12 +6,12 @@ import BasicCollectionTab from "./BasicCollectionTab";
 import CustomCollectionTab from "./CustomCollectionTab";
 
 interface MyCollectionProps {
-  allFishList: { id: number; fishName: string; imageUrl: string; rarity:string }[];
-  userFishList: { fishTypeId: number; fishTypeName: string; fishImage: string, cnt:number }[];
+  allFishList: { id: number; fishName: string; imageUrl: string; rarity: string }[];
+  userFishList: { fishTypeId: number; fishTypeName: string; fishImage: string; cnt: number }[];
   customFishList: { fishTypeId: number; fishTypeName: string; fishImage: string }[];
 }
 
-export default function MyCollection({allFishList, userFishList, customFishList}: MyCollectionProps) {
+export default function MyCollection({ allFishList, userFishList, customFishList }: MyCollectionProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedTab = searchParams.get("tab") || "basic";
@@ -85,8 +85,8 @@ export default function MyCollection({allFishList, userFishList, customFishList}
       >
         <div className="flex-1 overflow-y-auto bg-white w-full h-full rounded-[30px]">
           <div className="bg-white overflow-hidden">
-            {selectedTab === "basic" && <BasicCollectionTab allFishList={allFishList} userFishList={userFishList}/>}
-            {selectedTab === "custom" && <CustomCollectionTab customFishList={customFishList}/>}
+            {selectedTab === "basic" && <BasicCollectionTab allFishList={allFishList} userFishList={userFishList} />}
+            {selectedTab === "custom" && <CustomCollectionTab customFishList={customFishList} />}
           </div>
         </div>
       </div>

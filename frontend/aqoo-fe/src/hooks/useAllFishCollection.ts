@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 import { fetchAllFishCollectionTest } from "@/lib/api";
 
 interface FishData {
-  fish: string;
+  id: number;
+  fishName: string;
+  imageUrl: string;
+  rarity: string;
 }
 
 /**
