@@ -18,6 +18,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await logout(); // Recoil 상태 초기화 & API 호출 <<< 이거 지금 안 되는 게 로컬이어서 그런 건지 아닌지 모르겠어서 수정 바람
+      setIsSettingsOpen(false); // ✅ 모달 닫기
       router.push("/user/login"); // 로그아웃 후 로그인 페이지로 이동
     } catch (error) {
       console.error("로그아웃 실패", error);
