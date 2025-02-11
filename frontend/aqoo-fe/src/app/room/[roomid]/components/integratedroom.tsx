@@ -427,10 +427,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
           )}
 
           {screen === 'game' && (
-            <div
-            className="min-h-screen w-full bg-cover bg-center p-6"
-            style={{ backgroundImage: "url('/images/game_background.png')" }}
-            >
+            <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow">
               <Game
                 roomId={roomId}
                 userName={userName}

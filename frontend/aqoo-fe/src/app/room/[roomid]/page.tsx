@@ -48,8 +48,14 @@ export default function RoomPage({ params }: RoomPageProps) {
   // }
 
   return (
-    <div className="min-h-screen p-4 bg-gray-100">
-      <IntegratedRoom roomId={roomid} userName={userName} />
+    <div>
+      <div 
+      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/background.png')" }}
+      >
+        <div className="absolute inset-0 bg-white opacity-20"></div>
+        <IntegratedRoom roomId={roomid} userName={userName} />
+      </div>
     </div>
   );
 }
