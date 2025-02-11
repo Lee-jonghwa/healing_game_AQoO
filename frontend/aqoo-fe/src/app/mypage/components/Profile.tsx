@@ -3,6 +3,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { Fish } from "lucide-react";
 
 interface UserData {
   id: string;
@@ -68,7 +69,7 @@ function fetchUserData(userId: string): Promise<any> {
 /**
  * 실제 UI를 렌더링하는 컴포넌트
  */
-function ProfileContent({ userData }: { userData: UserData }) {
+function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal: number }) {
   return (
     <div
       className="
@@ -143,7 +144,7 @@ function ProfileContent({ userData }: { userData: UserData }) {
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
-            총 물고기 갯수: 100 마리
+            총 물고기 갯수: {fishTotal} 마리
           </p>
         </div>
       </div>
@@ -171,7 +172,7 @@ function ProfileContent({ userData }: { userData: UserData }) {
  * Profile 컴포넌트는 auth.user가 준비되었을 때,
  * useState와 useEffect를 사용해 리소스를 한 번만 생성합니다.
  */
-function Profile() {
+function Profile({ fishTotal }: { fishTotal: number }) {
   const { auth } = useAuth();
   const userId = auth.user?.id;
   const [resource, setResource] = useState<{ read: () => any } | null>(null);
@@ -189,16 +190,16 @@ function Profile() {
   }
 
   const userData = resource.read();
-  return <ProfileContent userData={userData} />;
+  return <ProfileContent userData={userData} fishTotal={fishTotal} />;
 }
 
 /**
  * Suspense를 사용해 로딩 상태를 처리하는 Wrapper 컴포넌트
  */
-export default function ProfileWrapper() {
+export default function ProfileWrapper({ fishTotal }: { fishTotal: number }) {
   return (
     <Suspense fallback={<div>로딩 중...</div>}>
-      <Profile />
+      <Profile fishTotal={fishTotal} />
     </Suspense>
   );
 }
