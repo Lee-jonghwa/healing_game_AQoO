@@ -113,9 +113,16 @@ export default function MainPage() {
     // ✅ 물고기 데이터 불러오기 (API 호출)
     axios
       .get(`${API_BASE_URL}/aquariums/fish/${userInfo.mainAquarium}`, { withCredentials: true })
-      .then((response: AxiosResponse<FishData[]>) => {
+      .then((response: AxiosResponse<FishData[] | { message: string }>) => {
         console.log("🐠 내 물고기 목록:", response.data);
-        setFishes(response.data);
+
+        // ✅ 응답이 배열인지 확인 후 상태 업데이트
+        if (Array.isArray(response.data)) {
+          setFishes(response.data);
+        } else {
+          console.warn("⚠️ 물고기 데이터가 없습니다.");
+          setFishes([]); // 빈 배열 설정
+        }
       })
       .catch((error) => {
         console.error("❌ 물고기 데이터 불러오기 실패", error);
