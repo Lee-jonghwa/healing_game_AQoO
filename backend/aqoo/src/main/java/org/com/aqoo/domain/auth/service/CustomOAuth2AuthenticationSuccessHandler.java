@@ -50,15 +50,13 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
         }
 
         LoginResponse loginResponse = null;
-        boolean isFirstLogin = false;
         if (isNewUser == false) { // 기존 회원인 경우
             String refreshToken = jwtUtil.generateToken(email, "REFRESH");
             String accessToken = jwtUtil.generateToken(email, "ACCESS");
             User user = userRepository.findById(email).get();
             String nickName = user.getNickname();
-            isFirstLogin =  user.getIsFirstLogin()==1;
 
-            loginResponse = new LoginResponse(accessToken, email, nickName, isFirstLogin,"기존 회원");
+            loginResponse = new LoginResponse(accessToken, email, nickName,"기존 회원");
             log.info("Generated refresh token for existing user {}: {}", email, refreshToken);
 
             // RefreshToken 쿠키 설정
@@ -66,7 +64,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         } else if (isNewUser == true) { // 신규 회원인 경우
             // 신규 회원인 경우 accessToken, nickName은 빈 문자열로 설정합니다.
-            loginResponse = new LoginResponse("", email, "", isFirstLogin,"신규 회원");
+            loginResponse = new LoginResponse("", email, "","신규 회원");
         }
 
         log.info("LoginResponse - accessToken: {}, userId: {}, nickName: {}, userStatus: {}",
@@ -76,7 +74,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
                 loginResponse.getMessage());
 
         // 6. 최종 프론트엔드 리다이렉트 URL 생성 및 리다이렉트
-        String redirectUrl = loginFrontendRedirectUrl(loginResponse, isNewUser,isFirstLogin);
+        String redirectUrl = loginFrontendRedirectUrl(loginResponse, isNewUser);
         log.info("Redirecting to URL: {}", redirectUrl);
         response.sendRedirect(redirectUrl);
     }
@@ -133,7 +131,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
     /**
      * 프론트엔드 리다이렉트 URL을 생성하는 메서드
      */
-    private String loginFrontendRedirectUrl(LoginResponse loginResponse, boolean isNewUser, boolean isFristLogin) {
+    private String loginFrontendRedirectUrl(LoginResponse loginResponse, boolean isNewUser) {
         String frontendRedirectUrl = "https://i12e203.p.ssafy.io/user/login/social-login-callback";
 
         // 안전하게 인코딩하기 위한 헬퍼 메서드 사용
@@ -145,8 +143,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
                 "?accessToken=" + accessToken +
                 "&userId=" + userId +
                 "&nickName=" + nickName +
-                "&isNewUser=" + isNewUser+
-                "&isFirstLogin=" + isFristLogin;
+                "&isNewUser=" + isNewUser;
     }
 
     /**

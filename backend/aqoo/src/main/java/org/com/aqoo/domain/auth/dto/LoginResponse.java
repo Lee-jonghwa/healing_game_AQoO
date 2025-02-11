@@ -9,6 +9,5 @@ public class LoginResponse {
     private String accessToken;
     private String userId;
     private String nickName;
-    private boolean isFirstLogin;
     private String message;
 }
