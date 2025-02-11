@@ -13,6 +13,9 @@ interface CollectionItemCardProps {
 }
 
 export default function CollectionItemCard({ name, count, imageSrc }: CollectionItemCardProps) {
+  const customLoader = ({ src }: { src: string }) => {
+    return src; // ✅ 원본 URL 그대로 사용하도록 설정
+  };
   return (
     <div
       className="
@@ -32,7 +35,10 @@ export default function CollectionItemCard({ name, count, imageSrc }: Collection
         "
       >
         <div className="flex-1 flex items-center justify-center">
-          <Image src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} />
+          <Image
+           loader={customLoader} // ✅ 커스텀 로더 추가
+           unoptimized
+          src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} />
         </div>
         <div
           className="
