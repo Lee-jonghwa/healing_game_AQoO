@@ -1,0 +1,308 @@
+@font-face {
+  font-family: "NeoDunggeunmo Pro";
+  src: url("/NeoDunggeunmoPro-Regular.ttf") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+/* 페이지 body */
+.main {
+  display: flex;
+  background-image: url("../../public/images/배경샘플.png"); /* public 폴더 기준으로 절대 경로 사용 */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+/* Home, Back 버튼 위치 설정*/
+.btn-bg {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin: 10px;
+}
+
+/* 기본 버튼 설정 */
+.btn {
+  /* 사이즈 */
+  min-width: 80px;
+  width: auto;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 10px;
+
+  /* 버튼 디자인 */
+  border-radius: 10px;
+  border: 1px solid #040303;
+  background: #fff;
+  box-shadow: -2px -2px 0px 1px rgba(0, 0, 0, 0.5) inset;
+
+  /* 정렬 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 텍스트 컬러 */
+  color: #070707;
+  text-align: center;
+  font-family: "NeoDunggeunmo Pro";
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+/* 내 정보 + 도감 container => 두 가지 기능 배치 */
+.myPage-container {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+/* 내 정보 부분 */
+.myInfo {
+  /* 위치 조정 */
+  margin: 10px;
+
+  /* 디자인 */
+  width: 1300px;
+  height: 200px;
+  border-radius: 30px;
+  background: #fffdfd;
+  border: 2px solid #1c5e8d;
+  box-shadow: -2px -2px 0px 2px rgba(0, 0, 0, 0.25) inset;
+
+  /* 정렬 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* myInfo 내 대표이미지와 정보 표시 부분 container */
+.info-container {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* 내 정보에 나타나는 이름 없는 초상화 컨테이너 */
+.my-portrait-container {
+  /* 사이즈 */
+  width: 170px;
+  height: 170px;
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 20px;
+  margin-right: 20px;
+
+  /* 정렬 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 디자인 */
+  border-radius: 10px;
+  border: 1px solid #000;
+  background: #fff;
+  box-shadow: -2px -2px 0px 1px rgba(0, 0, 0, 0.5) inset;
+}
+
+/* 캐릭터 이미지 컨테이너 */
+.portrait-container {
+  /* 사이즈 */
+  width: 170px;
+  height: 190px;
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 20px;
+  margin-right: 20px;
+
+  /* 정렬 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 디자인 */
+  border-radius: 10px;
+  border: 1px solid #000;
+  background: #fff;
+  box-shadow: -2px -2px 0px 1px rgba(0, 0, 0, 0.5) inset;
+}
+
+/* 캐릭터 이미지 테두리 */
+.portrait {
+  /* 사이즈 */
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* 디자인 */
+  border: 1px solid #000;
+  background: #fff;
+  box-shadow: 1px 1px 0px 1px rgba(0, 0, 0, 0.25) inset;
+}
+
+/* 캐릭터 이름 / 마릿수 텍스트 */
+.portrait-text {
+  /* 사이즈 */
+  font-size: 20px;
+
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+
+  font-family: "NeoDunggeunmo Pro";
+  color: #000;
+}
+/* 캐릭터 마릿 수 */
+.how-many {
+  font-size: 15px;
+  color: gray;
+}
+.infotext-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.infotext {
+  min-width: 200px;
+  width: auto;
+  height: 40px;
+  flex-shrink: 0;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+
+  display: flex;
+  align-items: center;
+
+  color: #070707;
+  text-align: center;
+  font-family: "NeoDunggeunmo Pro";
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+
+  border-radius: 10px;
+  border: 3px solid #000;
+  background: #fff;
+  box-shadow: 1px 1px 0px 1px rgba(0, 0, 0, 0.5) inset;
+}
+
+.button-myInfo {
+  align-self: flex-start;
+  margin: 10px 20px 0 0;
+}
+
+/* 도감 부분 */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.tab {
+  position: relative;
+  left: 30px;
+
+  cursor: pointer;
+  display: inline-block;
+  justify-content: center;
+  align-items: center;
+
+  width: 150px;
+  height: 40px;
+  flex-shrink: 0;
+
+  padding: 10px 20px;
+
+  border-radius: 10px 10px 0px 0px;
+  border-top: 1px solid #1c5e8d;
+  border-right: 1px solid #1c5e8d;
+  border-left: 1px solid #1c5e8d;
+  background: #f0f0f0;
+  box-shadow: -1px 0px 0px 2px rgba(0, 0, 0, 0.25) inset;
+
+  color: #070707;
+  text-align: center;
+  font-family: "NeoDunggeunmo Pro";
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.tab.active {
+  background-color: #31a9ff;
+  color: #000;
+  border-top: 3px solid #000;
+}
+
+.go-to-fishtank {
+  position: absolute;
+  right: 0px;
+}
+
+.fishList-container {
+  width: 1300px;
+  height: 100vh;
+  margin: 0;
+  padding: 20px;
+
+  border-radius: 10px;
+  border: 2px solid #1c5e8d;
+  background: #31a9ff;
+  box-shadow: -2px -2px 0px 1px rgba(0, 0, 0, 0.25) inset;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fishList {
+  flex: 1;
+  overflow-y: auto;
+
+  background-color: white;
+  width: 100%;
+  height: 100%;
+
+  border-radius: 30px;
+  background: #fff;
+}
+
+.panels {
+  background-color: white;
+  overflow: hidden;
+}
+
+.panel {
+  display: none;
+}
+
+.panel-title {
+  font-size: 1.5em;
+  font-weight: bold;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 10px;
+}
+
+.radio {
+  display: none;
+}
+
+.one-panel,
+.two-panel {
+  display: flex;
+  flex-wrap: wrap;
+}

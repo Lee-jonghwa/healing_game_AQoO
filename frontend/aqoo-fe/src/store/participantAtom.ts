@@ -5,7 +5,7 @@ export interface User {
   friendId: string;  // ✅ FriendId 추가 (친구 ID)
   nickname: string;
   level: number;
-  fishImage?: string;
+  mainFishImage?: string;
   ready: boolean;
   isHost: boolean;
 }
