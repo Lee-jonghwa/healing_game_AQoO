@@ -1,7 +1,8 @@
 {
-  "/page": "app/page.js",
+  "/user/login/page": "app/user/login/page.js",
   "/main/page": "app/main/page.js",
   "/gameroom/page": "app/gameroom/page.js",
-  "/user/login/page": "app/user/login/page.js",
-  "/room/[roomid]/page": "app/room/[roomid]/page.js"
+  "/room/[roomid]/page": "app/room/[roomid]/page.js",
+  "/room/page": "app/room/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js"
 }
