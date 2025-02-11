@@ -85,22 +85,39 @@ export default function GameRoomPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900 text-center">
-        참가자 관리 및 채팅방 생성
-      </h1>
-
-      <div className="flex gap-6">
-        <FriendList />
-        <ParticipantList />
+    <div
+      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/background.png')" }}
+    >
+      {/* 배경 */}
+      <div className="absolute inset-0 bg-white opacity-20"></div>
+  
+      {/* 전체 컨테이너 */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* 친구 리스트 + 참가자 리스트 감싸는 네모 박스 */}
+        <div className="relative flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px]">
+          <FriendList />
+          <ParticipantList />
+  
+          {/* 방 만들기 */}
+          <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 px-6 py-2 bg-white border border-black rounded-lg shadow-lg">
+            <h1 className="text-3xl font-bold text-black text-center">
+              🎮 방 만들기 🕹️
+            </h1>
+          </div>
+        </div>
       </div>
 
+      {/* 만들기 버튼 */}
       <button
-        onClick={handleCreateRoom}
-        disabled={!userName || participants.length === 0 || loading}
-        className="mt-6 w-60 px-4 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
+      className="absolute bottom-5 right-5 px-5 py-2 rounded border border-black bg-white text-xl"
+      onClick={handleCreateRoom}
       >
-        {loading ? "Creating..." : "채팅방 생성"}
+        만들기
+      </button>
+      {/* 뒤로가기 버튼 */}
+      <button className="absolute bottom-5 left-5 px-5 py-2 rounded border border-black bg-white text-xl">
+        BACK
       </button>
     </div>
   );

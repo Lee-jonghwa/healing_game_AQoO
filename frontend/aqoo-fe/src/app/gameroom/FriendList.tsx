@@ -4,7 +4,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
-import { usersState } from "@/store/participantAtom";
+import { usersState, User } from "@/store/participantAtom";
 
 interface Friend {
   id: string; // 친구 관계 아이디
@@ -12,11 +12,6 @@ interface Friend {
   nickname: string;
   level: number;
   mainFishImage?: string | null;
-}
-
-interface User extends Friend {
-  ready: boolean;
-  isHost: boolean;
 }
 
 export default function FriendList() {
@@ -48,7 +43,8 @@ export default function FriendList() {
     axios
       .get(`${API_BASE_URL}/friends/${loggedInUser}`)
       .then((response) => {
-        console.log("✅ 친구 목록 조회 성공:", response.data);
+        console.log("loggedInUser", loggedInUser);
+        console.log("친구 목록 조회 성공:", response.data);
         setMyFriends(response.data.friends);
       })
       .catch((error) => {
@@ -62,6 +58,8 @@ export default function FriendList() {
   
     const newUser: User = {
       ...friend,
+      // mainFishImage가 null일 경우 undefined로 변환
+      mainFishImage: friend.mainFishImage ?? undefined,
       ready: false,
       isHost: false,
     };
@@ -70,7 +68,7 @@ export default function FriendList() {
   };
 
   return (
-    <div className="relative w-[400px] h-[600px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col">
+    <div className="relative w-96 h-[450px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">친구 {myFriends.length}</h2>
@@ -82,7 +80,7 @@ export default function FriendList() {
           myFriends.map((friend) => (
             <div
               key={friend.friendId}
-              className="p-3 bg-white rounded-lg border border-black flex items-center justify-between"
+              className="p-3 bg-white border border-black flex items-center justify-between shadow-[2px_2px_0_rgba(0,0,0,0.3)]"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gray-300 rounded-full">
@@ -108,11 +106,10 @@ export default function FriendList() {
               </div>
               <button
                 onClick={() => handleAddParticipant(friend)}
-                disabled={users.some((u) => u.friendId === friend.friendId)}
                 className={`px-3 py-1 text-sm rounded-md ${
                   users.some((u) => u.friendId === friend.friendId)
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-blue-500 text-white hover:bg-blue-600"
+                    ? "bg-white text-black border border-black shadow-[2px_2px_0_rgba(0,0,0,0.3)] cursor-default"
+                    : "bg-white text-black border border-black cursor-pointer"
                 }`}
               >
                 {users.some((u) => u.friendId === friend.friendId) ? "✔" : "추가"}
