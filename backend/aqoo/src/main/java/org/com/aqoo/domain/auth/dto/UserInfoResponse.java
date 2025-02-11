@@ -30,4 +30,8 @@ public class UserInfoResponse {
 
     @Builder.Default
     private int mainAquarium = 0;
+
+    @Builder.Default
+    private int fishTicekt;
+
 }
