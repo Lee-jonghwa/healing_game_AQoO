@@ -3,15 +3,11 @@ package org.com.aqoo.domain.auth.service;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.*;
 import org.com.aqoo.domain.auth.entity.User;
-import org.com.aqoo.repository.UserFishRepository;
 import org.com.aqoo.repository.UserRepository;
 import org.com.aqoo.util.ImageUrlUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.Objects;
 
 @Service
@@ -116,4 +112,16 @@ public class UserService {
         user.setStatus(!user.getStatus());
         userRepository.save(user);
     }
+
+    public boolean isFirstLogin(String userId){
+        User user = userRepository.findById(userId).get();
+        return user.getIsFirstLogin()==1?true:false;
+    }
+
+    public void tutorialComplete(String userId){
+        User user = userRepository.findById(userId).get();
+        user.setIsFirstLogin(0);
+        userRepository.save(user);
+    }
+
 }

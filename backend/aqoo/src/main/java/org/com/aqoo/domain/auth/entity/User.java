@@ -27,11 +27,11 @@ public class User {
     private String nickname;
 
     @Lob
-    @Column(columnDefinition = "TEXT") // TEXT 타입
+    @Column(name="refresh_token",columnDefinition = "TEXT") // TEXT 타입
     private String refreshToken;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(name="main_fish_image",columnDefinition = "TEXT")
     private String mainFishImage;
 
     @Column
@@ -43,8 +43,15 @@ public class User {
     @Column
     private Boolean status; // BOOLEAN
 
-    @Column
+    @Column(name = "main_aquarium")
     private Integer mainAquarium; // INTEGER
+
+    @Column(name = "is_first_login")
+    private Integer isFirstLogin; // INTEGER
+
+    @Column(name = "fish_ticket")
+    private Integer fishTicket; // INTEGER
+
 
     // 기본값 설정 메서드
     @PrePersist
