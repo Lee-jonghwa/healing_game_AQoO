@@ -50,8 +50,9 @@ export const logout = async (): Promise<void> => {
       return;
     }
 
-    // userId를 포함한 로그아웃 엔드포인트 호출
-    await axios.post(`${AUTH_API_URL}/logout/${userId}`, {}, { withCredentials: true });
+    // userId를 포함한 로그아웃 엔드포인트 호출 (withCredentials 옵션 포함)
+    await axios.delete(`${AUTH_API_URL}/logout/${userId}`, { withCredentials: true });
+    
     // 로그아웃 성공 시 localStorage의 인증 데이터 삭제
     localStorage.removeItem("accessToken");
     localStorage.removeItem("loggedInUser");
@@ -59,6 +60,7 @@ export const logout = async (): Promise<void> => {
     console.error("Error during logout:", error);
   }
 };
+
 
 /**
  * 저장된 accessToken을 이용해 로그인된 사용자 정보를 가져옵니다.
