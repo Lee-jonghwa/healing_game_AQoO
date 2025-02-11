@@ -13,15 +13,21 @@ interface FishData {
 /**
  * 테스트용 커스텀 훅 (로그인 없이 특정 userId의 커스텀 물고기를 가져옴)
  */
-export function useCustomFishCollectionTest() {
+export function useCustomFishCollectionTest(userId?: string) {
   const [fishList, setFishList] = useState<FishData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
+    const validUserId: string = userId;
+
     async function loadFish() {
       try {
-        const data = await fetchCustomFishCollectionTest();
+        const data = await fetchCustomFishCollectionTest(validUserId);
         if (data) {
           setFishList(data);
         } else {
@@ -35,7 +41,7 @@ export function useCustomFishCollectionTest() {
     }
 
     loadFish();
-  }, []);
+  }, [userId]);
 
   return { fishList, isLoading, error };
 }
