@@ -1,7 +1,0 @@
-{
-  "/user/login/page": "app/user/login/page.js",
-  "/mypage/edit/page": "app/mypage/edit/page.js",
-  "/main/page": "app/main/page.js",
-  "/mypage/page": "app/mypage/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js"
-}

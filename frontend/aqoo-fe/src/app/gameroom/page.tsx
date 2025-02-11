@@ -7,7 +7,7 @@ import { usersState } from "@/store/participantAtom";
 import FriendList from "./FriendList";
 import ParticipantList from "./ParticipantList";
 
-// localStorage 안전하게 접근하는 헬퍼 함수
+// localStorage에 안전하게 접근하는 헬퍼 함수
 const getLocalStorageItem = (key: string, defaultValue: string = "guest"): string => {
   if (typeof window !== "undefined") {
     return localStorage.getItem(key) ?? defaultValue;
@@ -27,17 +27,6 @@ export default function GameRoomPage() {
     setUserName(storedUserName);
   }, []);
 
-  // 방장 자동 지정 (이전 참가자가 있을 경우만)
-  useEffect(() => {
-    if (participants.length > 0 && !participants[0]?.isHost) {
-      setParticipants((prev) => {
-        const updatedParticipants = [...prev];
-        updatedParticipants[0] = { ...updatedParticipants[0], isHost: true };
-        return updatedParticipants;
-      });
-    }
-  }, [participants.length]);
-
   // 채팅방 생성 핸들러
   const handleCreateRoom = async () => {
     if (participants.length === 0) {
@@ -52,6 +41,7 @@ export default function GameRoomPage() {
 
     setLoading(true);
     try {
+      // 채팅방 생성 API 호출
       const response = await fetch(
         `https://i12e203.p.ssafy.io/api/v1/chatrooms?userId=${encodeURIComponent(userName)}`,
         {
@@ -68,9 +58,41 @@ export default function GameRoomPage() {
 
       const data = await response.json();
       const roomId = data.roomId;
-      console.log("✅ Created roomId:", roomId);
+      console.log("Created roomId:", roomId);
+      console.log("paritipants:", participants);
+      
 
-      // 새로운 경로로 이동
+      // 참가자 목록을 순회하며 초대 API 호출 (호스트 제외)
+      for (const participant of participants) {
+        // 만약 해당 참가자가 호스트라면 초대 API 호출하지 않음
+        if (participant.isHost) continue;
+
+        try {
+          const inviteResponse = await fetch(
+            "https://i12e203.p.ssafy.io/api/v1/chatrooms/invite",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                hostId: userName, // 채팅방을 생성한 사람(호스트)
+                guestId: participant.friendId, // 초대할 참가자 (participant의 식별자)
+                roomId: roomId,
+              }),
+            }
+          );
+          if (!inviteResponse.ok) {
+            console.error(`${participant.friendId}님 초대 실패`);
+          } else {
+            console.log(`${participant.friendId}님 초대 성공`);
+          }
+        } catch (inviteError) {
+          console.error(`${participant.friendId}님 초대 중 에러 발생:`, inviteError);
+        }
+      }
+
+      // 채팅방 페이지로 이동 (호스트 플래그 true)
       router.push(
         `/room/${roomId}?userName=${encodeURIComponent(userName)}&isHost=true`
       );
@@ -110,8 +132,8 @@ export default function GameRoomPage() {
 
       {/* 만들기 버튼 */}
       <button
-      className="absolute bottom-5 right-5 px-5 py-2 rounded border border-black bg-white text-xl"
-      onClick={handleCreateRoom}
+        className="absolute bottom-5 right-5 px-5 py-2 rounded border border-black bg-white text-xl"
+        onClick={handleCreateRoom}
       >
         만들기
       </button>
