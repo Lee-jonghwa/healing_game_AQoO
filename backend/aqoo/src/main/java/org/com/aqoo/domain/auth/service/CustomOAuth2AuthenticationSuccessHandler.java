@@ -66,7 +66,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         } else if (isNewUser == true) { // 신규 회원인 경우
             // 신규 회원인 경우 accessToken, nickName은 빈 문자열로 설정합니다.
-            loginResponse = new LoginResponse("", email, "", false,"신규 회원");
+            loginResponse = new LoginResponse("", email, "", isFirstLogin,"신규 회원");
         }
 
         log.info("LoginResponse - accessToken: {}, userId: {}, nickName: {}, userStatus: {}",
