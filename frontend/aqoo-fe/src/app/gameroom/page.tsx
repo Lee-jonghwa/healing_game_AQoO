@@ -106,7 +106,7 @@ export default function GameRoomPage() {
       style={{ backgroundImage: "url('/images/background.png')" }}
     >
       {/* 배경 */}
-      <div className="absolute inset-0 bg-white opacity-20"></div>
+      {/* <div className="absolute inset-0 bg-white opacity-20"></div> */}
 
       {/* 전체 컨테이너 */}
       <div className="relative z-10 flex flex-col items-center">
