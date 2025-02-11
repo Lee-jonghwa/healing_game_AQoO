@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.com.aqoo.domain.auth.dto.LoginResponse;
 import org.com.aqoo.repository.UserRepository;
 import org.com.aqoo.util.JwtUtil;
@@ -18,6 +19,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@Slf4j
 @Component
 @AllArgsConstructor
 public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
@@ -37,6 +39,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
 
         // 2. 사용자 이메일 추출 (구글/네이버 대응)
         String email = extractEmailFromOAuth2User(oAuth2User);
+        log.info("OAuth2 authentication success for email: {}", email);
 
         // 3. 회원 상태 확인 (기존 회원/신규 회원/탈퇴 회원 처리)
         Boolean isNewUser = checkUserStatus(email, response);
@@ -52,6 +55,8 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             String nickName = userRepository.findById(email).get().getNickname();
 
             loginResponse = new LoginResponse(accessToken, email, nickName, "기존 회원");
+            log.info("Generated refresh token for existing user {}: {}", email, refreshToken);
+
             // RefreshToken 쿠키 설정
             setRefreshTokenCookie(response, refreshToken);
 
@@ -60,10 +65,15 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             loginResponse = new LoginResponse("", email, "", "신규 회원");
         }
 
+        log.info("LoginResponse - accessToken: {}, userId: {}, nickName: {}, userStatus: {}",
+                loginResponse.getAccessToken(),
+                loginResponse.getUserId(),
+                loginResponse.getNickName(),
+                loginResponse.getMessage());
 
         // 6. 최종 프론트엔드 리다이렉트 URL 생성 및 리다이렉트
         String redirectUrl = loginFrontendRedirectUrl(loginResponse, isNewUser);
-        System.out.println("OAuth 로그인 응답 : " + redirectUrl );
+        log.info("Redirecting to URL: {}", redirectUrl);
         response.sendRedirect(redirectUrl);
     }
 
@@ -92,6 +102,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
             if (!userService.getAccountStatus(email)) { // 탈퇴한 회원인 경우
                 String withdrawnRedirectUrl = "https://i12e203.p.ssafy.io/user/login/account-withdrawn"
                         + "?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
+                log.info("User {} is withdrawn. Redirecting to {}", email, withdrawnRedirectUrl);
                 response.sendRedirect(withdrawnRedirectUrl);
                 return null; // 탈퇴 회원이므로 추가 로직 실행 중단
             }
@@ -112,6 +123,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
                 .maxAge(7 * 24 * 60 * 60) // 7일
                 .build();
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        log.info("Set refresh token cookie: {}", refreshTokenCookie.toString());
     }
 
     /**
