@@ -28,7 +28,7 @@ export default function Game({
   onResultConfirmed,
 }: GameProps) {
   // Countdown 상태: 3초 카운트 후 게임 시작
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
   const [hasCountdownFinished, setHasCountdownFinished] = useState(false);
 
   // 게임 진행 상태
@@ -113,13 +113,44 @@ export default function Game({
   // 렌더링: 카운트다운, 게임 진행, 게임 종료 화면 분기 처리
   if (!hasCountdownFinished) {
     return (
-      <div className="p-6 mt-6 bg-white rounded shadow text-center">
-        <h3 className="text-3xl font-bold mb-6 text-gray-900">Get Ready!</h3>
-        <p className="text-xl text-gray-800">
-          Game starts in {countdown} second{countdown > 1 ? 's' : ''}...
-        </p>
+      <div className="relative flex flex-col justify-center items-center min-h-screen px-4">
+        <div className="p-8 bg-white/60 rounded-lg shadow-lg text-center w-[90%] max-w-6xl h-full min-h-[80vh] border-2 border-gray-300 flex flex-col justify-center items-center relative">
+          
+          {/* 게임 설명 박스를 겹쳐서 배치 */}
+          <h3 className="absolute top-[-50px] left-1/2 transform -translate-x-1/2 px-6 py-2 bg-white/80 border-2 border-gray-600 rounded-lg shadow-lg flex items-center text-lg sm:text-lg md:text-2xl lg:text-3xl font-bold">
+          <img src="/images/game_stick.png" alt="스페이스바"
+              className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
+          />
+          게임 설명 
+          <img src="/images/game_stick.png" alt="스페이스바"
+              className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
+          />
+          </h3>
+
+          <p className="text-lg md:text-xl lg:text-5xl font-medium text-gray-800 text-center mt-10">
+            물고기 경주에 오신걸 환영합니다!
+          </p>
+
+          <p className="text-md md:text-lg lg:text-4xl text-gray-700 mt-4 text-center">
+            물고기 경주는 친구들과 함께<br /><br />
+            누가 먼저 Goal에 도착하는지 대결하는 게임입니다.
+          </p>
+
+          <p className="text-md md:text-lg lg:text-4xl text-gray-700 mt-4 flex items-center justify-center">
+            친구보다
+            <img src="/images/spacebar.png" alt="스페이스바"
+              className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
+            />
+            스페이스바를 빨리 눌러 1등을 쟁취해보세요!
+          </p>
+          <br /><br />
+          <p className="text-lg md:text-xl lg:text-2xl text-gray-800">
+            {countdown} 초 후 게임시작{countdown > 1 ? '' : ''}
+          </p>
+        </div>
       </div>
     );
+       
   }
 
   if (gameEnded) {
