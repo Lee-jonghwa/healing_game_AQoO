@@ -13,7 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   // ✅ 네비게이션을 숨기고 싶은 페이지 리스트
-  const hiddenNavPaths = ["/login", "/register", "/some-other-page"]; // 네비게이션 숨길 경로
+  const hiddenNavPaths = ["/login", "/register", "/some-other-page", "/mypage", "/mypage/edit", "/mypage/fishtank"]; // 네비게이션 숨길 경로
 
   return (
     <html lang="ko">
