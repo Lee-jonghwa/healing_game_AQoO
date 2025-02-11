@@ -41,7 +41,7 @@ export function useCustomFishCollectionTest(userId?: string) {
     }
 
     loadFish();
-  }, []);
+  }, [userId]);
 
   return { fishList, isLoading, error };
 }
