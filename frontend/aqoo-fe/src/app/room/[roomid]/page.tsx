@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import IntegratedRoom from "./components/integratedroom";
+import IntegratedRoom from "./components/IntegratedRoom";
 
 interface RoomPageProps {
   params: { roomid: string }; // [roomid] 폴더에서 추출한 roomid
