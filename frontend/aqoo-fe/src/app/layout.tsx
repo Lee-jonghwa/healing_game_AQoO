@@ -13,16 +13,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   // ✅ 네비게이션을 숨기고 싶은 페이지 리스트
-  const hiddenNavPaths = ["/login", "/register", "/some-other-page", "/mypage", "/mypage/edit", "/mypage/fishtank"]; // 네비게이션 숨길 경로
+  const hiddenNavPaths = ["/", "/user/login", "/register", "/some-other-page"]; // 네비게이션 숨길 경로
 
   return (
     <html lang="ko">
-      <body>
+      <body className="w-full h-screen overflow-hidden">
         <RecoilProvider>
           {/* ✅ 특정 페이지에서만 네비게이션을 렌더링 */}
           {!hiddenNavPaths.includes(pathname) && <Navbar />}
-
-          {children}
+          <div className="w-full h-full">{children}</div>{" "}
         </RecoilProvider>
       </body>
     </html>
