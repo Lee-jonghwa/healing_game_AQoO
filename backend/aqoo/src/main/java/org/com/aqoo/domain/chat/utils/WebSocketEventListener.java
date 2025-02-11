@@ -60,21 +60,11 @@ public class WebSocketEventListener {
                     chatRoomService.removeMember(roomId, userId);
                     logger.info("사용자 {}가 최종적으로 제거되었습니다.", userId);
 
-                    // 퇴장 메시지 전송 (ChatMessageDto의 생성자 순서는 roomId, sender, content, type)
-                    ChatMessageDto leaveMessage = new ChatMessageDto(
-                            roomId,
-                            userId,
-                            userId + "님이 연결이 끊겼습니다.",
-                            ChatMessageDto.MessageType.LEAVE,
-                            ""
-                    );
-                    messagingTemplate.convertAndSend("/topic/" + roomId, leaveMessage);
-
                     if (chatRoomService.isRoomEmpty(roomId)) {
                         chatRoomService.deleteRoom(roomId);
                     }
                 }
-            }, 10, TimeUnit.SECONDS);
+            }, 5, TimeUnit.SECONDS);
         }
     }
 
