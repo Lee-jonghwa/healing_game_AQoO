@@ -229,7 +229,8 @@ function EditProfilePage() {
 
       {isPasswordModalOpen && <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />}
       {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} />}
-      {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} />}
+      {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)}
+      userData={userData} />}
     </div>
   );
 }
