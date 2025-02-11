@@ -1,13 +1,14 @@
 package org.com.aqoo.domain.auth.controller;
 
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.*;
-import org.com.aqoo.domain.auth.service.AuthService;
 import org.com.aqoo.domain.auth.service.UserService;
 import org.com.aqoo.util.JwtUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -64,6 +65,26 @@ public class UserController {
             }
         } else {
             return ResponseEntity.badRequest().body("Authorization 헤더가 없거나 유효하지 않습니다.");
+        }
+    }
+
+    @GetMapping("/isFirst/{userId}")
+    public ResponseEntity<Boolean> isFirstLogin(@PathVariable String userId){
+        return ResponseEntity.ok(userService.isFirstLogin(userId));
+    }
+
+    @PostMapping("/tutorial-complete")
+    public ResponseEntity<String> isFirstLogin(@RequestBody TutorialRequest request,@CookieValue(value = "refreshToken", required = false) String refreshToken){
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 필요");
+        }
+        try {
+            // 로그인된 사용자 ID 추출
+            String userId = jwtUtil.extractUsername(refreshToken);
+            userService.tutorialComplete(userId);
+            return ResponseEntity.ok("튜토리얼이 완료 되었습니다.");
+        }catch (Exception e){
+            return ResponseEntity.ok("잘못된 요청입니다.");
         }
     }
 
