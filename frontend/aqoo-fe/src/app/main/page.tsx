@@ -1,5 +1,7 @@
 "use client";
 
+import "@/lib/firebase"; // Firebase 초기화
+
 import { AquariumData, UserInfo } from "@/types";
 import React, { useEffect, useRef, useState } from "react";
 import axios, { AxiosResponse } from "axios";
@@ -10,6 +12,7 @@ import FriendsList from "@/app/main/FriendsList";
 import Image from "next/image";
 import LevelUpModal from "@/components/LevelUpModal"; // ✅ 레벨업 모달 추가
 import Link from "next/link";
+import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import { gsap } from "gsap";
 import { increaseUserExp } from "@/services/userService";
@@ -34,6 +37,19 @@ export default function MainPage() {
   const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
 
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+
+  useEffect(() => {
+    // TODO 첫 로그인 판단 후, 밑의 동작 수행하고 아니면 패스
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/firebase-messaging-sw.js")
+        .then((registration: ServiceWorkerRegistration) => {
+          console.log("✅ 서비스 워커 등록 완료:", registration);
+        })
+        .catch((err: unknown) => console.error("🔥 서비스 워커 등록 실패:", err));
+    }
+  }, []);
 
   useEffect(() => {
     if (levelUpInfo) {
@@ -160,6 +176,8 @@ export default function MainPage() {
       {fishes.map((fish) => (
         <Fish key={fish.fishTypeId} fish={fish} />
       ))}
+
+      <NotificationComponent />
 
       {/* 📌 하단 메뉴 바 */}
       <BottomMenuBar
