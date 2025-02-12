@@ -114,7 +114,7 @@ public class FishController {
         }
     }
 
-    @PostMapping("/ticket/{userId}")
+    @GetMapping("/ticket/{userId}")
     public ResponseEntity<?> getFishTicket(@PathVariable String userId) {
         try {
             FishTicketResponse response = fishService.getFishTicket(userId);

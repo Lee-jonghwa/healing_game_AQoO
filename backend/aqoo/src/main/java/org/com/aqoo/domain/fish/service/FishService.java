@@ -162,6 +162,7 @@ public class FishService {
 
         int curFishTicket = user.getFishTicket() + 1;
         user.setFishTicket(curFishTicket);
+        userRepository.save(user);
 
         return new FishTicketResponse(userId, user.getFishTicket());
     }
