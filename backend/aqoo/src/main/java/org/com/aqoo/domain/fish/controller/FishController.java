@@ -3,10 +3,12 @@ package org.com.aqoo.domain.fish.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import lombok.RequiredArgsConstructor;
+import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.fish.dto.*;
 import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.domain.fish.service.FishService;
 import org.com.aqoo.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +25,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/fish")
 @RequiredArgsConstructor
 public class FishController {
+    @Autowired
     private final FishService fishService;
     private final JwtUtil util;
 
@@ -120,37 +123,13 @@ public class FishController {
             // JSON 데이터 파싱
             ObjectMapper objectMapper = new ObjectMapper();
             FishPaintingRequest fishData = objectMapper.readValue(fishDataJson, FishPaintingRequest.class);
-            String imagePath = imageFile.getOriginalFilename();
+            String fishName = fishData.getFishName();
+            String userId = fishData.getUserId();
 
-            // 이미지 저장 경로 설정
-            String uploadDir = "/home/ubuntu/images/";
-            File dir = new File(uploadDir);
-            if (!dir.exists()) {
-                dir.mkdirs(); // 경로가 없으면 생성
-            }
+            String response = fishService.paintFish(userId, fishName, imageFile);
 
-            // 원본 이미지 저장
-            String originalFilePath = uploadDir + "ori_" + imagePath;
-            File originalFile = new File(originalFilePath);
-            imageFile.transferTo(originalFile);  // 원본 이미지 저장
+            return ResponseEntity.ok("Upload successful: " + response);
 
-            // 변환된 이미지 파일명
-            String processedFilePath = uploadDir + imagePath;
-
-            // 이미지 변환 처리
-            File processedFile = FishService.processImage(originalFile, processedFilePath);
-
-            //물고기 타입에 추가
-            FishTypeRequest request = new FishTypeRequest(fishData.getFishName(),
-                    "/" + imagePath,
-                    fishData.getUserId());
-            Fish newType = fishService.saveFishType(request);
-
-            //유저 물고기에 추가
-            fishService.saveUserFish(fishData.getUserId(), newType.getId());
-
-            // 결과 반환
-            return ResponseEntity.ok("Upload successful: " + fishData.getFishName());
         } catch (Exception e) {
             // 예외 발생 시, 상세 오류 메시지 포함하여 응답
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed: " + e.getMessage());

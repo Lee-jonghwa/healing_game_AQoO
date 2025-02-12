@@ -206,10 +206,7 @@ public class AquariumService {
     // 어항 속 물고기 조회
     @Transactional(readOnly = true)
     public List<AquariumFishResponse> getAquariumFish(String userId, int aquariumId) {
-
-        // 1. 특정 사용자의 특정 어항 물고기 조회
         List<Object[]> fishData = userFishRepository.findFishDetailsByUserIdAndAquariumId(userId, aquariumId);
-
         if (fishData.isEmpty()) {
             return Collections.emptyList();
         }
@@ -230,7 +227,7 @@ public class AquariumService {
         // 5. 응답 객체 변환
         return fishData.stream()
                 .map(row -> new AquariumFishResponse(
-                        (Integer) row[2],  // aquariumId
+                        row[2] != null ? (Integer) row[2] : -1,  // aquariumId
                         (Integer) row[0], // fishId
                         (Integer) row[1], // fishTypeId
                         fishTypeMap.get((Integer) row[1]).getFishName(), // fishTypeName
@@ -239,6 +236,7 @@ public class AquariumService {
                 .sorted(Comparator.comparing(AquariumFishResponse::getFishTypeId)) // fishTypeId 기준 정렬
                 .toList();
     }
+
 
     /**
      * ✅ 어항 상태 업데이트
