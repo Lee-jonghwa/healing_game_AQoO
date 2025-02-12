@@ -18,7 +18,7 @@ pipeline {
         stage('Build and Test') {
             steps {
                 script {
-                    docker.image('node:18-alpine').inside { // Docker 이미지 사용
+                    docker.image('node:18-alpine').inside { 
                         dir('aqoo-fe') {
                             sh 'npm install'
                             sh 'npm run build'
