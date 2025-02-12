@@ -28,7 +28,7 @@ export default function Game({
   onResultConfirmed,
 }: GameProps) {
   // Countdown 상태: 5초 카운트 후 게임 시작
-  const [countdown, setCountdown] = useState(3600);
+  const [countdown, setCountdown] = useState(1);
   const [hasCountdownFinished, setHasCountdownFinished] = useState(false);
 
   // 게임 진행 상태
@@ -128,7 +128,7 @@ export default function Game({
           </h3>
 
           <p className="text-lg md:text-xl lg:text-5xl font-medium text-gray-800 text-center mt-10">
-            물고기 경주에 오신걸 환영합니다!
+            물고기 경주에 오신 걸 환영합니다!
           </p>
 
           <p className="text-md md:text-lg lg:text-4xl text-gray-700 mt-4 text-center">
