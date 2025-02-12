@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    docker run --rm -v $(pwd)/aqoo-fe:/app -w /app node:18-alpine sh -c "
+                    docker run --rm -v \$(pwd)/aqoo-fe:/app -w /app node:18-alpine sh -c "
                     npm install && npm run build && npm test"
                     """
                 }
