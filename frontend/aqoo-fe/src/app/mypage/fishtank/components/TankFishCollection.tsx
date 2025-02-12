@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import CollectionItemCard from "./CollectionItemCard";
-import axiosInstance from "@/services/axiosInstance"; // baseURL: http://i12e203.p.ssafy.io:8089/api/v1
+import axiosInstance from "@/services/axiosInstance";
 
-// 그룹화된 물고기 정보 타입
 interface AggregatedFishData {
   fishName: string;
   cnt: number;
-  fishIds: number[]; // 해당 그룹에 속한 개별 물고기의 fishId 목록
+  fishIds: number[];
   imageSrc: string;
 }
 
-// 어항 상세 정보 타입 (어항 이름은 임의로 생성)
 interface AquariumDetails {
   id: number;
   aquariumName: string;
@@ -21,28 +19,28 @@ interface AquariumDetails {
 
 interface TankFishCollectionProps {
   aquariumId: number;
-  refresh: number; // 부모로부터 받은 리프레시 트리거
+  refresh: number;
   onFishRemoved?: () => void;
+  onCountChange?: (count: number) => void; // 부모로 총 마릿수를 전달하는 prop
 }
 
-export default function TankFishCollection({ aquariumId, refresh, onFishRemoved }: TankFishCollectionProps) {
+export default function TankFishCollection({ aquariumId, refresh, onFishRemoved, onCountChange }: TankFishCollectionProps) {
   const [aquariumDetails, setAquariumDetails] = useState<AquariumDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
 
-  // 모달 관련 상태 (제거할 물고기 그룹 선택)
   const [selectedFish, setSelectedFish] = useState<AggregatedFishData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     if (!aquariumId) return;
-    setLoading(true);
+    if (refresh === 0) {
+      setLoading(true);
+    }
     axiosInstance
       .get(`/aquariums/fish/${aquariumId}`)
       .then((response) => {
-        // console.log("TankFishCollection 받은 데이터 : ", response.data);
         if (Array.isArray(response.data)) {
-          // fishName 기준으로 그룹화
           const grouped: { [key: string]: AggregatedFishData } = {};
           response.data.forEach((fish: any) => {
             const name: string = fish.fishName;
@@ -58,31 +56,43 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
               };
             }
           });
-          const aggregatedFishes = Object.values(grouped);
-          setAquariumDetails({
+          const details: AquariumDetails = {
             id: aquariumId,
             aquariumName: `어항 ${aquariumId}`,
-            fishes: aggregatedFishes,
-          });
+            fishes: Object.values(grouped),
+          };
+          setAquariumDetails(details);
+          const totalFish = details.fishes.reduce((sum, group) => sum + group.cnt, 0);
+          if (onCountChange) {
+            onCountChange(totalFish);
+          }
         } else {
           setAquariumDetails({
             id: aquariumId,
             aquariumName: `어항 ${aquariumId}`,
             fishes: [],
           });
+          if (onCountChange) {
+            onCountChange(0);
+          }
         }
-        setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching aquarium details:", err);
         setError("어항 정보를 불러오는 데 실패했습니다.");
-        setLoading(false);
+      })
+      .finally(() => {
+        if (refresh === 0) {
+          setLoading(false);
+        }
       });
-  }, [aquariumId, refresh]);
+  }, [aquariumId, refresh, onCountChange]);
 
-  // 카드 클릭 시 모달 오픈
+  useEffect(() => {
+    fetchData();
+  }, [aquariumId, refresh, fetchData]);
+
   const handleFishClick = (fishGroup: AggregatedFishData) => {
-    // console.log("선택된 물고기 그룹:", fishGroup.fishName);
     setSelectedFish(fishGroup);
     setIsModalOpen(true);
   };
@@ -95,49 +105,66 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
   const handleModalConfirm = async () => {
     if (!selectedFish) return;
     const fishIdToDelete = selectedFish.fishIds[0];
+    setAquariumDetails((prev) => {
+      if (!prev) return prev;
+      const updatedFishes = prev.fishes
+        .map((group) => {
+          if (group.fishName === selectedFish.fishName) {
+            if (group.cnt > 1) {
+              return {
+                ...group,
+                cnt: group.cnt - 1,
+                fishIds: group.fishIds.slice(1),
+              };
+            } else {
+              return null;
+            }
+          }
+          return group;
+        })
+        .filter((group): group is AggregatedFishData => group !== null);
+      return { ...prev, fishes: updatedFishes };
+    });
+    setIsModalOpen(false);
+    setSelectedFish(null);
     try {
       await axiosInstance.post("/aquariums/fish/remove", {
         userFishId: fishIdToDelete,
         aquariumId: aquariumId,
       });
-      setAquariumDetails((prev) => {
-        if (!prev) return prev;
-        const updatedFishes = prev.fishes
-          .map((group) => {
-            if (group.fishName === selectedFish.fishName) {
-              if (group.cnt > 1) {
-                return {
-                  ...group,
-                  cnt: group.cnt - 1,
-                  fishIds: group.fishIds.slice(1),
-                };
-              } else {
-                return null;
-              }
-            }
-            return group;
-          })
-          .filter((group): group is AggregatedFishData => group !== null);
-        return { ...prev, fishes: updatedFishes };
-      });
-      setIsModalOpen(false);
-      setSelectedFish(null);
       if (onFishRemoved) onFishRemoved();
     } catch (error) {
       console.error("Error removing fish from aquarium:", error);
     }
   };
 
-  if (loading) return <div>로딩중...</div>;
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isModalOpen && event.key === "Enter") {
+        handleModalConfirm();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isModalOpen, selectedFish]);
+
   if (error) return <div>{error}</div>;
+  if (!aquariumDetails && loading) return <div>로딩중...</div>;
   if (!aquariumDetails || aquariumDetails.fishes.length === 0)
     return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    <div className="bg-white w-full h-full rounded-[30px] p-3 overflow-auto">
-      <div className="flex flex-wrap">
+    <div>
+      <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (
-          <div key={group.fishName} onClick={() => handleFishClick(group)}>
+          <div
+            key={group.fishName}
+            onClick={() => handleFishClick(group)}
+            className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer"
+          >
             <CollectionItemCard
               name={group.fishName}
               count={group.cnt}
@@ -147,23 +174,22 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
         ))}
       </div>
 
-      {/* 모달 창 (물고기 제거 확인) */}
       {isModalOpen && selectedFish && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
             <p className="mb-4 text-lg">
               <span className="font-bold">{selectedFish.fishName}</span>를 어항밖으로 빼시겠습니까?
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={handleModalCancel}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm"
               >
                 취소
               </button>
               <button
                 onClick={handleModalConfirm}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
               >
                 빼기
               </button>

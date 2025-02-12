@@ -1,3 +1,4 @@
+// FishTankTabs.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,21 +13,22 @@ interface AquariumTab {
 }
 
 export default function FishTankTabs() {
-  // Recoil에서 현재 로그인한 유저 정보 가져오기
   const auth = useRecoilValue(authAtom);
 
   // 탭 배열 (어항 목록)
   const [tabs, setTabs] = useState<AquariumTab[]>([]);
   // 현재 선택된 탭 인덱스
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  // 편집 모드 상태: 편집 중인 탭의 인덱스 (null이면 편집 중 아님)
+  // 편집 모드 상태
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  // 편집 중인 탭의 새 이름
   const [editingName, setEditingName] = useState<string>("");
-
   // 삭제 모달 관련 상태
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [tabToDelete, setTabToDelete] = useState<AquariumTab | null>(null);
+
+  // 리프레시 트리거: MyFishCollection과 TankFishCollection을 각각 새로고침
+  const [refreshMyFish, setRefreshMyFish] = useState(0);
+  const [refreshTankFish, setRefreshTankFish] = useState(0);
 
   // 유저의 어항 목록을 API에서 가져오기
   useEffect(() => {
@@ -50,7 +52,6 @@ export default function FishTankTabs() {
     }
   }, [auth.user?.id]);
 
-  // 어항 생성하기 버튼 클릭 시 처리 (최대 5개까지 생성)
   const handleAddTank = () => {
     if (tabs.length >= 5) {
       alert("어항은 최대 5개까지 생성 가능합니다.");
@@ -79,7 +80,6 @@ export default function FishTankTabs() {
     }
   };
 
-  // 탭 클릭 시: 활성 탭 클릭하면 편집 모드로 전환, 그 외 단순 선택
   const handleTabClick = (idx: number) => {
     if (idx === selectedIndex) {
       setEditingIndex(idx);
@@ -90,7 +90,6 @@ export default function FishTankTabs() {
     }
   };
 
-  // 탭 이름 업데이트: 편집 종료 시 (포커스 아웃 또는 Enter 키 입력 시)
   const handleTabNameUpdate = async () => {
     if (editingIndex !== null) {
       const aquariumId = tabs[editingIndex].id;
@@ -117,25 +116,21 @@ export default function FishTankTabs() {
     }
   };
 
-  // 삭제 버튼 클릭 시 모달 표시
   const handleDeleteClick = (idx: number) => {
     setTabToDelete(tabs[idx]);
     setShowDeleteModal(true);
   };
 
-  // 모달 취소 버튼 클릭 시 처리
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
     setTabToDelete(null);
   };
 
-  // 모달 확인 버튼 클릭 시 DELETE 요청 보내고 상태 업데이트
   const handleConfirmDelete = () => {
     if (tabToDelete) {
       axiosInstance
         .delete("/aquariums", { data: { aquariumId: tabToDelete.id } })
         .then((response) => {
-          console.log("Aquarium deletion successful:", response.data);
           const updatedTabs = tabs.filter((tab) => tab.id !== tabToDelete.id);
           setTabs(updatedTabs);
           if (updatedTabs.length === 0) {
@@ -153,12 +148,36 @@ export default function FishTankTabs() {
     }
   };
 
+  // "대표어항 설정" 버튼 핸들러
+  const handleSetMainAquarium = async () => {
+    if (!auth.user) return;
+    try {
+      await axiosInstance.post("/aquariums/main-aqua", {
+        userId: auth.user.id,
+        aquariumId: tabs[selectedIndex].id,
+      });
+      alert("대표 어항 설정이 완료되었습니다.");
+    } catch (error) {
+      console.error("Error setting main aquarium:", error);
+    }
+  };
+
+  // 자식 컴포넌트에서 물고기를 추가하면 TankFishCollection을 리프레시
+  const handleFishAdded = () => {
+    setRefreshTankFish((prev) => prev + 1);
+  };
+
+  // 자식 컴포넌트에서 물고기를 제거하면 MyFishCollection을 리프레시
+  const handleFishRemoved = () => {
+    setRefreshMyFish((prev) => prev + 1);
+  };
+
   return (
-    <div className="flex flex-col h-full overflow-hidden mb-2 mt-2">
+    <div className="flex flex-col h-full overflow-hidden mb-2 mt-2 px-4">
       {/* 탭 버튼 영역 */}
-      <div className="flex items-end mb-0 flex-wrap">
+      <div className="flex flex-wrap items-end">
         {tabs.map((tab, idx) => (
-          <div key={tab.id} className="relative w-[150px] h-10 mr-1 mb-1">
+          <div key={tab.id} className="relative w-36 h-10 mr-2">
             {editingIndex === idx ? (
               <input
                 type="text"
@@ -166,7 +185,7 @@ export default function FishTankTabs() {
                 onChange={(e) => setEditingName(e.target.value)}
                 onBlur={handleTabNameUpdate}
                 onKeyDown={handleKeyDown}
-                className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] font-normal leading-normal text-sm"
+                className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] text-sm"
                 autoFocus
               />
             ) : (
@@ -175,22 +194,20 @@ export default function FishTankTabs() {
                 className={`
                   w-full h-full cursor-pointer inline-flex items-center justify-center
                   rounded-t-xl border-t border-r border-l border-[#1c5e8d]
-                  bg-[#f0f0f0] [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
-                  text-[#070707] text-sm font-[NeoDunggeunmo_Pro] font-normal leading-normal
-                  ${selectedIndex === idx ? "bg-[#31A9FF] text-black border-t-[3px] border-black hover:bg-[#2b8ac0]" : ""}
+                  bg-[#f0f0f0] shadow-inner text-[#070707] text-sm font-[NeoDunggeunmo_Pro]
+                  ${selectedIndex === idx ? "bg-[#31A9FF] text-black border-t-4 border-black hover:bg-[#2b8ac0]" : ""}
                 `}
                 title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
               >
                 {tab.name}
               </button>
             )}
-            {/* 삭제 버튼 (×) - 탭 내부에 위치, 진한 회색, 위치를 위로 올림 */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleDeleteClick(idx);
               }}
-              className="absolute top-0 right-1 text-gray-800 hover:text-gray-900 text-2xl md:text-3xl p-1 md:p-2"
+              className="absolute top-0 right-1 text-gray-800 hover:text-gray-900 text-xl p-1"
               title="어항 삭제"
             >
               ×
@@ -201,32 +218,24 @@ export default function FishTankTabs() {
         {/* 어항 생성하기 버튼 */}
         <button
           onClick={handleAddTank}
-          className={`
-              cursor-pointer inline-flex items-center justify-center
-              w-[200px] h-10 px-[20px] py-[10px] mr-1
-              rounded-t-xl border-t border-r border-l border-[#1c5e8d]
-              bg-[#f0f0f0] [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
-              text-[#070707] text-2xl font-[NeoDunggeunmo_Pro] font-normal leading-normal
-            `}
+          className="cursor-pointer inline-flex items-center justify-center w-48 h-10 px-4 py-2 mr-2 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-[#f0f0f0] shadow-inner text-[#070707] text-xl font-[NeoDunggeunmo_Pro]"
           title="어항 생성하기"
         >
           어항 생성하기
         </button>
       </div>
 
-      {/* 실제 탭 컨텐츠 영역 */}
-      <div
-        className="
-          w-[1300px] h-full m-0 p-0 overflow-hidden
-          rounded-xl rounded-tl-none border-2 border-[#1c5e8d] bg-[#31a9ff]
-          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.25)_inset]
-          flex flex-col
-        "
-      >
+      {/* 탭 컨텐츠 영역 */}
+      <div className="w-full max-w-5xl h-full mx-auto p-0 overflow-hidden rounded-xl border-2 border-[#1c5e8d] bg-[#31a9ff] shadow-inner flex flex-col">
         {tabs.length > 0 ? (
           <FishTankTabContent
             aquariumId={tabs[selectedIndex].id}
             aquariumName={tabs[selectedIndex].name}
+            refreshMyFish={refreshMyFish}
+            refreshTankFish={refreshTankFish}
+            onFishAdded={handleFishAdded}
+            onFishRemoved={handleFishRemoved}
+            onSetMainAquarium={handleSetMainAquarium}
           />
         ) : (
           <div className="flex justify-center items-center h-full">
@@ -237,7 +246,7 @@ export default function FishTankTabs() {
 
       {/* 삭제 확인 모달 */}
       {showDeleteModal && tabToDelete && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full">
             <p className="text-lg mb-4">{tabToDelete.name} 어항을 삭제하겠습니까?</p>
             <div className="flex justify-end gap-4">

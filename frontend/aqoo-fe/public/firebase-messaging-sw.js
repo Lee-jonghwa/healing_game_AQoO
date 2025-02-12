@@ -18,19 +18,29 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log("📢 백그라운드 메시지 수신:", payload);
 
-  // payload.data에서 알림 정보 추출
+  const type = payload.data.type;
   const title = payload.data.title;
-  const body = payload.data.body;
-  const icon = payload.data.icon || "/icon.png"; // 기본 아이콘 경로 설정
+  const body = payload.data.body; // 상태 값 (0~3)
+  const icon = payload.data.icon || "/icon/icon-fishTank.png"; // 기본 아이콘 경로
+  
+    const options = {
+      body: body,
+      icon: icon,
+      data: {
+        click_action: payload.data.click_action, // 클릭 시 이동할 URL
+      },
+    };
 
-  const options = {
-    body: body,
-    icon: icon,
-    data: {
-      click_action: payload.data.click_action, // 클릭 시 이동할 URL
-    },
-  };
+    self.registration.showNotification(title, options);
+ 
+});
 
-  // 푸시 알림 표시
-  self.registration.showNotification(title, options);
+
+// 클릭 이벤트 처리
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close(); // 알림 닫기
+  const action = event.notification.data.click_action;
+  if (action) {
+    event.waitUntil(clients.openWindow(action)); // URL로 이동
+  }
 });

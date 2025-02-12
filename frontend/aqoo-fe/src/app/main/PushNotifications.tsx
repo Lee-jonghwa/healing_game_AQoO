@@ -116,17 +116,17 @@ function NotificationItem({
     switch (type) {
       case "FRIEND REQUEST":
       case "FRIEND ACCEPT":
-        return "/friendIcon.png";
+        return "/icon/friendIcon.png";
       case "GAME INVITE":
-        return "/gameIcon.png";
+        return "/icon/gameIcon.png";
       case "FEED":
-        return "/feedIcon.png";
+        return "/icon/feedIcon.png";
       case "CLEAN":
-        return "/cleanIcon.png";
+        return "/icon/cleanIcon.png";
       case "WATER":
-        return "/waterIcon.png";
+        return "/icon/waterIcon.png";
       default:
-        return "/defaultIcon.png"; // 기본 아이콘
+        return "/icon/defaultIcon.png"; // 기본 아이콘
     }
   };
 
@@ -229,6 +229,7 @@ function FriendRequestModal({ relationshipId, onClose }: { relationshipId: strin
           <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
             취소
           </button>
+          {/* TODO 이미 친구면 수락버튼 못 누르게 해야 함 */}
           <button onClick={handleAcceptFriend} className="px-4 py-2 bg-green-500 text-white rounded">
             수락
           </button>
