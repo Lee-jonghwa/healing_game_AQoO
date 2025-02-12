@@ -30,5 +30,7 @@ public class RoomUpdate {
 
         @JsonProperty("isHost")
         private boolean isHost;
+
+        private String mainFishImage;
     }
 }

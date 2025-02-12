@@ -1,5 +1,8 @@
 package org.com.aqoo.domain.chat.service;
 
+import lombok.RequiredArgsConstructor;
+import org.com.aqoo.domain.auth.dto.UserInfoResponse;
+import org.com.aqoo.domain.auth.service.UserService;
 import org.com.aqoo.domain.chat.dto.InviteRequest;
 import org.com.aqoo.domain.chat.dto.RoomUpdate;
 import org.com.aqoo.domain.chat.model.ChatRoom;
@@ -17,18 +20,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ChatRoomService {
 
     private final Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
     // messagingTemplate을 이용하여 각종 메시지를 브로드캐스트
     private final SimpMessagingTemplate messagingTemplate;
-
-    @Autowired
-    private PushService pushService;
-
-    public ChatRoomService(SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
-    }
+    private final UserService userService;
+    private final PushService pushService;
 
     /** 모든 채팅방 목록 조회 */
     public List<ChatRoom> getAllRooms() {
@@ -151,7 +150,9 @@ public class ChatRoomService {
                     .map(userName -> {
                         boolean isHost = userName.equals(room.getOwnerId());
                         boolean ready = room.getReadyMembers().contains(userName);
-                        return new RoomUpdate.UserInfo(userName, ready, isHost);
+                        UserInfoResponse tmpUser = userService.getUserInfo(userName);
+                        String mainFishImage = tmpUser.getMainFishImage();
+                        return new RoomUpdate.UserInfo(userName, ready, isHost, mainFishImage);
                     })
                     .collect(Collectors.toList());
             return new RoomUpdate(roomId, "USER_LIST", userList);
@@ -195,4 +196,6 @@ public class ChatRoomService {
             messagingTemplate.convertAndSend("/topic/room/" + roomId, update);
         }
     }
+
+
 }
