@@ -11,6 +11,7 @@ import FriendList from './FriendList';
 // 플레이어 타입 정의
 interface Player {
   userName: string;
+  mainFishImage: string;
   totalPressCount: number;
 }
 
@@ -237,9 +238,14 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
             </div>
           )}
           {screen === 'game' && (
-            <div className="min-h-screen w-full bg-cover bg-center p-6" style={{ backgroundImage: "url('/chat_images/game_background.png')" }}>
-              <Game roomId={roomId} userName={userName} initialPlayers={gamePlayers} onResultConfirmed={() => setScreen('chat')} />
-            </div>
+            <div className="w-full h-screen bg-cover bg-center">
+            <Game
+              roomId={roomId}
+              userName={userName}
+              initialPlayers={gamePlayers}
+              onResultConfirmed={() => setScreen('chat')}
+            />
+          </div>
           )}
 
         </>

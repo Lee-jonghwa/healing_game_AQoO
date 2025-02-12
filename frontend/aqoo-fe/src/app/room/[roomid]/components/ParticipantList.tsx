@@ -17,8 +17,7 @@ interface ParticipantListProps {
 export default function ParticipantList({ users, currentUser, currentIsHost, onKickUser }: ParticipantListProps) {
   return (
     <div className="mb-4 w-[330px] bg-white shadow-md rounded-lg p-3">
-      <h3 className="text-xl font-semibold mb-2 text-gray-900">참가자 리스트</h3>
-      
+      <h3 className="text-xl font-semibold mb-2 text-gray-900">참가자 리스트</h3>    
       {/* 최대 높이 제한 + 스크롤 기능 */}
       <div className="max-h-[100px] overflow-y-auto">
         <ul className="space-y-2">
