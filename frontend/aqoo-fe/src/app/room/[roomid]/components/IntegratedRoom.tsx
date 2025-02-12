@@ -201,7 +201,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
           )}
 
           {screen === 'game' && (
-            <div className="min-h-screen w-full bg-cover bg-center p-6" style={{ backgroundImage: "url('/images/game_background.png')" }}>
+            <div className="min-h-screen w-full bg-cover bg-center p-6" style={{ backgroundImage: "url('/chat_images/game_background.png')" }}>
               <Game roomId={roomId} userName={userName} initialPlayers={gamePlayers} onResultConfirmed={() => setScreen('chat')} />
             </div>
           )}
