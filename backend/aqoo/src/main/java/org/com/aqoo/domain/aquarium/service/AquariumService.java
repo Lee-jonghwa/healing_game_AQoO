@@ -52,12 +52,7 @@ public class AquariumService {
         return aquariums.stream().map(aquarium -> {
             return new AquariumResponseDto(
                 aquarium.getId(),
-                aquarium.getAquariumName(),
-                aquarium.getLastFedTime(),
-                aquarium.getLastWaterChangeTime(),
-                calculateWaterCondition(aquarium),
-                aquarium.getLastCleanedTime(),
-                calculatePollutionStatus(aquarium)
+                aquarium.getAquariumName()
             );
         }).collect(Collectors.toList());
     }
@@ -256,7 +251,7 @@ public class AquariumService {
             case "background":
                 try {
                     int backgroundId = Integer.parseInt(data);
-                    aquarium.getAquariumBackground().setId(backgroundId);
+                    aquarium.setAquariumBackgroundId(backgroundId);
                 } catch (NumberFormatException e) {
                     throw new IllegalArgumentException("배경 ID는 숫자여야 합니다.");
                 }
@@ -275,53 +270,5 @@ public class AquariumService {
         }
 
         return new StatusResponseDto("성공", "어항 상태가 업데이트되었습니다.");
-    }
-
-
-
-    /**
-     * 물 상태 계산 (5가 최적, 1이 최악)
-     */
-    private int calculateWaterCondition(Aquarium aquarium) {
-        if (aquarium.getLastWaterChangeTime() == null) {
-            return 1; // 물을 한 번도 갈지 않은 경우 최악의 상태
-        }
-
-        long hoursSinceWaterChange = Duration.between(aquarium.getLastWaterChangeTime(), LocalDateTime.now()).toHours();
-
-        if (hoursSinceWaterChange <= 6) {
-            return 5; // 6시간 이내 → 최적의 상태
-        } else if (hoursSinceWaterChange <= 12) {
-            return 4; // 6~12시간 → 양호
-        } else if (hoursSinceWaterChange <= 24) {
-            return 3; // 12~24시간 → 보통
-        } else if (hoursSinceWaterChange <= 36) {
-            return 2; // 24~36시간 → 나쁨
-        } else {
-            return 1; // 36시간 이상 → 최악
-        }
-    }
-
-    /**
-     * 오염 상태 계산 (1이 최적, 5가 최악)
-     */
-    private int calculatePollutionStatus(Aquarium aquarium) {
-        if (aquarium.getLastCleanedTime() == null) {
-            return 5; // 한 번도 청소하지 않은 경우 최악의 상태
-        }
-
-        long hoursSinceClean = Duration.between(aquarium.getLastCleanedTime(), LocalDateTime.now()).toHours();
-
-        if (hoursSinceClean <= 6) {
-            return 1; // 6시간 이내 → 최적의 상태
-        } else if (hoursSinceClean <= 12) {
-            return 2; // 6~12시간 → 양호
-        } else if (hoursSinceClean <= 24) {
-            return 3; // 12~24시간 → 보통
-        } else if (hoursSinceClean <= 36) {
-            return 4; // 24~36시간 → 나쁨
-        } else {
-            return 5; // 36시간 이상 → 최악
-        }
     }
 }
