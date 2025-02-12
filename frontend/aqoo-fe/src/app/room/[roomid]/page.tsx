@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import IntegratedRoom from "./components/integratedroom";
+import IntegratedRoom from "./components/IntegratedRoom";
 
 interface RoomPageProps {
   params: { roomid: string }; // [roomid] 폴더에서 추출한 roomid
@@ -48,14 +48,12 @@ export default function RoomPage({ params }: RoomPageProps) {
   // }
 
   return (
-    <div>
-      <div 
-      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/images/background.png')" }}
-      >
-        <div className="absolute inset-0 bg-white opacity-20"></div>
-        <IntegratedRoom roomId={roomid} userName={userName} />
-      </div>
+
+    <div 
+    className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
+    style={{ backgroundImage: "url('/images/background.png')" }}
+    >
+      <IntegratedRoom roomId={roomid} userName={userName} />
     </div>
   );
 }
