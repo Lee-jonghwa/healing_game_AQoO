@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import MyFishCollection from "./MyFishCollection";
 import TankFishCollection from "./TankFishCollection";
 import BackgroundList from "./BackgroundList";
+import { Suspense } from "react";
 
 interface FishTankTabContentProps {
   aquariumId: number;
@@ -10,6 +12,21 @@ interface FishTankTabContentProps {
 }
 
 export default function FishTankTabContent({ aquariumId, aquariumName }: FishTankTabContentProps) {
+  // MyFishCollection 새로고침을 위한 트리거
+  const [refreshMyFish, setRefreshMyFish] = useState(0);
+  // TankFishCollection 새로고침을 위한 트리거
+  const [refreshTankFish, setRefreshTankFish] = useState(0);
+
+  // TankFishCollection에서 물고기 제거 후 MyFishCollection 갱신
+  const handleFishRemoval = () => {
+    setRefreshMyFish((prev) => prev + 1);
+  };
+
+  // MyFishCollection에서 물고기를 어항에 넣은 후 TankFishCollection 갱신
+  const handleFishAdded = () => {
+    setRefreshTankFish((prev) => prev + 1);
+  };
+
   return (
     <div className="w-full h-full flex flex-col m-0 p-0">
       {/* 상단 영역 (MyFishCollection + TankFishCollection) */}
@@ -25,7 +42,13 @@ export default function FishTankTabContent({ aquariumId, aquariumName }: FishTan
           >
             내 물고기
           </p>
-          <MyFishCollection />
+          {/* refresh와 onFishAdded를 전달 */}
+          <MyFishCollection
+            aquariumId={aquariumId}
+            aquariumName={aquariumName}
+            refresh={refreshMyFish}
+            onFishAdded={handleFishAdded}
+          />
         </div>
         {/* 오른쪽: TankFishCollection */}
         <div className="flex-1 w-full h-full m-0 p-5 flex flex-col items-center">
@@ -38,7 +61,12 @@ export default function FishTankTabContent({ aquariumId, aquariumName }: FishTan
           >
             {aquariumName} 물고기
           </p>
-          <TankFishCollection aquariumId={aquariumId} />
+          {/* refresh와 onFishRemoved를 전달 */}
+          <TankFishCollection
+            aquariumId={aquariumId}
+            refresh={refreshTankFish}
+            onFishRemoved={handleFishRemoval}
+          />
         </div>
       </div>
 
@@ -53,7 +81,9 @@ export default function FishTankTabContent({ aquariumId, aquariumName }: FishTan
         >
           어항 배경 선택
         </p>
-        <BackgroundList />
+        <Suspense fallback={<div>Loading Backgrounds...</div>}>
+          <BackgroundList aquariumId={aquariumId} />
+        </Suspense>
       </div>
     </div>
   );
