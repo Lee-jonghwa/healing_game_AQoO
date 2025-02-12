@@ -5,7 +5,21 @@ pipeline {
         DOCKER_IMAGE = "frontend-app:latest"
         CONTAINER_NAME = "frontend"
     }
-
+    stages {
+        stage('Build and Test') {
+            agent {
+                docker {
+                    image 'node:18-alpine' // Jenkinsfile에서 Node.js 이미지 사용
+                    label 'my-docker-agent'
+                }
+            }
+            steps {
+                sh 'npm install'
+                sh 'npm run build'
+                sh 'npm test'
+            }
+        }
+    }
     stages {
         stage('Checkout') {
             steps {
