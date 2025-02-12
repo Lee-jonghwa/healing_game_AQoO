@@ -53,7 +53,7 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
   };
 
   return (
-    <Modal onClose={onClose} className="w-[600px] h-[350px] flex flex-col items-center justify-center">
+    <Modal onClose={onClose} className="w-[600px] min-h-[350px] flex flex-col items-center justify-center">
       <h3 className="text-3xl font-semibold text-red-600 mb-4">회원 탈퇴</h3>
       <div className="flex gap-4 m-4 items-center">
         <div
