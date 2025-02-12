@@ -28,13 +28,12 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
   const [aquariumDetails, setAquariumDetails] = useState<AquariumDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  
+
   const [selectedFish, setSelectedFish] = useState<AggregatedFishData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const fetchData = useCallback(() => {
     if (!aquariumId) return;
-    // 초기 로딩일 때(refresh가 0일 때)만 loading 상태를 true로 설정합니다.
     if (refresh === 0) {
       setLoading(true);
     }
@@ -63,7 +62,6 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
             fishes: Object.values(grouped),
           };
           setAquariumDetails(details);
-          // 총 물고기 마릿수 계산
           const totalFish = details.fishes.reduce((sum, group) => sum + group.cnt, 0);
           if (onCountChange) {
             onCountChange(totalFish);
@@ -84,7 +82,6 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
         setError("어항 정보를 불러오는 데 실패했습니다.");
       })
       .finally(() => {
-        // 초기 로딩일 때만 loading 상태를 false로 전환합니다.
         if (refresh === 0) {
           setLoading(false);
         }
@@ -108,7 +105,6 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
   const handleModalConfirm = async () => {
     if (!selectedFish) return;
     const fishIdToDelete = selectedFish.fishIds[0];
-    // Optimistic update: 바로 로컬 상태 업데이트
     setAquariumDetails((prev) => {
       if (!prev) return prev;
       const updatedFishes = prev.fishes
@@ -139,11 +135,22 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
       if (onFishRemoved) onFishRemoved();
     } catch (error) {
       console.error("Error removing fish from aquarium:", error);
-      // 필요한 경우 optimistic update 복구 로직 추가 가능
     }
   };
 
-  // 렌더링 시: 기존 데이터가 있는 경우 loading 상태여도 기존 데이터를 그대로 보여줍니다.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isModalOpen && event.key === "Enter") {
+        handleModalConfirm();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isModalOpen, selectedFish]);
+
   if (error) return <div>{error}</div>;
   if (!aquariumDetails && loading) return <div>로딩중...</div>;
   if (!aquariumDetails || aquariumDetails.fishes.length === 0)
