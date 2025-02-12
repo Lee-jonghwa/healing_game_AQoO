@@ -135,14 +135,16 @@ public class FishService {
         // 5. 물고기 티켓 차감
         int curFishTicket = user.getFishTicket() - 1;
         user.setFishTicket(curFishTicket);
+        // 변경된 user 객체를 DB에 저장
+        userRepository.save(user);
 
         // 6. 결과 응답
         return new GotchaResponse(
                 userFishId,
                 selectedFish.getId(),
                 selectedFish.getFishName(),
-                selectedFish.getRarity(),
-                imageUtils.toAbsoluteUrl(selectedFish.getImageUrl()));
+                imageUtils.toAbsoluteUrl(selectedFish.getImageUrl()),
+                selectedFish.getRarity());
     }
 
     public UserFish saveUserFish(String userId, Integer fishId){
@@ -151,6 +153,18 @@ public class FishService {
         newone.setUserId(userId);
         newone.setFishTypeId(fishId);
         return userFishRepository.save(newone);
+    }
+
+    public FishTicketResponse getFishTicket(String userId){
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+
+        int curFishTicket = user.getFishTicket() + 1;
+        user.setFishTicket(curFishTicket);
+        userRepository.save(user);
+
+        return new FishTicketResponse(userId, user.getFishTicket());
     }
 
     @Transactional
@@ -168,7 +182,6 @@ public class FishService {
     }
 
     public String paintFish(String userId, String fishName, MultipartFile imageFile) throws Exception {
-        System.out.println(userId);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
@@ -206,6 +219,8 @@ public class FishService {
         //물고기 티켓 차감
         int curFishTicket = user.getFishTicket() - 1;
         user.setFishTicket(curFishTicket);
+        // 변경된 user 객체를 DB에 저장
+        userRepository.save(user);
 
         return fishName;
 
