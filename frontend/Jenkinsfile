@@ -11,7 +11,7 @@ pipeline {
             steps {
                 git branch: 'frontend',
                     url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
-                    credentialsId: 'frontend-cred'
+                    credentialsId: 'ssafy203'
             }
         }
 
