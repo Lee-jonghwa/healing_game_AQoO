@@ -95,6 +95,7 @@ public class PushService {
                     .putData("type", type)
                     .putData("title", title)
                     .putData("body", body)
+                    .putData("data", request.getData())
                     .putData("click_action", "https://i12e203.p.ssafy.io/main") //게임 메인 페이지로 이동
                     .build();
 
