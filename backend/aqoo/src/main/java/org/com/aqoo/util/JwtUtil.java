@@ -48,12 +48,17 @@ public class JwtUtil {
     }
 
     // 토큰에서 사용자 ID 추출 메서드
-    public String extractUsername(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.getSubject();
+    public String extractUsername(String token) throws Exception {
+        try{
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(SECRET_KEY)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getSubject();
+        }
+        catch (Exception e) {
+            throw new Exception("JWT 검증 오류: " + e.getMessage());
+        }
     }
 }

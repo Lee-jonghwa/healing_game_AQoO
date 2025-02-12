@@ -2,12 +2,13 @@ package org.com.aqoo.domain.push.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.notification.dto.NotificationRequest;
 import org.com.aqoo.domain.notification.service.NotificationService;
 import org.com.aqoo.domain.push.dto.PushRequest;
 import org.com.aqoo.domain.push.entity.UserToken;
-import org.com.aqoo.repository.NotificationRepository;
 import org.com.aqoo.repository.UserTokenRepository;
+import org.com.aqoo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,21 +23,34 @@ public class PushService {
     @Autowired
     private NotificationService notificationService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private FirebaseService firebaseService;  // FirebaseService 추가
 
     public UserToken createUserToken(String userId, String token) {
-        // 중복 토큰 방지 (이미 존재하면 덮어쓰기 or 예외 발생)
         Optional<UserToken> existingToken = userTokenRepository.findByToken(token);
+
         if (existingToken.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 토큰입니다.");
+            UserToken userToken = existingToken.get();
+
+            if (userToken.getUserId().equals(userId)) {
+                // 이미 존재하는 토큰이고 유저 아이디도 동일 -> 기존 토큰 반환
+                return userToken;
+            } else {
+                // 이미 존재하는 토큰이지만 다른 유저 아이디 -> 유저 아이디 업데이트
+                userToken.setUserId(userId);
+                return userTokenRepository.save(userToken);
+            }
         }
 
-        UserToken userToken = new UserToken();
-        userToken.setUserId(userId);
-        userToken.setToken(token);
+        // 존재하지 않는 토큰 -> 새로 등록
+        UserToken newUserToken = new UserToken();
+        newUserToken.setUserId(userId);
+        newUserToken.setToken(token);
 
-        return userTokenRepository.save(userToken);
+        return userTokenRepository.save(newUserToken);
     }
+
 
 
     // FCM 알림 보내는 메서드
@@ -65,6 +79,13 @@ public class PushService {
 
         if (userTokens.isEmpty()) {
             System.out.println(request.getRecipientId() + " 유저의 등록된 FCM 토큰이 없습니다.");
+            return;
+        }
+
+        // 해당 유저의 refreshToken이 없으면 푸시 알람을 보내지 않음
+        User user = userRepository.findById(request.getRecipientId()).orElse(null);
+        if (user == null || user.getRefreshToken() == null || user.getRefreshToken().isEmpty()) {
+            System.out.println(request.getRecipientId() + " 유저는 로그아웃되었습니다. 푸시 알람을 보내지 않습니다.");
             return;
         }
 
