@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent any // 또는 label 'your-agent-label'
 
     environment {
         DOCKER_IMAGE = "frontend-app:latest"
@@ -16,24 +16,22 @@ pipeline {
         }
 
         stage('Build and Test') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    label 'my-docker-agent'
-                }
-            }
             steps {
-                dir('aqoo-fe') { // frontend 디렉토리 안에서 실행
-                    sh 'npm install'
-                    sh 'npm run build'
-                    sh 'npm test' // 테스트가 필요한 경우 추가
+                script {
+                    docker.image('node:18-alpine').inside { // Docker 이미지 사용
+                        dir('aqoo-fe') {
+                            sh 'npm install'
+                            sh 'npm run build'
+                            sh 'npm test'
+                        }
+                    }
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir('frontend') { // 도커파일이 있는 경로
+                dir('frontend') {
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
