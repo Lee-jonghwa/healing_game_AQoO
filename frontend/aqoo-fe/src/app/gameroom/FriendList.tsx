@@ -1,10 +1,11 @@
 "use client";
 
-import axios from "axios";
+import { User, usersState } from "@/store/participantAtom";
 import { useEffect, useState } from "react";
+
+import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
-import { usersState, User } from "@/store/participantAtom";
 
 interface Friend {
   id: string; // 친구 관계 아이디
@@ -55,7 +56,7 @@ export default function FriendList() {
   // 참가자 추가 함수
   const handleAddParticipant = (friend: Friend) => {
     if (users.some((u) => u.friendId === friend.friendId)) return;
-  
+
     const newUser: User = {
       ...friend,
       // mainFishImage가 null일 경우 빈 문자열로 변환
@@ -63,7 +64,7 @@ export default function FriendList() {
       ready: false,
       isHost: false,
     };
-  
+
     setUsers((prev) => [...prev, newUser]);
   };
 
@@ -85,17 +86,9 @@ export default function FriendList() {
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gray-300 rounded-full">
                   {friend.mainFishImage ? (
-                    <img
-                      src={friend.mainFishImage}
-                      alt="친구의 대표 물고기"
-                      className=" rounded-full"
-                    />
+                    <img src={friend.mainFishImage} alt="친구의 대표 물고기" className=" rounded-full" />
                   ) : (
-                    <img
-                      src="/fish/default.png"
-                      alt="기본 물고기 이미지"
-                      className="w-full h-full rounded-full"
-                    />
+                    <img src="/fish/default.png" alt="기본 물고기 이미지" className="w-full h-full rounded-full" />
                   )}
                 </div>
                 <div>

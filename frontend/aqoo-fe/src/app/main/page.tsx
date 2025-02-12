@@ -8,6 +8,7 @@ import axios, { AxiosResponse } from "axios";
 
 import BottomMenuBar from "@/app/main/BottomMenuBar";
 import CleanComponent from "@/app/main/CleanComponent";
+import FishTicketModal from "@/components/FishTicketModal"; // ✅ 물고기 뽑기 모달 추가
 import FriendsList from "@/app/main/FriendsList";
 import Image from "next/image";
 import LevelUpModal from "@/components/LevelUpModal"; // ✅ 레벨업 모달 추가
@@ -26,6 +27,7 @@ interface FishData {
   fishName: string;
   fishImage: string;
 }
+
 export default function MainPage() {
   const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
 
@@ -35,6 +37,10 @@ export default function MainPage() {
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
   const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
+
+  // ✅ 모달 상태 중앙 관리
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [showFishTicketModal, setShowFishTicketModal] = useState(false);
 
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -174,7 +180,7 @@ export default function MainPage() {
 
       {/* 🐠 떠다니는 물고기 렌더링 */}
       {fishes.map((fish) => (
-        <Fish key={fish.fishTypeId} fish={fish} />
+        <Fish key={fish.fishId} fish={fish} />
       ))}
 
       <NotificationComponent />
@@ -185,7 +191,7 @@ export default function MainPage() {
         userInfo={userInfo}
         aquariumData={aquariumData}
         refreshAquariumData={refreshAquariumData}
-        refreshUserData={() => handleIncreaseExp(0)} // ✅ 경험치 0으로 유저 정보만 업데이트
+        onOpenFishModal={() => setShowFishTicketModal(true)} // ✅ 하단 메뉴에서도 같은 모달 사용
         handleIncreaseExp={handleIncreaseExp} // ✅ Water/Feed에서도 사용
       />
 
@@ -221,9 +227,20 @@ export default function MainPage() {
           <LevelUpModal
             level={levelUpInfo.level}
             // expProgress={levelUpInfo.expProgress}
-            onClose={() => setLevelUpInfo(null)}
+            onClose={() => setLevelUpInfo(null)} // ✅ 모달 닫는 함수
+            onOpenFishModal={() => setShowFishTicketModal(true)} // ✅ 레벨업 후에도 같은 모달 사용
           />
         </div>
+      )}
+
+      {/* 📌 물고기 뽑기 모달 */}
+      {showFishTicketModal && userInfo && (
+        <FishTicketModal
+          level={userInfo.level}
+          fishTicket={userInfo.fishTicket} // ✅ 티켓 개수 전달
+          refreshUserInfo={refreshUserInfo} // ✅ 유저 정보 갱신 함수 전달
+          onClose={() => setShowFishTicketModal(false)}
+        />
       )}
     </div>
   );
@@ -331,14 +348,13 @@ function Fish({ fish }: { fish: FishData }) {
       loader={customLoader} // ✅ 커스텀 로더 추가
       ref={fishRef}
       src={fish.fishImage}
-      alt={fish.fishTypeId.toString()}
+      alt={fish.fishName.toString()}
       width={64} // 필요에 맞게 조정
       height={64} // 필요에 맞게 조정
       className="absolute max-w-64 max-h-16 transform-gpu"
       onClick={handleClick}
+      layout="intrinsic"
       unoptimized // ✅ Next.js 최적화 비활성화
     />
-
-    // <Image src={fish.fishImage} alt={fish.fishTypeName} fill className="absolute max-w-64 h-16 transform-gpu"></Image>
   );
 }

@@ -114,7 +114,7 @@ export default function MyFishCollection({
   };
 
   return (
-    <div >
+    <div>
       <div className="flex flex-wrap gap-4">
         {myFishList.map((fish) => (
           <div

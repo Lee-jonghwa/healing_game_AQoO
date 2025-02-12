@@ -4,6 +4,7 @@ export interface UserInfo {
   level: number;
   exp: number;
   mainAquarium: number;
+  fishTicket: number;
 }
 
 // 🔹 어항 상태 데이터 타입 정의
