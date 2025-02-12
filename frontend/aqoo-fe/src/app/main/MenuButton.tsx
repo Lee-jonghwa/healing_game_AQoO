@@ -14,9 +14,9 @@ function MenuButton({
   return (
     <button
       onClick={onClick} // 버튼 클릭 시 전달받은 함수 실행
-      className="flex flex-col items-center justify-center w-20 h-20 bg-white rounded-lg shadow-md border border-gray-300 hover:bg-gray-200"
+      className="flex flex-col items-center justify-center w-16 h-16 p-1 bg-white rounded-lg shadow-md border border-gray-300 hover:bg-gray-200"
     >
-      <img src={icon} alt={label} className="w-12 h-12" />
+      <img src={icon} alt={label} className="w-[32px] h-[32px]" />
       <span className="text-sm font-bold">{label}</span>
     </button>
   );
