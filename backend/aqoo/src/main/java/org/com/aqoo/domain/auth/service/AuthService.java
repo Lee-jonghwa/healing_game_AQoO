@@ -147,28 +147,28 @@ public class AuthService {
 
 
     //토큰 재발급 요청 서비스
-    public String refreshToken(String refreshToken) {
-        System.out.println("쿠키에 저장된 refreshToken으로 엑세스 토큰 재요청");
-
-        // 토큰 유효성 확인
-        if (!jwtUtil.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("Invalid Refresh Token");
-        }
-
-        // 토큰에서 사용자 ID 추출
-        String userId = jwtUtil.extractUsername(refreshToken);
-        System.out.println("추출한 ID: " + userId);
-
-        // 데이터베이스에서 저장된 리프레시 토큰 확인
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        if (!refreshToken.equals(user.getRefreshToken())) {
-            throw new IllegalArgumentException("Invalid Refresh Token");
-        }
-
-        return jwtUtil.generateToken(userId, "ACCESS");
-    }
+//    public String refreshToken(String refreshToken) {
+//        System.out.println("쿠키에 저장된 refreshToken으로 엑세스 토큰 재요청");
+//
+//        // 토큰 유효성 확인
+//        if (!jwtUtil.validateToken(refreshToken)) {
+//            throw new IllegalArgumentException("Invalid Refresh Token");
+//        }
+//
+//        // 토큰에서 사용자 ID 추출
+//        String userId = jwtUtil.extractUsername(refreshToken);
+//        System.out.println("추출한 ID: " + userId);
+//
+//        // 데이터베이스에서 저장된 리프레시 토큰 확인
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+//
+//        if (!refreshToken.equals(user.getRefreshToken())) {
+//            throw new IllegalArgumentException("Invalid Refresh Token");
+//        }
+//
+//        return jwtUtil.generateToken(userId, "ACCESS");
+//    }
 
     // 소셜 로그인 서비스
     @Transactional
