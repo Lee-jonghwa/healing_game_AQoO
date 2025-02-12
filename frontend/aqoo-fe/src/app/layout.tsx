@@ -7,13 +7,20 @@ import Navbar from "@/components/NavBar";
 import RecoilProvider from "@/providers/RecoilProvider";
 import { usePathname } from "next/navigation";
 
-// import NavBar from "@/components/NavBar";
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // ✅ 네비게이션을 숨기고 싶은 페이지 리스트
-  const hiddenNavPaths = ["/", "/user/login", "/register", "/some-other-page", "/mypage", "/mypage/fishtank"]; // 네비게이션 숨길 경로
+
+  const hiddenNavPaths = [
+    "/",
+    "/user/login",
+    "/register",
+    "/some-other-page",
+    "/mypage",
+    "/mypage/fishtank",
+    "/mypage/edit",
+  ]; // 네비게이션 숨길 경로
 
   return (
     <html lang="ko">

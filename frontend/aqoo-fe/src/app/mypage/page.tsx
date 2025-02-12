@@ -21,6 +21,8 @@ export default function MyPage() {
   // 총 물고기
   const totalFishCount = userFishList.reduce((acc, fish) => acc + fish.cnt, 0) + customFishList.length;
 
+  const API_BASE_URL = "https://i12e203.p.ssafy.io/";
+
   // 로그아웃 기능 핸들러
   const handleLogout = async () => {
     try {
@@ -33,13 +35,13 @@ export default function MyPage() {
 
   return (
     <div
-      className="
+      style={{ backgroundImage: `url(${API_BASE_URL}/images/bg1.png)` }}
+      className={`
         flex
         h-screen
-        bg-[url('/images/배경샘플.png')]
         bg-cover bg-center bg-no-repeat
         relative
-      "
+      `}
     >
       {/* 왼쪽 상단 Home 버튼 */}
       <Link

@@ -103,7 +103,7 @@ export default function GameRoomPage() {
   return (
     <div
       className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/images/background.png')" }}
+      style={{ backgroundImage: "url('/chat_images/background.png')" }}
     >
       {/* 배경 */}
       <div className="absolute inset-0 bg-white opacity-20"></div>

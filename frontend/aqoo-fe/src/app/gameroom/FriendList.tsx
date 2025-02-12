@@ -59,8 +59,8 @@ export default function FriendList() {
 
     const newUser: User = {
       ...friend,
-      // mainFishImage가 null일 경우 undefined로 변환
-      mainFishImage: friend.mainFishImage ?? undefined,
+      // mainFishImage가 null일 경우 빈 문자열로 변환
+      mainFishImage: friend.mainFishImage ?? "",
       ready: false,
       isHost: false,
     };
@@ -76,7 +76,7 @@ export default function FriendList() {
       </div>
 
       {/* 친구 리스트 */}
-      <div className="space-y-3 overflow-y-auto scrollbar-hide flex-grow">
+      <div className="space-y-3 overflow-y-auto scrollbar flex-grow">
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
             <div
@@ -86,7 +86,7 @@ export default function FriendList() {
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gray-300 rounded-full">
                   {friend.mainFishImage ? (
-                    <img src={friend.mainFishImage} alt="친구의 대표 물고기" className="w-full h-full rounded-full" />
+                    <img src={friend.mainFishImage} alt="친구의 대표 물고기" className=" rounded-full" />
                   ) : (
                     <img src="/fish/default.png" alt="기본 물고기 이미지" className="w-full h-full rounded-full" />
                   )}
