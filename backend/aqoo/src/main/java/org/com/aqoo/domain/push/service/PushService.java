@@ -60,7 +60,7 @@ public class PushService {
         //title, body 구성
         String type = request.getType();
         String title = getMessageTitle(type);
-        String body = request.getData();
+        String body = getMessageBody(type, request.getSenderId(), request.getData());
 
         // 알람 저장
         if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
@@ -95,6 +95,7 @@ public class PushService {
                     .putData("type", type)
                     .putData("title", title)
                     .putData("body", body)
+                    .putData("data", request.getData())
                     .putData("click_action", "https://i12e203.p.ssafy.io/main") //게임 메인 페이지로 이동
                     .build();
 
@@ -106,12 +107,12 @@ public class PushService {
 
     public static String getMessageTitle(String type) {
         return switch (type) {
-            case "FRIEND REQUEST" -> "친구 요청";
-            case "FRIEND ACCEPT" -> "친구 수락";
-            case "GAME INVITE" -> "게임 초대";
-            case "FEED" -> "어항의 먹이 상태";
-            case "CLEAN" -> "어항의 청소 상태";
-            case "WATER" -> "어항의 물 상태";
+            case "FRIEND REQUEST" -> "\uD83C\uDF1F 친구 요청 \uD83C\uDF1F";
+            case "FRIEND ACCEPT" -> "\uD83E\uDD1D 친구 수락 \uD83E\uDD1D";
+            case "GAME INVITE" -> "\uD83C\uDFAE 게임 초대 \uD83C\uDFAE";
+            case "FEED" -> "\uD83C\uDF7D 어항 먹이 상태 \uD83C\uDF7D";
+            case "CLEAN" -> "\uD83E\uDDFD 어항 청소 상태 \uD83E\uDDFD";
+            case "WATER" -> "\uD83D\uDCA7 어항 물 상태 \uD83D\uDCA7";
             default -> "알림";
         };
     }
@@ -130,24 +131,24 @@ public class PushService {
 
     private static String generateFeedMessage(String data) {
         return switch (data) {
-            case "5" -> "어항의 먹이 상태가 아주 좋습니다.";
-            case "4" -> "어항의 먹이 상태가 좋습니다.";
-            case "3" -> "어항의 먹이 상태가 양호합니다.";
-            case "2" -> "어항의 먹이가 조금 부족합니다.";
-            case "1" -> "어항의 먹이가 거의 없습니다. 먹이를 주세요!";
-            case "0" -> "어항의 먹이가 없습니다! 빨리 먹이를 주세요!";
+            case "5" -> "물고기들이 깨끗한 물 속에서 행복해요!";
+            case "4" -> "어항의 물이 맑고 깨끗해요!";
+            case "3" -> "어항의 물이 조금씩 탁해지고 있어요!";
+            case "2" -> "어항 속 물이 점점 더 혼탁해지고 있어요!";
+            case "1" -> "수질이 심각하게 나빠졌어요!";
+            case "0" -> "즉시 물을 교체하지 않으면 물고기들이 아파해요!";
             default -> "어항의 먹이 상태를 확인할 수 없습니다.";
         };
     }
 
     private static String generateCleanMessage(String data) {
         return switch (data) {
-            case "5" -> "어항이 아주 깨끗합니다.";
-            case "4" -> "어항이 깨끗합니다.";
-            case "3" -> "어항이 깨끗한 상태입니다.";
-            case "2" -> "어항이 조금 더러워지고 있습니다.";
-            case "1" -> "어항이 많이 더러워졌습니다. 청소가 필요합니다!";
-            case "0" -> "어항이 매우 지저분합니다! 지금 바로 청소하세요!";
+            case "5" -> "어항이 완벽하게 청소되었어요!";
+            case "4" -> "어항이 깨끗하게 유지되고 있어요!";
+            case "3" -> "어항을 깨끗하게 닦아주는 게 좋겠어요!";
+            case "2" -> "어항이 점점 지저분해지고 있어요. 청소가 필요해요!";
+            case "1" -> "어항이 너무 더러워져서 물고기들이 움직이기 어려워해요.";
+            case "0" -> "지금 당장 청소하지 않으면 물고기들이 위험해요!";
             default -> "어항의 청소 상태를 확인할 수 없습니다.";
         };
     }
