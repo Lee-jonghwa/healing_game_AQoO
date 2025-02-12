@@ -1,5 +1,5 @@
 pipeline {
-    agent any // 또는 label 'your-agent-label'
+    agent any
 
     environment {
         DOCKER_IMAGE = "frontend-app:latest"
@@ -18,7 +18,7 @@ pipeline {
         stage('Build and Test') {
             steps {
                 script {
-                    docker.image('node:18-alpine').inside { 
+                    docker.image('node:18-alpine').inside {
                         dir('aqoo-fe') {
                             sh 'npm install'
                             sh 'npm run build'
