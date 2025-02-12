@@ -1,11 +1,8 @@
 "use client";
 
-import axios, {
-  AxiosError,
-  AxiosInstance,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from "axios";
+console.log("AxiosInstance loaded");
+
+import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 const BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 const REFRESH_URL = "/auth/refresh"; // 토큰 갱신 API 엔드포인트
@@ -28,10 +25,12 @@ axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const requestUri = `${config.baseURL || ""}${config.url || ""}`;
     // console.log("Outgoing Request URI:", requestUri);
-
+    console.log("[Request] Method:", config.method?.toUpperCase());
+    console.log("[Request] URL:", requestUri);
+    console.log("[Request] Headers:", config.headers);
     // 요청 본문 로깅
     if (config.data) {
-      // console.log("Request Body:", config.data);
+      console.log("Request Body:", config.data);
     }
 
     const token = localStorage.getItem("accessToken");
@@ -49,8 +48,8 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     const responseUri = `${response.config.baseURL || ""}${response.config.url || ""}`;
-    // console.log("Response received from:", responseUri);
-    // console.log("Response data:", response.data);
+    console.log("Response received from:", responseUri);
+    console.log("Response data:", response.data);
     return response; // 정상 응답일 경우 그대로 반환
   },
   async (error: AxiosError) => {
@@ -58,7 +57,7 @@ axiosInstance.interceptors.response.use(
       const errorUri = `${error.config.baseURL || ""}${error.config.url || ""}`;
       console.error("Error response from:", errorUri);
     }
-    
+
     if (error.response?.status === 401) {
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
