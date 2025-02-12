@@ -9,7 +9,7 @@ export default function MyFishTank() {
       className="
         flex flex-col
         h-screen
-        bg-[url('/images/배경샘플.png')]
+        bg-[url('https://i12e203.p.ssafy.io/images/bg1.png')]
         bg-cover bg-center bg-no-repeat
       "
     >
