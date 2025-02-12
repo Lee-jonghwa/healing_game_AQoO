@@ -13,8 +13,10 @@ import org.im4java.core.ConvertCmd;
 import org.im4java.core.IMOperation;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -130,8 +132,11 @@ public class FishService {
         UserFish userFish = saveUserFish(user.getId(), selectedFish.getId());
         Integer userFishId = userFish.getId(); // 저장 후 ID 바로 가져오기
 
+        // 5. 물고기 티켓 차감
+        int curFishTicket = user.getFishTicket() - 1;
+        user.setFishTicket(curFishTicket);
 
-        // 5. 결과 응답
+        // 6. 결과 응답
         return new GotchaResponse(
                 userFishId,
                 selectedFish.getId(),
@@ -162,7 +167,50 @@ public class FishService {
         return fishType;
     }
 
-    public static File processImage(File inputFile, String outputFilePath) throws Exception {
+    public String paintFish(String userId, String fishName, MultipartFile imageFile) throws Exception {
+        System.out.println(userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
+
+
+        String imagePath = imageFile.getOriginalFilename();
+
+        // 이미지 저장 경로 설정
+        String uploadDir = "/home/ubuntu/images/";
+        File dir = new File(uploadDir);
+        if (!dir.exists()) {
+            dir.mkdirs(); // 경로가 없으면 생성
+        }
+
+        // 원본 이미지 저장
+        String originalFilePath = uploadDir + "ori_" + imagePath;
+        File originalFile = new File(originalFilePath);
+        imageFile.transferTo(originalFile);  // 원본 이미지 저장
+
+        // 변환된 이미지 파일명
+        String processedFilePath = uploadDir + imagePath;
+
+        // 이미지 변환 처리
+        File processedFile = processImage(originalFile, processedFilePath);
+
+        //물고기 타입에 추가
+        FishTypeRequest request = new FishTypeRequest(fishName,
+                "/" + imagePath,
+                userId);
+        Fish newType = saveFishType(request);
+
+        //유저 물고기에 추가
+        saveUserFish(userId, newType.getId());
+
+        //물고기 티켓 차감
+        int curFishTicket = user.getFishTicket() - 1;
+        user.setFishTicket(curFishTicket);
+
+        return fishName;
+
+    }
+    public File processImage(File inputFile, String outputFilePath) throws Exception {
         // 이미지 변환을 위한 ProcessBuilder 객체 생성
         ProcessBuilder processBuilder = new ProcessBuilder("/usr/bin/convert",
                 inputFile.getAbsolutePath(),  // 원본 이미지 파일 경로

@@ -31,11 +31,15 @@ public interface UserFishRepository extends JpaRepository<UserFish, Integer> {
     void removeAllByAquariumId(Integer aquariumId);
 
     @Query("""
-        SELECT uf.id, uf.fishTypeId, uf.aquariumId 
-        FROM UserFish uf 
-        WHERE uf.userId = :userId 
-        AND (:aquariumId = -1 AND uf.aquariumId IS NULL OR :aquariumId != -1 AND uf.aquariumId = :aquariumId)
-    """)
+    SELECT uf.id, uf.fishTypeId, uf.aquariumId 
+    FROM UserFish uf 
+    WHERE uf.userId = :userId 
+    AND (
+        (:aquariumId = -1 AND uf.aquariumId IS NULL) 
+        OR 
+        (:aquariumId != -1 AND uf.aquariumId = :aquariumId)
+    )
+""")
     List<Object[]> findFishDetailsByUserIdAndAquariumId(
             @Param("userId") String userId,
             @Param("aquariumId") Integer aquariumId

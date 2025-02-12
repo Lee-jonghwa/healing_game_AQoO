@@ -31,7 +31,7 @@ public class UserService {
                 .level(user.getLevel())
                 .status(user.getStatus())
                 .mainAquarium(Objects.requireNonNullElse(user.getMainAquarium(), 0)) // 기본값 0
-                .fishTicekt(user.getFishTicket())
+                .fishTicket(user.getFishTicket())
                 .build();
     }
 

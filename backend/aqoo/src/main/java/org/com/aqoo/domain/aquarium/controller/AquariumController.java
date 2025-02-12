@@ -102,14 +102,10 @@ public class AquariumController {
 
             List<AquariumFishResponse> response = aquariumService.getAquariumFish(userId, aquariumId);
 
-            if (response.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "해당하는 물고기가 없습니다."));
-            }
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "어항 물고기 검색에 실패했습니다."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
 
