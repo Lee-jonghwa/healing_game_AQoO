@@ -114,12 +114,13 @@ function EditProfilePage() {
 
   // userData 리소스: auth.user가 변경될 때마다 최신 데이터를 가져옴
   const userDataResourceRef = useRef<{ read: () => any } | null>(null);
+  const [userDataResource, setUserDataResource] = useState<{ read: () => any } | null>(null);
 
   useEffect(() => {
     // auth.user?.id가 준비되었고, 아직 리소스가 생성되지 않았다면 생성
     if (auth.user?.id) {
       const token = localStorage.getItem("accessToken");
-      userDataResourceRef.current = wrapPromise(
+      const resource = wrapPromise(
         fetch(`${API_BASE_URL}/api/v1/users/${auth.user.id}`, {
           method: "GET",
           headers: {
@@ -133,12 +134,13 @@ function EditProfilePage() {
           return response.json();
         })
       );
+      setUserDataResource(resource);
     }
   }, [auth.user]); // auth.user가 변경될 때마다 리소스 재생성
 
   // Suspense 내부에서 호출 (리소스가 준비되지 않았다면 Promise를 throw하여 fallback 표시)
-  const userData = userDataResourceRef.current ? userDataResourceRef.current.read() : null;
-
+  // 렌더 시점에 바로 읽기
+  const userData = userDataResource ? userDataResource.read() : null;
   useEffect(() => {
     if (userData) {
       setValue("nickname", userData.nickname || "");
