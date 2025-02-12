@@ -5,6 +5,9 @@ import MyFishCollection from "./MyFishCollection";
 import TankFishCollection from "./TankFishCollection";
 import BackgroundList from "./BackgroundList";
 import { Suspense } from "react";
+import { useRecoilValue } from "recoil";
+import { authAtom } from "@/store/authAtom";
+import axiosInstance from "@/services/axiosInstance";
 
 interface FishTankTabContentProps {
   aquariumId: number;
@@ -25,6 +28,22 @@ export default function FishTankTabContent({ aquariumId, aquariumName }: FishTan
   // MyFishCollection에서 물고기를 어항에 넣은 후 TankFishCollection 갱신
   const handleFishAdded = () => {
     setRefreshTankFish((prev) => prev + 1);
+  };
+
+  const auth = useRecoilValue(authAtom);
+
+  // "대표어항 설정" 버튼 클릭 핸들러
+  const handleSetMainAquarium = async () => {
+    if (!auth.user) return;
+    try {
+      await axiosInstance.post("/aquariums/main-aqua", {
+        userId: auth.user.id,
+        aquariumId: aquariumId,
+      });
+      alert("대표 어항 설정이 완료되었습니다.");
+    } catch (error) {
+      console.error("Error setting main aquarium:", error);
+    }
   };
 
   return (
@@ -52,15 +71,23 @@ export default function FishTankTabContent({ aquariumId, aquariumName }: FishTan
         </div>
         {/* 오른쪽: TankFishCollection */}
         <div className="flex-1 w-full h-full m-0 p-5 flex flex-col items-center">
-          <p
-            className="
-              m-1 p-1 self-start min-w-[200px] h-[50px] px-2 flex items-center justify-center
-              rounded-xl border border-[#040303] bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
-              text-[#070707] text-center text-xl font-[NeoDunggeunmo_Pro]
-            "
-          >
-            {aquariumName} 물고기
-          </p>
+          <div className="flex items-center justify-between w-full">
+            <p
+              className="
+                m-1 p-1 min-w-[200px] h-[50px] px-2 flex items-center justify-center
+                rounded-xl border border-[#040303] bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+                text-[#070707] text-center text-xl font-[NeoDunggeunmo_Pro]
+              "
+            >
+              {aquariumName} 어항의 물고기
+            </p>
+            <button
+              onClick={handleSetMainAquarium}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              대표어항 설정
+            </button>
+          </div>
           {/* refresh와 onFishRemoved를 전달 */}
           <TankFishCollection
             aquariumId={aquariumId}

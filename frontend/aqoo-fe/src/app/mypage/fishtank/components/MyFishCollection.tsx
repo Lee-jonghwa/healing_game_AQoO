@@ -6,22 +6,27 @@ import axiosInstance from "@/services/axiosInstance";
 import { useRecoilValue } from "recoil";
 import { authAtom } from "@/store/authAtom";
 
-// 내 물고기 정보 타입 (API 응답에서 fishId, fishName, fishImage 사용)
+// 그룹화된 내 물고기 정보 타입
 interface MyFish {
-  id: number;         // API의 fishId
-  name: string;       // API의 fishName
-  count: number;
-  imageSrc: string;   // API의 fishImage
+  fishName: string;    // API의 fishName
+  count: number;       // 같은 물고기의 개수
+  fishIds: number[];   // 해당 그룹에 속한 개별 물고기의 fishId 목록
+  imageSrc: string;    // API의 fishImage (또는 이미지 URL 생성에 사용할 값)
 }
 
 interface MyFishCollectionProps {
   aquariumId: number;
   aquariumName: string;
-  refresh: number;  // 새로고침 트리거
-  onFishAdded?: () => void; // 어항에 물고기 추가 후 부모에게 알리는 콜백
+  refresh: number;             // 부모 컴포넌트로부터 전달받은 새로고침 트리거
+  onFishAdded?: () => void;    // 어항에 물고기 추가 후 부모에게 알리는 콜백
 }
 
-export default function MyFishCollection({ aquariumId, aquariumName, refresh, onFishAdded }: MyFishCollectionProps) {
+export default function MyFishCollection({
+  aquariumId,
+  aquariumName,
+  refresh,
+  onFishAdded,
+}: MyFishCollectionProps) {
   const auth = useRecoilValue(authAtom);
   const [myFishList, setMyFishList] = useState<MyFish[]>([]);
   const [selectedFish, setSelectedFish] = useState<MyFish | null>(null);
@@ -32,13 +37,34 @@ export default function MyFishCollection({ aquariumId, aquariumName, refresh, on
       axiosInstance
         .get(`aquariums/fish/-1`)
         .then((response) => {
-          const fishes: MyFish[] = response.data.map((item: any) => ({
-            id: item.fishId,
-            name: item.fishName,
-            count: 1,
-            imageSrc: item.fishImage,
-          }));
-          setMyFishList(fishes);
+          // API 응답 예시:
+          // [
+          //   { "aquariumId": 1, "fishId": 9, "fishTypeId": 1, "fishName": "Goldfish", "fishImage": "https://example.com/fish1.png" },
+          //   { "aquariumId": 1, "fishId": 10, "fishTypeId": 1, "fishName": "Goldfish", "fishImage": "https://example.com/fish1.png" },
+          //   { "aquariumId": 1, "fishId": 11, "fishTypeId": 3, "fishName": "Betta", "fishImage": "https://example.com/fish3.png" }
+          // ]
+          if (Array.isArray(response.data)) {
+            // 그룹화: fishName 기준으로 그룹 생성
+            const grouped: { [key: string]: MyFish } = {};
+            response.data.forEach((fish: any) => {
+              const name: string = fish.fishName;
+              if (grouped[name]) {
+                grouped[name].count += 1;
+                grouped[name].fishIds.push(fish.fishId);
+              } else {
+                grouped[name] = {
+                  fishName: name,
+                  count: 1,
+                  fishIds: [fish.fishId],
+                  imageSrc: fish.fishImage, // 또는 `https://i12e203.p.ssafy.io/images/${name}.png`
+                };
+              }
+            });
+            const aggregatedFishes = Object.values(grouped);
+            setMyFishList(aggregatedFishes);
+          } else {
+            setMyFishList([]);
+          }
         })
         .catch((error) => {
           console.error("Error fetching my fish collection:", error);
@@ -46,24 +72,49 @@ export default function MyFishCollection({ aquariumId, aquariumName, refresh, on
     }
   }, [auth.user?.id, refresh]);
 
+  // 카드 클릭 시 모달을 열어 어항에 넣을 물고기를 선택
   const handleFishClick = (fish: MyFish) => {
     setSelectedFish(fish);
     setIsModalOpen(true);
   };
 
+  // 모달 취소
   const handleModalCancel = () => {
     setIsModalOpen(false);
     setSelectedFish(null);
   };
 
+  // 모달의 "넣기" 버튼 클릭 시, POST 요청으로 어항에 물고기를 추가
   const handleModalConfirm = async () => {
     if (!selectedFish) return;
+    // 그룹 내에서 추가할 물고기의 식별자는 첫 번째 fishId 사용
+    const fishIdToAdd = selectedFish.fishIds[0];
     try {
       await axiosInstance.post("/aquariums/fish/add", {
-        userFishId: selectedFish.id,
+        userFishId: fishIdToAdd,
         aquariumId: aquariumId,
       });
-      setMyFishList((prevList) => prevList.filter((fish) => fish.id !== selectedFish.id));
+      // 요청 성공 시, 내 물고기 목록 업데이트:
+      // 같은 그룹의 개수가 1보다 크면 count 감소 및 fishIds 배열에서 첫 번째 요소 제거,
+      // count가 1이면 해당 그룹을 제거
+      setMyFishList((prevList) =>
+        prevList
+          .map((fish) => {
+            if (fish.fishName === selectedFish.fishName) {
+              if (fish.count > 1) {
+                return {
+                  ...fish,
+                  count: fish.count - 1,
+                  fishIds: fish.fishIds.slice(1),
+                };
+              } else {
+                return null;
+              }
+            }
+            return fish;
+          })
+          .filter((fish): fish is MyFish => fish !== null)
+      );
       setIsModalOpen(false);
       setSelectedFish(null);
       // 어항에 추가되었으므로 부모에게 알림 (TankFishCollection 새로고침)
@@ -77,9 +128,9 @@ export default function MyFishCollection({ aquariumId, aquariumName, refresh, on
     <div className="bg-white w-full h-full rounded-[30px] p-3 overflow-auto">
       <div className="flex flex-wrap">
         {myFishList.map((fish) => (
-          <div key={fish.id} onClick={() => handleFishClick(fish)}>
+          <div key={fish.fishName} onClick={() => handleFishClick(fish)}>
             <CollectionItemCard
-              name={fish.name}
+              name={fish.fishName}
               count={fish.count}
               imageSrc={fish.imageSrc}
             />
@@ -93,7 +144,7 @@ export default function MyFishCollection({ aquariumId, aquariumName, refresh, on
           <div className="bg-white p-6 rounded-lg shadow-lg">
             <p className="mb-4 text-lg">
               활성화 돼있는 <span className="font-bold">{aquariumName}</span> 어항에{" "}
-              <span className="font-bold">{selectedFish.name}</span>을(를) 넣겠습니까?
+              <span className="font-bold">{selectedFish.fishName}</span>을(를) 넣겠습니까?
             </p>
             <div className="flex justify-end space-x-4">
               <button
