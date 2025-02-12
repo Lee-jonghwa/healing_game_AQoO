@@ -150,7 +150,7 @@ export default function Game({
         </div>
       </div>
     );
-       
+        
   }
 
   if (gameEnded) {
