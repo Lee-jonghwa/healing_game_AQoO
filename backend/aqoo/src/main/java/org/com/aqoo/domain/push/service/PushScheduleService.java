@@ -90,6 +90,8 @@ public class PushScheduleService {
             System.out.println(userId + "님께  푸시 알람을 전송을 실패했습니다.");
             return;
         }
+
+
         try {
             System.out.println(userId + "님께 " + type + " 푸시 알람을 전송합니다. 현재 상태는 : " + level);
             pushService.sendPush(new PushRequest(null, userId, type, Integer.toString(level)));

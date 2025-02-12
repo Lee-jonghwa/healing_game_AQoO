@@ -60,7 +60,7 @@ public class PushService {
         //title, body 구성
         String type = request.getType();
         String title = getMessageTitle(type);
-        String body = getMessageBody(type, request.getSenderId(), request.getData());
+        String body = request.getData();
 
         // 알람 저장
         if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
@@ -95,7 +95,7 @@ public class PushService {
                     .putData("type", type)
                     .putData("title", title)
                     .putData("body", body)
-                    .putData("click_action", "https://i12e12, 24, 203.p.ssafy.io/main") //게임 메인 페이지로 이동
+                    .putData("click_action", "https://i12e203.p.ssafy.io/main") //게임 메인 페이지로 이동
                     .build();
 
             // FCM으로 메시지 전송
