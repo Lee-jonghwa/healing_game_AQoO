@@ -10,15 +10,18 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Git 저장소에서 소스 코드 가져오기
-                git branch: 'frontend',
-                    url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
-                    credentialsId: 'frontend-cred'
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/frontend']],
+                    userRemoteConfigs: [[
+                        url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
+                        credentialsId: 'frontend-cred'
+                    ]]
+                ])
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Dockerfile 위치에서 Docker 이미지를 빌드
                 dir('frontend') {
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
@@ -28,7 +31,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying container with name: ${CONTAINER_NAME}"
                     sh "docker stop ${CONTAINER_NAME} || true"
                     sh "docker rm ${CONTAINER_NAME} || true"
                     sh """
