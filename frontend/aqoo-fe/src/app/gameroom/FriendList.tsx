@@ -59,7 +59,7 @@ export default function FriendList() {
     const newUser: User = {
       ...friend,
       // mainFishImage가 null일 경우 undefined로 변환
-      mainFishImage: friend.mainFishImage ?? undefined,
+      mainFishImage: friend.mainFishImage ?? "",
       ready: false,
       isHost: false,
     };
