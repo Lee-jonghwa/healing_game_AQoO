@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 interface Participant {
   userName: string;
   ready: boolean;
@@ -39,6 +41,9 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
                     <span className="ml-1 text-sm font-bold text-red-600">(방장)</span>
                   )}
                 </span>
+                </div>
+                {/* ready 상태가 true인 경우 READY 문구 표시 */}
+                {user.ready && <span className="text-green-700 font-bold">Ready</span>}
                 {currentIsHost && user.userName !== currentUser && (
                   <button
                     onClick={() => onKickUser(user.userName)}
@@ -47,9 +52,6 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
                     추방
                   </button>
                 )}
-                {/* ready 상태가 true인 경우 READY 문구 표시 */}
-                {user.ready && <span className="text-green-700 font-bold">Ready</span>}
-              </div>
             </li>
           ))}
         </ul>

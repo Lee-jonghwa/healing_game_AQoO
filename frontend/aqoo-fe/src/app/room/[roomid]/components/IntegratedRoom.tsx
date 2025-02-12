@@ -20,8 +20,10 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
+  // 게임 관련 메시지와 함께 유저 목록 업데이트용 필드 (채팅방 사용자용)
   users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[];
   players?: Player[];
+  // GAME_STARTED 메시지의 경우 players 필드가 포함됨
   targetUser?: string;
 }
 
@@ -54,7 +56,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
 
     const intervalId = setInterval(() => {
       if (client.connected) {
-        setIsConnected(true);
+        setIsConnected(true);  // 연결 확정정
         if (!hasSentJoinRef.current) {
           const joinMessage = { roomId, sender: userName };
           client.publish({
@@ -68,6 +70,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
           const data: RoomUpdate = JSON.parse(message.body);
           console.log('Room update received:', data);
           if (data.message === 'GAME_STARTED') {
+            // GAME_STARTED 메시지에는 players 필드가 포함되어 있어야 함
             setGamePlayers(data.players ?? []);
             setScreen('game');
           } else if (data.message === 'USER_LIST') {
@@ -94,6 +97,15 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     const me = users.find((u) => u.userName === userName);
     setCurrentIsHost(me ? me.isHost : false);
   }, [users, userName]);
+
+  // 방장여부 디버깅
+  useEffect(() => {
+    console.log('Updated users:', users);
+    users.forEach((user) =>
+      console.log(`User ${user.userName}: isHost = ${user.isHost}, ready = ${user.ready}`)
+    );
+  }, [users]);
+
 
   // ----------------------------
   // ready / start 관련 상태 계산
