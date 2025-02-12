@@ -21,7 +21,7 @@ interface FishData {
   fishId: number;
   fishTypeId: number;
   fishName: string;
-  fishImgage: string;
+  fishImage: string;
 }
 export default function MainPage() {
   const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
@@ -108,19 +108,26 @@ export default function MainPage() {
   }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀔 때마다 실행
 
   useEffect(() => {
-    if (!auth.user?.id) return;
+    if (!auth.user?.id || userInfo?.mainAquarium === undefined) return;
 
     // ✅ 물고기 데이터 불러오기 (API 호출)
     axios
-      .get(`${API_BASE_URL}/aquariums/fish/${userInfo?.mainAquarium}`)
-      .then((response: AxiosResponse<FishData[]>) => {
+      .get(`${API_BASE_URL}/aquariums/fish/${userInfo.mainAquarium}`, { withCredentials: true })
+      .then((response: AxiosResponse<FishData[] | { message: string }>) => {
         console.log("🐠 내 물고기 목록:", response.data);
-        setFishes(response.data);
+
+        // ✅ 응답이 배열인지 확인 후 상태 업데이트
+        if (Array.isArray(response.data)) {
+          setFishes(response.data);
+        } else {
+          console.warn("⚠️ 물고기 데이터가 없습니다.");
+          setFishes([]); // 빈 배열 설정
+        }
       })
       .catch((error) => {
         console.error("❌ 물고기 데이터 불러오기 실패", error);
       });
-  }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀔 때마다 실행
+  }, [auth.user?.id, userInfo?.mainAquarium]); // ✅ `userInfo?.mainAquarium` 변경될 때 실행
 
   useEffect(() => {
     if (!userInfo?.mainAquarium) return;
@@ -134,7 +141,7 @@ export default function MainPage() {
         setAquariumData(res.data);
       })
       .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
-  }, [userInfo]); // ✅ `userInfo` 변경될 때 실행
+  }, [userInfo]); // ✅ userInfo 변경될 때 실행
 
   // if (!auth.user?.id) return <div>로그인이 필요합니다.</div>;
   if (!userInfo) return <div>유저 정보 불러오는 중...</div>;
@@ -297,15 +304,21 @@ function Fish({ fish }: { fish: FishData }) {
     moveFish();
   }, []);
 
+  const customLoader = ({ src }: { src: string }) => {
+    return src; // ✅ 원본 URL 그대로 사용하도록 설정
+  };
+
   return (
     <Image
+      loader={customLoader} // ✅ 커스텀 로더 추가
       ref={fishRef}
-      src={fish.fishImgage}
+      src={fish.fishImage}
       alt={fish.fishTypeId.toString()}
       width={64} // 필요에 맞게 조정
       height={64} // 필요에 맞게 조정
       className="absolute max-w-64 max-h-16 transform-gpu"
       onClick={handleClick}
+      unoptimized // ✅ Next.js 최적화 비활성화
     />
 
     // <Image src={fish.fishImage} alt={fish.fishTypeName} fill className="absolute max-w-64 h-16 transform-gpu"></Image>
