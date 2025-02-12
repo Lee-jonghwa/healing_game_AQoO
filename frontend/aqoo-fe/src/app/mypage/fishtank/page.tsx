@@ -8,7 +8,7 @@ export default function MyFishTank() {
     <div
       className="
         flex flex-col
-        h-screen
+        min-h-screen
         bg-[url('https://i12e203.p.ssafy.io/images/bg1.png')]
         bg-cover bg-center bg-no-repeat
       "
@@ -18,11 +18,12 @@ export default function MyFishTank() {
         <Link
           href="/mypage"
           className="
+            block
             min-w-[80px] h-10 px-2
             rounded-xl border border-[#040303] bg-white
             shadow-inner
             flex items-center justify-center
-            text-[#070707] text-center font-normal text-2xl leading-none
+            text-[#040303] text-center font-normal text-xl leading-none
             font-[NeoDunggeunmo_Pro]
             sm:min-w-[80px] sm:h-10
             md:min-w-[100px] md:h-12
@@ -34,10 +35,9 @@ export default function MyFishTank() {
       {/* 메인 컨테이너 */}
       <div
         className="
-          flex flex-col items-center
-          h-full overflow-hidden
-          p-4
-          sm:p-6 md:p-8
+          flex flex-col items-center justify-center
+          flex-1 overflow-hidden
+          p-4 sm:p-6 md:p-8
         "
       >
         {/* 실제 탭 + 내용 */}
