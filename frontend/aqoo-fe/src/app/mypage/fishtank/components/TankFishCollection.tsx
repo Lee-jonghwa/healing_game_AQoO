@@ -40,7 +40,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
     axiosInstance
       .get(`/aquariums/fish/${aquariumId}`)
       .then((response) => {
-        console.log("TankFishCollection 받은 데이터 : ", response.data);
+        // console.log("TankFishCollection 받은 데이터 : ", response.data);
         if (Array.isArray(response.data)) {
           // fishName 기준으로 그룹화
           const grouped: { [key: string]: AggregatedFishData } = {};
@@ -82,7 +82,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
 
   // 카드 클릭 시 모달 오픈
   const handleFishClick = (fishGroup: AggregatedFishData) => {
-    console.log("선택된 물고기 그룹:", fishGroup.fishName);
+    // console.log("선택된 물고기 그룹:", fishGroup.fishName);
     setSelectedFish(fishGroup);
     setIsModalOpen(true);
   };

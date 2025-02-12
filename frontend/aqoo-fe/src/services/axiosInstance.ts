@@ -27,11 +27,11 @@ const getCookie = (name: string): string | null => {
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const requestUri = `${config.baseURL || ""}${config.url || ""}`;
-    console.log("Outgoing Request URI:", requestUri);
+    // console.log("Outgoing Request URI:", requestUri);
 
     // 요청 본문 로깅
     if (config.data) {
-      console.log("Request Body:", config.data);
+      // console.log("Request Body:", config.data);
     }
 
     const token = localStorage.getItem("accessToken");
@@ -49,8 +49,8 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     const responseUri = `${response.config.baseURL || ""}${response.config.url || ""}`;
-    console.log("Response received from:", responseUri);
-    console.log("Response data:", response.data);
+    // console.log("Response received from:", responseUri);
+    // console.log("Response data:", response.data);
     return response; // 정상 응답일 경우 그대로 반환
   },
   async (error: AxiosError) => {
@@ -71,7 +71,7 @@ axiosInstance.interceptors.response.use(
       try {
         const refreshToken = getCookie("refreshToken"); // ✅ 쿠키에서 `refreshToken` 가져오기
         if (!refreshToken) {
-          console.log("리프레시 토큰 없음:", refreshToken);
+          // console.log("리프레시 토큰 없음:", refreshToken);
           // ✅ 토큰 삭제 후 로그인 페이지로 이동
           localStorage.removeItem("accessToken");
           window.location.href = "/user/login";
@@ -82,7 +82,7 @@ axiosInstance.interceptors.response.use(
         // 🔄 새로운 accessToken 요청
         const { data } = await axios.post(`${BASE_URL}${REFRESH_URL}`, { refreshToken });
         const newAccessToken = data.accessToken;
-        console.log("New access token:", newAccessToken);
+        // console.log("New access token:", newAccessToken);
         localStorage.setItem("accessToken", newAccessToken); // 새로운 토큰 저장
 
         // 기존 요청에 새로운 accessToken 추가 후 재시도
