@@ -17,7 +17,7 @@ interface ParticipantListProps {
 export default function ParticipantList({ users, currentUser, currentIsHost, onKickUser }: ParticipantListProps) {
   return (
     <div className="mb-4 w-[330px] bg-white shadow-md rounded-lg p-3">
-      <h3 className="text-xl font-semibold mb-2 text-gray-900">참가자 리스트</h3>
+      <h3 className="text-xl font-semibold mb-2 text-gray-900">참가자 리스트</h3>    
       {/* 최대 높이 제한 + 스크롤 기능 */}
       <div className="max-h-[100px] overflow-y-auto">
         <ul className="space-y-2">
@@ -29,7 +29,7 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
               <div className="flex items-center">
                 {/* 참가자의 대표 물고기 이미지 */}
                 <img
-                  src={user.mainFishImage}
+                  src={`${user.mainFishImage}`}
                   alt={`${user.userName}의 대표 물고기`}
                   className="w-10 h-10 rounded-full object-cover mr-2"
                 />
@@ -47,9 +47,8 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
                     추방
                   </button>
                 )}
-                {/* ready 상태가 true인 경우 READY 문구 표시 */}
-                {user.ready && <span className="text-green-700 font-bold">Ready</span>}
               </div>
+              {user.ready && <span className="text-green-700 font-bold">Ready</span>}
             </li>
           ))}
         </ul>
