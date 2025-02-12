@@ -12,9 +12,4 @@ import java.time.LocalDateTime;
 public class AquariumResponseDto {
     private Integer id;
     private String aquariumName;
-    private LocalDateTime lastFedTime;
-    private LocalDateTime lastWaterChangeTime;
-    private int waterCondition;
-    private LocalDateTime lastCleanedTime;
-    private int pollutionStatus;
 }
