@@ -1,4 +1,4 @@
-# 1. Node.js 공식 빌드 이미지를 사용
+# 1. Node.js 공식 빌드 이미지를 사용 (Next.js 권장)
 FROM node:18-alpine AS builder
 
 # 2. 작업 디렉토리 설정
@@ -24,9 +24,12 @@ COPY --from=builder /app/public /app/public
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/node_modules /app/node_modules
 
-# 8. 환경 변수 및 포트 설정
+# 8. NGINX 설정 파일 복사
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# 9. 환경 변수 및 포트 설정
 ENV PORT 3000
 EXPOSE 3000
 
-# 9. Next.js 앱 실행
+# 10. Next.js 앱 실행
 CMD ["npm", "start"]
