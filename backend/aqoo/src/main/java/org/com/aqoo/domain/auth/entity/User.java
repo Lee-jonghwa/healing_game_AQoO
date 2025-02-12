@@ -60,5 +60,7 @@ public class User {
         this.exp = (this.exp == null) ? 0 : this.exp;
         this.level = (this.level == null) ? 1 : this.level;
         this.status = this.status == null || this.status;
+        this.isFirstLogin = (this.isFirstLogin == null) ? 1 : this.isFirstLogin;
+        this.fishTicket = (this.fishTicket == null) ? 0 : this.fishTicket;
     }
 }

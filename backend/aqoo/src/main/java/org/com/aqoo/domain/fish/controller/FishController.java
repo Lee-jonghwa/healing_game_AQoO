@@ -114,6 +114,17 @@ public class FishController {
         }
     }
 
+    @PostMapping("/ticket/{userId}")
+    public ResponseEntity<?> getFishTicket(@PathVariable String userId) {
+        try {
+            FishTicketResponse response = fishService.getFishTicket(userId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "새로운 물고기 타입 추가에 실패했습니다."));
+        }
+    }
+
     @PostMapping("/painting")
     public ResponseEntity<String> uploadFish(
             @RequestPart("fishData") String fishDataJson,
