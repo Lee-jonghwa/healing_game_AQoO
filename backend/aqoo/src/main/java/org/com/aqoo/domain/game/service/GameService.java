@@ -2,7 +2,9 @@ package org.com.aqoo.domain.game.service;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.com.aqoo.domain.auth.service.UserService;
 import org.com.aqoo.domain.game.dto.PressMessage;
 import org.com.aqoo.domain.game.dto.RoomResponse;
 import org.com.aqoo.domain.game.entity.Player;
@@ -23,6 +25,7 @@ public class GameService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatRoomService chatRoomService;
+    private final UserService userService;
 
     // 각 방의 점수를 관리하는 Map: roomId -> (userName -> score)
     private final Map<String, Map<String, Integer>> scoreMap = new ConcurrentHashMap<>();
@@ -36,16 +39,22 @@ public class GameService {
         log.info("startGame() called for roomId: {}", roomId);
         ChatRoom chatRoom = chatRoomService.getRoom(roomId);
         if (chatRoom != null) {
-            System.out.println("채팅방 멤버: "+chatRoom.getMembers());
+            System.out.println("채팅방 멤버: " + chatRoom.getMembers());
             Map<String, Integer> roomScore = new ConcurrentHashMap<>();
             chatRoom.getMembers().forEach(member -> roomScore.put(member, 0));
             scoreMap.put(roomId, roomScore);
 
             List<Player> players = roomScore.entrySet().stream()
-                    .map(e -> new Player(e.getKey(), e.getValue()))
+                    .map(e -> {
+                        String userNameKey = e.getKey();
+                        int score = e.getValue();
+                        // UserService를 통해 해당 사용자의 정보를 조회하여 mainFishImage를 가져옴
+                        String mainFishImage = userService.getUserInfo(userNameKey).getMainFishImage();
+                        return new Player(userNameKey, score, mainFishImage);
+                    })
                     .collect(Collectors.toList());
 
-            System.out.println("players:"+players);
+            System.out.println("players:" + players);
             RoomResponse response = new RoomResponse(roomId, players, "GAME_STARTED");
             messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
             log.info("Broadcasted GAME_STARTED message for roomId: {}", roomId);
@@ -74,7 +83,12 @@ public class GameService {
             log.info("Updated score for {}: {}", user, currentScore);
 
             List<Player> players = roomScore.entrySet().stream()
-                    .map(e -> new Player(e.getKey(), e.getValue()))
+                    .map(e -> {
+                        String userNameKey = e.getKey();
+                        int score = e.getValue();
+                        String mainFishImage = userService.getUserInfo(userNameKey).getMainFishImage();
+                        return new Player(userNameKey, score, mainFishImage);
+                    })
                     .collect(Collectors.toList());
 
             if (currentScore >= 100) {
