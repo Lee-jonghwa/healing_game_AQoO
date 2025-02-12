@@ -186,7 +186,7 @@ export default function MainPage() {
         <Fish key={fish.fishId} fish={fish} />
       ))}
 
-      <NotificationComponent />
+      <NotificationComponent refreshAquariumData={refreshAquariumData} />
 
       {/* 📌 하단 메뉴 바 */}
       <BottomMenuBar

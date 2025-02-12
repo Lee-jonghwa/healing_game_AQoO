@@ -125,7 +125,12 @@ export default function BottomMenuBar({
           value={aquariumData?.pollutionStatus ?? 0}
           color="bg-indigo-400"
         />
-        <StatusBar icon="icon/feedIcon.png" label="포만감" value={aquariumData?.feedStatus ?? 0} color="bg-cyan-400" />{" "}
+        <StatusBar 
+          icon="icon/feedIcon.png" 
+          label="포만감" 
+          value={aquariumData?.feedStatus ?? 0} 
+          color="bg-cyan-400" 
+        />{" "}
       </div>
 
       {/* 우측 메뉴 */}
