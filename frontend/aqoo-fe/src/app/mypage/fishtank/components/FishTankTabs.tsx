@@ -1,3 +1,4 @@
+// FishTankTabs.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -234,6 +235,7 @@ export default function FishTankTabs() {
             refreshTankFish={refreshTankFish}
             onFishAdded={handleFishAdded}
             onFishRemoved={handleFishRemoved}
+            onSetMainAquarium={handleSetMainAquarium}
           />
         ) : (
           <div className="flex justify-center items-center h-full">
