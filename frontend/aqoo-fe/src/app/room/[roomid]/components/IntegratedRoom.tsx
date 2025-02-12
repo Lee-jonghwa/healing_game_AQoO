@@ -19,7 +19,7 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
-  users?: { userName: string; ready: boolean; isHost: boolean }[];
+  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[];
   players?: Player[];
   targetUser?: string;
 }
@@ -31,7 +31,7 @@ interface IntegratedRoomProps {
 
 export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
-  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean }[]>([]);
+  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -69,6 +69,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
             setGamePlayers(data.players ?? []);
             setScreen('game');
           } else if (data.message === 'USER_LIST') {
+            console.log("datga.users:",data.users);
             setUsers(data.users ?? []);
           } else if (data.message === 'USER_KICKED') {
             if (data.targetUser === userName) {
