@@ -26,24 +26,21 @@ public class PushScheduleService {
     private static final int WATER_INTERVAL = 24;
 
     // 먹이 상태 알람 (2시간마다 실행)
-    //@Scheduled(fixedRate = 2 * 60 * 60 * 1000)
-    @Scheduled(fixedRate = 3  * 60 * 1000)
+    @Scheduled(fixedRate = 2 * 60 * 60 * 1000)
     public void checkFeedNotifications() {
         System.out.println("[먹이 점검] 2시간마다 실행");
         processNotificationsForType("FEED");
     }
 
     // 청소 상태 알람 (5시간마다 실행)
-    //@Scheduled(fixedRate = 5 * 60 * 60 * 1000)
-    @Scheduled(fixedRate = 10  * 60 * 1000)
+    @Scheduled(fixedRate = 5 * 60 * 60 * 1000)
     public void checkCleanNotifications() {
         System.out.println("[청소 점검] 5시간마다 실행");
         processNotificationsForType("CLEAN");
     }
 
     // 물 상태 알람 (9시간마다 실행)
-    //@Scheduled(fixedRate = 9 * 60 * 60 * 1000)
-    @Scheduled(fixedRate = 15  * 60 * 1000)
+    @Scheduled(fixedRate = 9 * 60 * 60 * 1000)
     public void checkWaterNotifications() {
         System.out.println("[물 교체 점검] 9시간마다 실행");
         processNotificationsForType("WATER");
