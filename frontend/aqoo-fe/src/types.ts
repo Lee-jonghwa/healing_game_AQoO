@@ -5,6 +5,9 @@ export interface UserInfo {
   exp: number;
   mainAquarium: number;
   fishTicket: number;
+  email: string;
+  mainFishImage: string;
+  status: boolean;
 }
 
 // 🔹 어항 상태 데이터 타입 정의
