@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { UseFormRegisterReturn } from "react-hook-form";
+import React from "react";
+import { SubmitHandler, UseFormHandleSubmit, UseFormRegisterReturn, UseFormSetValue } from "react-hook-form";
 import useNicknameEdit from "@/hooks/useNicknameEdit";
+
+import { ProfileFormInputs } from "@/types";
 
 // variant: "dynamic"(입력창) | "static"(고정창) | "nickname"(닉네임 입력 필드 + 완료 버튼)
 interface InputFieldProps {
@@ -10,6 +12,9 @@ interface InputFieldProps {
   register?: UseFormRegisterReturn;
   disabled?: boolean;
   variant?: "dynamic" | "static" | "nickname";
+  setValue?: UseFormSetValue<ProfileFormInputs>;
+  handleSubmit?: UseFormHandleSubmit<ProfileFormInputs>;
+  onSubmit?: SubmitHandler<ProfileFormInputs>;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -19,10 +24,16 @@ const InputField: React.FC<InputFieldProps> = ({
   register,
   disabled = false,
   variant = "dynamic",
+  setValue,
+  handleSubmit,
+  onSubmit,
 }) => {
   const variantClasses = { dynamic: "", static: "bg-gray-200", nickname: "" };
 
-  const nicknameEdit = useNicknameEdit({ initialNickname: placeholder || "" });
+  const nicknameEdit = useNicknameEdit({
+    initialNickname: placeholder || "",
+    setValue: setValue ?? (() => {}), // ✅ 기본값을 빈 함수로 설정하여 오류 방지
+  });
 
   return (
     <div>
@@ -46,7 +57,13 @@ const InputField: React.FC<InputFieldProps> = ({
         {/* 완료 버튼 (닉네임이 변경되었을 때만 보임) */}
         {variant === "nickname" && nicknameEdit.isEdited && !nicknameEdit.isConfirmed && (
           <button
-            type="submit" // ✅ 폼 제출 가능하게 설정
+            type="button"
+            onClick={() => {
+              nicknameEdit.handleConfirm();
+              if (handleSubmit && onSubmit) {
+                handleSubmit(onSubmit)();
+              }
+            }}
             className="absolute top-1/2 right-1 -translate-y-1/2 
                      z-10 bg-white px-3 py-1 border rounded-md shadow"
           >

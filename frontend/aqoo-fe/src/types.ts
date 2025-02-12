@@ -43,3 +43,7 @@ export interface Notification {
   status: boolean;
   createdAt: string;
 }
+
+export interface ProfileFormInputs {
+  nickname: string;
+}

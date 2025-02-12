@@ -5,6 +5,8 @@ import CollectionItemCard from "../components/CollectionItemCard";
 import Modal from "./Modal";
 import { useAuth } from "@/hooks/useAuth";
 import axiosInstance from "@/services/axiosInstance"; // axiosInstance 임포트
+import { useRecoilState } from "recoil";
+import { authAtom } from "@/store/authAtom";
 
 interface FishData {
   fishTypeId: number;
@@ -31,8 +33,14 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { fetchUser } = useAuth();
+
+  // Recoil을 통한 전역 auth 상태 사용 (낙관적 업데이트에 활용)
+  const [auth, setAuth] = useRecoilState(authAtom);
+
   // 현재 대표 물고기 정보는 상위에서 받아온 userData.mainFishImage를 사용
   const currentMainFishImage = userData.mainFishImage;
+
+  const API_BASE_URL = "https://i12e203.p.ssafy.io/images";
 
   // 내가 가진 fish 정보를 axiosInstance를 통해 불러오고,
   // 현재 대표 물고기와 동일한 fishImage는 필터링합니다.
@@ -43,9 +51,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
       .get<FishData[]>(`/fish/my-fish/${userData.id}`)
       .then((response) => {
         const data = response.data;
-        const filteredFish = data.filter(
-          (fish) => fish.fishImage !== currentMainFishImage
-        );
+        const filteredFish = data.filter((fish) => fish.fishImage !== currentMainFishImage);
         setFishList(filteredFish);
         setIsLoading(false);
       })
@@ -55,7 +61,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
       });
   }, [userData.id, currentMainFishImage]);
 
-  // 완료 버튼 클릭 시 대표 물고기 변경 API 호출
+  // 완료 버튼 클릭 시 대표 물고기 변경 API 호출 및 낙관적 업데이트 적용
   const handleConfirm = async () => {
     if (!selectedFishImage) {
       alert("대표 물고기를 선택해주세요.");
@@ -63,13 +69,29 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
     }
     setIsLoading(true);
     try {
-      await axiosInstance.post("/users", {
+      // 파일명 추출 (예: "ImperatorAngelfish.png")
+      const parsedImageName = "/" + selectedFishImage.split("/").pop() || "";
+      // 서버는 이 파일명에 기본 URL을 붙여서 처리한다고 가정합니다.
+      const response = await axiosInstance.post("/users", {
         userId: userData.id,
         userNickName: userData.nickname,
-        mainFishImage: selectedFishImage,
+        mainFishImage: parsedImageName,
       });
+      console.log("응답:", response.data);
+      console.log("선택한 이미지:", selectedFishImage);
+      console.log("파싱된 이미지:", parsedImageName);
+
+      // 낙관적 업데이트: 전역 auth 상태에 바로 새로운 대표 이미지를 반영
+      setAuth({
+        ...auth,
+        user: {
+          ...auth.user,
+          mainFishImage: selectedFishImage,
+        } as any,
+      });
+
       alert("대표 물고기 변경 성공!");
-      // 전역 유저 데이터를 새로 불러와 업데이트합니다.
+      // 서버와 동기화하기 위해 fetchUser()를 호출
       await fetchUser();
       onClose();
     } catch (error) {
@@ -84,18 +106,10 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
     <Modal onClose={onClose} className="overflow-y-auto w-[1000px] h-[550px] p-6">
       <h3 className="text-3xl font-semibold mb-4">대표 물고기 수정</h3>
       <div className="flex mb-4">
-        <button
-          className="px-4 py-2 bg-gray-300 rounded mr-2"
-          onClick={onClose}
-          disabled={isLoading}
-        >
+        <button className="px-4 py-2 bg-gray-300 rounded mr-2" onClick={onClose} disabled={isLoading}>
           취소
         </button>
-        <button
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-          onClick={handleConfirm}
-          disabled={isLoading}
-        >
+        <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleConfirm} disabled={isLoading}>
           변경완료
         </button>
       </div>
@@ -128,3 +142,44 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
     </Modal>
   );
 }
+
+// // 완료 버튼 클릭 시 대표 물고기 변경 API 호출
+// const handleConfirm = async () => {
+//   if (!selectedFishImage) {
+//     alert("대표 물고기를 선택해주세요.");
+//     return;
+//   }
+//   setIsLoading(true);
+//   try {
+//     const parsedImageName = selectedFishImage.split("/").pop();
+
+//     // const response = await axiosInstance.post("/users", {
+//     //   userId: userData.id,
+//     //   userNickName: userData.nickname,
+//     //   mainFishImage: selectedFishImage.startsWith("http")
+//     //     ? selectedFishImage
+//     //     : `https://i12e203.p.ssafy.io/images/${selectedFishImage}`, // 파일명만 전달
+//     // });
+//     await axiosInstance.post("/users", {
+//       userId: userData.id,
+//       userNickName: userData.nickname,
+//       mainFishImage: selectedFishImage.startsWith("http")
+//         ? selectedFishImage
+//         : `https://i12e203.p.ssafy.io/images/${selectedFishImage}`,
+//     });
+//     // console.log("응답:", response.data);
+//     console.log("선택한 이미지:", selectedFishImage);
+//     console.log("파싱된 이미지:", parsedImageName);
+//     console.log("현재 대표 이미지:", userData.mainFishImage);
+//     console.log("fishList:", fishList);
+//     alert("대표 물고기 변경 성공!");
+//     // 전역 유저 데이터를 새로 불러와 업데이트합니다.
+//     await fetchUser();
+//     onClose();
+//   } catch (error) {
+//     alert("대표 물고기 변경에 실패했습니다.");
+//     console.error(error);
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };

@@ -58,7 +58,7 @@ export default function CollectionItemCard({
         "
         >
           <p>{name}</p>
-          {imageSrc !== "/images/배경샘플.png" && count !== undefined && count !== null && count > 0 && (
+          {imageSrc !== "/images/배경샘플.png" && !isModal && count !== undefined && count !== null && count > 0 && (
             <p className="text-[10px] text-gray-500">x {count}</p>
           )}
         </div>
