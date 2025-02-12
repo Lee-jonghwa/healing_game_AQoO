@@ -75,7 +75,7 @@ export default function FriendList() {
       </div>
 
       {/* 친구 리스트 */}
-      <div className="space-y-3 overflow-y-auto scrollbar-hide flex-grow">
+      <div className="space-y-3 overflow-y-auto scrollbar flex-grow">
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
             <div
@@ -88,7 +88,7 @@ export default function FriendList() {
                     <img
                       src={friend.mainFishImage}
                       alt="친구의 대표 물고기"
-                      className="w-full h-full rounded-full"
+                      className=" rounded-full"
                     />
                   ) : (
                     <img
