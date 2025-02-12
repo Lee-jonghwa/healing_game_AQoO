@@ -27,7 +27,7 @@ public class ChatRoomService {
     // messagingTemplate을 이용하여 각종 메시지를 브로드캐스트
     private final SimpMessagingTemplate messagingTemplate;
     private final UserService userService;
-    private PushService pushService;
+    private final PushService pushService;
 
     /** 모든 채팅방 목록 조회 */
     public List<ChatRoom> getAllRooms() {
