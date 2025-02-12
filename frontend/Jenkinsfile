@@ -9,14 +9,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Git 저장소에서 소스 코드 가져오기
-                checkout([$class: 'GitSCM',
-                    branches: [[name: '*/frontend']], // 브랜치 설정
-                    userRemoteConfigs: [[
-                        url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
-                        credentialsId: 'frontend-cred' // Git 인증 정보 ID
-                    ]]
-                ])
+                git branch: 'frontend',
+                    url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
+                    credentialsId: 'frontend-cred'
             }
         }
 
