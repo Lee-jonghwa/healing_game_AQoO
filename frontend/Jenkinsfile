@@ -5,21 +5,7 @@ pipeline {
         DOCKER_IMAGE = "frontend-app:latest"
         CONTAINER_NAME = "frontend"
     }
-    stages {
-        stage('Build and Test') {
-            agent {
-                docker {
-                    image 'node:18-alpine' // Jenkinsfile에서 Node.js 이미지 사용
-                    label 'my-docker-agent'
-                }
-            }
-            steps {
-                sh 'npm install'
-                sh 'npm run build'
-                sh 'npm test'
-            }
-        }
-    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -29,25 +15,25 @@ pipeline {
             }
         }
 
-        stage('Check Node Version') {
-            steps {
-                // Node.js가 설치되어 있는지 확인
-                sh 'npm --version'  // npm 버전 출력
+        stage('Build and Test') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    label 'my-docker-agent'
+                }
             }
-        }
-
-        stage('Build Frontend') {
             steps {
-                dir('frontend/aqoo-fe') {
+                dir('aqoo-fe') { // frontend 디렉토리 안에서 실행
                     sh 'npm install'
                     sh 'npm run build'
+                    sh 'npm test' // 테스트가 필요한 경우 추가
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir('frontend') {
+                dir('frontend') { // 도커파일이 있는 경로
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
