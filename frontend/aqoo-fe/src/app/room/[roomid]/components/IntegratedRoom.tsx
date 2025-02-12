@@ -127,78 +127,85 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
         </div>
       ) : (
         <>
-          {screen === 'chat' && (
-            <div className="relative w-full min-h-screen flex items-center justify-center bg-gray-100">
-              
-              {/* 참가자 리스트를 왼쪽 상단에 고정 */}
-              <div className="absolute top-4 left-4 w-[250px] bg-white shadow-md rounded-lg p-3">
-                <ParticipantList 
-                  users={users} 
-                  currentUser={userName} 
-                  currentIsHost={currentIsHost} 
-                  onKickUser={(target) => {
-                    const client = getStompClient();
-                    if (client && client.connected) {
-                      client.publish({
-                        destination: '/app/chat.kickUser',
-                        body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
-                      });
-                      console.log('Kick user message sent for:', target);
-                    } else {
-                      console.error('STOMP client is not connected yet.');
-                    }
-                  }} 
-                />
-              </div>
+{screen === 'chat' && (
+  <div className="relative w-full min-h-screen flex items-center justify-center bg-gray-100">
+    
+    {/* 나가기 버튼 + 참가자 리스트 (오른쪽 상단) */}
+    <div className="absolute top-20 right-4 w-[250px]">
+      <button 
+        onClick={() => {
+          const client = getStompClient();
+          if (client && client.connected) {
+            client.publish({
+              destination: '/app/chat.leaveRoom',
+              body: JSON.stringify({ roomId, sender: userName }),
+            });
+            console.log('Leave room message sent');
+            router.push('/room');
+          } else {
+            console.error('STOMP client is not connected yet.');
+          }
+        }} 
+        className="w-full mb-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+      >
+        나가기
+      </button>
 
-              {/* 기존 채팅방 UI */}
-              <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow text-center">
-                <h2 className="text-3xl font-bold mb-4 text-gray-900">채팅방</h2>
-                <p className="mb-4 text-lg text-gray-900">
-                  Logged in as: <strong>{userName}</strong> {currentIsHost && <span className="ml-2 text-red-600">(방장)</span>}
-                </p>
+      {/* 참가자 리스트 */}
+      <ParticipantList 
+        users={users} 
+        currentUser={userName} 
+        currentIsHost={currentIsHost} 
+        onKickUser={(target) => {
+          const client = getStompClient();
+          if (client && client.connected) {
+            client.publish({
+              destination: '/app/chat.kickUser',
+              body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
+            });
+            console.log('Kick user message sent for:', target);
+          } else {
+            console.error('STOMP client is not connected yet.');
+          }
+        }} 
+      />
+    </div>
 
-                {/* 친구 목록 (초대 기능) */}
-                {currentIsHost && <FriendList userName={userName} roomId={roomId} isHost={currentIsHost} onInvite={inviteFriend} />}
+    {/* 채팅창 + 입력 필드 + 전송 버튼 (같은 div로 묶음) */}
+    <div className="absolute top-[220px] right-4 w-[250px] p-3 bg-white rounded shadow-md">
+      <ChatBox roomId={roomId} userName={userName} />
+    </div>
 
-                {/* 채팅 영역 */}
-                <ChatBox roomId={roomId} userName={userName} />
+    {/* 게임 시작 버튼을 별도 div로 분리하여 채팅창 아래 배치 */}
+    <div className="absolute top-[700px] right-4 w-[250px]">
+      <button onClick={() => {
+        const client = getStompClient();
+        if (client && client.connected) {
+          client.publish({
+            destination: '/app/game.start',
+            body: JSON.stringify({ roomId }),
+          });
+          console.log('Game start message sent');
+        } else {
+          console.error('STOMP client is not connected yet.');
+        }
+      }} className="w-full px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+        Start Game
+      </button>
+    </div>
 
-                {/* 버튼 영역 */}
-                <div className="mt-6 flex flex-col items-center space-y-4">
-                  <button onClick={() => {
-                    const client = getStompClient();
-                    if (client && client.connected) {
-                      client.publish({
-                        destination: '/app/game.start',
-                        body: JSON.stringify({ roomId }),
-                      });
-                      console.log('Game start message sent');
-                    } else {
-                      console.error('STOMP client is not connected yet.');
-                    }
-                  }} className="w-full px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-                    Start Game
-                  </button>
-                  <button onClick={() => {
-                    const client = getStompClient();
-                    if (client && client.connected) {
-                      client.publish({
-                        destination: '/app/chat.leaveRoom',
-                        body: JSON.stringify({ roomId, sender: userName }),
-                      });
-                      console.log('Leave room message sent');
-                      router.push('/room');
-                    } else {
-                      console.error('STOMP client is not connected yet.');
-                    }
-                  }} className="w-full px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
-                    Leave Chat Room
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+    {/* 기존 채팅방 UI */}
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow text-center">
+      <h2 className="text-3xl font-bold mb-4 text-gray-900">채팅방</h2>
+      <p className="mb-4 text-lg text-gray-900">
+        Logged in as: <strong>{userName}</strong> {currentIsHost && <span className="ml-2 text-red-600">(방장)</span>}
+      </p>
+
+      {/* 친구 목록 (초대 기능) */}
+      {currentIsHost && <FriendList userName={userName} roomId={roomId} isHost={currentIsHost} onInvite={inviteFriend} />}
+    </div>
+  </div>
+)}
 
           {screen === 'game' && (
             <div className="min-h-screen w-full bg-cover bg-center p-6" style={{ backgroundImage: "url('/chat_images/game_background.png')" }}>
