@@ -35,6 +35,8 @@ const InputField: React.FC<InputFieldProps> = ({
     setValue: setValue ?? (() => {}), // ✅ 기본값을 빈 함수로 설정하여 오류 방지
   });
 
+  const handleNicknameSubmit = onSubmit && handleSubmit ? handleSubmit(onSubmit) : undefined;
+
   return (
     <div>
       <label className="block text-gray-700 font-medium mb-1">{label}</label>
@@ -60,8 +62,8 @@ const InputField: React.FC<InputFieldProps> = ({
             type="button"
             onClick={() => {
               nicknameEdit.handleConfirm();
-              if (handleSubmit && onSubmit) {
-                handleSubmit(onSubmit)();
+              if (handleNicknameSubmit) {
+                handleNicknameSubmit(); // ✅ 미리 감싼 함수 실행
               }
             }}
             className="absolute top-1/2 right-1 -translate-y-1/2 

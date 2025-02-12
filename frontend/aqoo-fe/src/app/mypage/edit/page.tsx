@@ -63,14 +63,14 @@ function ProfileForm({
     nickname: string;
     mainFishImage: string;
   } | null;
-  onSubmit: React.FormEventHandler<HTMLFormElement>;
+  onSubmit: SubmitHandler<ProfileFormInputs>;
   isLoading: boolean;
   register: UseFormRegister<ProfileFormInputs>; // ✅ 올바른 타입 지정
   setValue: UseFormSetValue<ProfileFormInputs>; // ✅ 올바른 타입 지정
   handleSubmit: UseFormHandleSubmit<ProfileFormInputs>;
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
         <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
@@ -205,7 +205,10 @@ function EditProfilePage() {
   };
 
   return (
-    <div className="flex h-screen bg-[url('/images/배경샘플.png')] bg-cover bg-center bg-no-repeat relative justify-center">
+    <div
+      style={{ backgroundImage: `url(${API_BASE_URL}/images/bg1.png)` }}
+      className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
+    >
       <div className="absolute top-0 left-0 m-2">
         <Buttons text="BACK" />
       </div>
