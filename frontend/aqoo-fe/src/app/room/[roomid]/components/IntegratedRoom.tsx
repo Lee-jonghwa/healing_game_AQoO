@@ -95,25 +95,6 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     setCurrentIsHost(me ? me.isHost : false);
   }, [users, userName]);
 
-  // ----------------------------
-  // ready / start 관련 상태 계산
-  // ----------------------------
-  // 현재 사용자의 Ready 상태
-  const myReady = users.find((u) => u.userName === userName)?.ready;
-  // 방장의 Start 버튼 활성화를 위한 조건:
-  // - 현재 사용자가 방장인 경우: 자신의 기록은 제외하고 나머지 사용자가 모두 ready 상태이면 true
-  // - 방장이 아닌 경우: 방장이 아닌 사용자들 중 모두 ready 상태이면 true.
-  const nonHostUsers = currentIsHost
-    ? users.filter((u) => u.userName !== userName)
-    : users.filter((u) => !u.isHost);
-  const allNonHostReady =
-    nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
-  // 렌더링할 사용자 목록: 현재 사용자가 방장인데, users 배열에 포함되어 있지 않다면 추가
-  const displayUsers =
-    currentIsHost && !users.some((u) => u.userName === userName)
-      ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
-      : users;
-
   // 친구 초대 함수
   const inviteFriend = async (friendUserId: string) => {
     try {
@@ -159,7 +140,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                 backgroundPosition: "center"
               }}
             >
-              <div className="absolute inset-0 bg-white opacity-20"></div>
+            <div className="absolute inset-0 bg-white opacity-20"></div>
 
               {/* 나가기 버튼 + 친구 초대 버튼 + 참가자 리스트 (오른쪽 상단) */}
               <div className="absolute top-20 right-[110px] w-[250px]">
@@ -193,6 +174,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                     >
                       나가기
                     </button>
+
                   </div>
                   {/* 친구 초대 목록 - 버튼의 왼쪽에 나타나도록 설정 */}
                   {showFriendList && (
@@ -210,7 +192,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
 
                 {/* 참가자 리스트 */}
                 <ParticipantList 
-                  users={displayUsers} 
+                  users={users} 
                   currentUser={userName} 
                   currentIsHost={currentIsHost} 
                   onKickUser={(target) => {
@@ -233,75 +215,39 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                 <ChatBox roomId={roomId} userName={userName} />
               </div>
 
-              {/* Ready / Start 버튼 영역 */}
-              <div className="absolute bottom-2 right-8 w-[330px]">
-                <div className="mt-6 flex flex-col items-center space-y-4">
-                  {currentIsHost ? (
-                    <button
-                      onClick={() => {
-                        if (!allNonHostReady) {
-                          console.warn("Not all non-host users are ready yet.");
-                          return;
-                        }
-                        const client = getStompClient();
-                        if (client && client.connected) {
-                          client.publish({
-                            destination: '/app/game.start',
-                            body: JSON.stringify({ roomId }),
-                          });
-                          console.log('Game start message sent');
-                        } else {
-                          console.error('STOMP client is not connected yet.');
-                        }
-                      }}
-                      className={`w-full px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors ${
-                        allNonHostReady ? '' : 'opacity-50 cursor-not-allowed'
-                      }`}
-                      disabled={!allNonHostReady}
-                    >
-                      Start Game
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        const client = getStompClient();
-                        if (client && client.connected) {
-                          if (myReady) {
-                            client.publish({
-                              destination: '/app/chat.unready',
-                              body: JSON.stringify({ roomId, sender: userName }),
-                            });
-                            console.log('Unready message sent');
-                          } else {
-                            client.publish({
-                              destination: '/app/chat.ready',
-                              body: JSON.stringify({ roomId, sender: userName }),
-                            });
-                            console.log('Ready message sent');
-                          }
-                        } else {
-                          console.error('STOMP client is not connected yet.');
-                        }
-                      }}
-                      className="w-full px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                    >
-                      {myReady ? 'Unready' : 'Ready'}
-                    </button>
-                  )}
-                </div>
-              </div>
+              {currentIsHost && (
+                <button 
+                  onClick={() => {
+                    const client = getStompClient();
+                    if (client && client.connected) {
+                      client.publish({
+                        destination: '/app/game.start',
+                        body: JSON.stringify({ roomId }),
+                      });
+                      console.log('Game start message sent');
+                    } else {
+                      console.error('STOMP client is not connected yet.');
+                    }
+                  }} 
+                  className="absolute bottom-2 right-8 w-[330px] px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  Start Game
+                </button>
+              )}
+
             </div>
           )}
           {screen === 'game' && (
             <div className="w-full h-screen bg-cover bg-center">
-              <Game
-                roomId={roomId}
-                userName={userName}
-                initialPlayers={gamePlayers}
-                onResultConfirmed={() => setScreen('chat')}
-              />
-            </div>
+            <Game
+              roomId={roomId}
+              userName={userName}
+              initialPlayers={gamePlayers}
+              onResultConfirmed={() => setScreen('chat')}
+            />
+          </div>
           )}
+
         </>
       )}
     </>
