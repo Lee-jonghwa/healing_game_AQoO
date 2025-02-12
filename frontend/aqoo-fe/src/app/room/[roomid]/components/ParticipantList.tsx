@@ -4,7 +4,6 @@ interface Participant {
   userName: string;
   ready: boolean;
   isHost: boolean;
-  mainFishImage: string; // 추가: 대표 물고기 이미지 URL
 }
 
 interface ParticipantListProps {
@@ -25,11 +24,6 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
             className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50"
           >
             <div className="flex items-center">
-              <img
-                src={`https://i12e203.p.ssafy.io${user.mainFishImage}`}
-                alt={`${user.userName}의 대표 물고기`}
-                className="w-10 h-10 rounded-full object-cover mr-2"
-              />
               <span className="text-gray-900 font-medium">
                 {user.userName}{' '}
                 {user.isHost && (

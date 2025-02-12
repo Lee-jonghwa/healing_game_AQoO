@@ -173,7 +173,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     </div>
 
     {/* 채팅창 + 입력 필드 + 전송 버튼 (같은 div로 묶음) */}
-    <div className="absolute top-[220px] right-4 w-[250px] p-3 bg-white rounded shadow-md">
+    <div className="absolute top-[300px] right-4 w-[250px] p-3 bg-white rounded shadow-md">
       <ChatBox roomId={roomId} userName={userName} />
     </div>
 
