@@ -1,7 +1,5 @@
 import { atom } from "recoil";
-import { recoilPersist } from 'recoil-persist';
-
-
+import { recoilPersist } from "recoil-persist";
 
 const { persistAtom } = recoilPersist();
 
@@ -9,6 +7,8 @@ export interface User {
   id: string;
   nickName: string;
   // 필요에 따라 name, email, 기타 필드를 추가할 수 있습니다.
+  // 물고기 이미지
+  mainFishImage?: string;
 }
 
 export interface AuthState {
