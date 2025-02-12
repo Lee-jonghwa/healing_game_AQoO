@@ -36,6 +36,29 @@ pipeline {
                 }
             }
         }
+
+        stage('Clean-up') {
+            steps {
+                script {
+                    echo "Cleaning up unused resources..."
+                    
+                    // 1. 중간 빌드 단계에서 생성된 파일 삭제
+                    sh """
+                        rm -rf frontend/aqoo-fe/node_modules
+                        rm -rf frontend/aqoo-fe/.next
+                        rm -rf frontend/aqoo-fe/package-lock.json
+                    """
+                    
+                    // 2. 사용되지 않는 Docker 이미지를 정리
+                    sh "docker image prune -f"
+
+                    // 3. 사용되지 않는 Docker 컨테이너, 네트워크, 볼륨 정리 (필요 시)
+                    sh "docker container prune -f"
+                    sh "docker volume prune -f"
+                    sh "docker network prune -f"
+                }
+            }
+        }
     }
 
     post {
