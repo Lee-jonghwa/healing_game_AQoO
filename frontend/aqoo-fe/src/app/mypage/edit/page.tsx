@@ -249,7 +249,8 @@ function EditProfilePage() {
             <h2 className="text-center text-3xl mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}
-              onSubmit={handleSubmit(onSubmit)}
+              // ***문제***
+              onSubmit={onSubmit}
               isLoading={isLoading}
               register={register}
               setValue={setValue}
