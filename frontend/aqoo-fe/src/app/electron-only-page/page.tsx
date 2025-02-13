@@ -10,10 +10,11 @@ export default function ElectronOnlyPage() {
     // Electron 환경 감지: preload 스크립트를 통해 전역 API가 노출되어 있다면
     const electronAPI = (window as any).electronAPI;
     if (electronAPI && typeof electronAPI.openOverlay === 'function') {
+      console.log('openOverlay 호출 시작');
       // Electron 환경이면 오버레이 창을 띄우도록 요청
       electronAPI.openOverlay();
     } else {
-      console.warn('이 기능은 Electron 환경에서만 사용할 수 있습니다.');
+      console.warn('Electron API를 찾을 수 없습니다.');
     }
   }, []);
 
