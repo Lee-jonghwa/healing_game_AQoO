@@ -179,7 +179,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
 
       {isModalOpen && selectedFish && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
+          <div className="p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
             <p className="mb-4 text-lg">
               <span className="font-bold">{selectedFish.fishName}</span>를 어항밖으로 빼시겠습니까?
             </p>
