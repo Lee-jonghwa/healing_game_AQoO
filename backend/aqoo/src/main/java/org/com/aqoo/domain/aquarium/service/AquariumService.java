@@ -6,11 +6,8 @@ import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.entity.AquariumBackground;
 import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.fish.entity.Fish;
-import org.com.aqoo.repository.AquariumRepository;
+import org.com.aqoo.repository.*;
 import org.com.aqoo.domain.fish.entity.UserFish;
-import org.com.aqoo.repository.FishRepository;
-import org.com.aqoo.repository.UserFishRepository;
-import org.com.aqoo.repository.UserRepository;
 import org.com.aqoo.util.ImageUrlUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +22,7 @@ import java.util.stream.Collectors;
 public class AquariumService {
 
     private final AquariumRepository aquariumRepository;
+    private final AquariumBackgroundRepository aquariumBackgroundRepository;
     private final UserFishRepository userFishRepository;
     private final FishRepository fishRepository;
     private final UserRepository userRepository;
@@ -85,7 +83,11 @@ public class AquariumService {
         dto.setLastWaterChangeTime(aquarium.getLastWaterChangeTime());
         dto.setLastCleanedTime(aquarium.getLastCleanedTime());
         dto.setUserId(aquarium.getUserId());
-        dto.setAquariumBackgroundId(aquarium.getAquariumBackgroundId());
+
+
+        String imageUrl = aquariumBackgroundRepository.findById(aquarium.getAquariumBackgroundId()).get().getImageUrl();
+
+        dto.setAquariumBackground(imageUrl);
         dto.setWaterStatus(getElapsedTimeScore(aquarium.getLastWaterChangeTime(), 24));
         dto.setPollutionStatus(getElapsedTimeScore(aquarium.getLastCleanedTime(), 12));
         dto.setFeedStatus(getElapsedTimeScore(aquarium.getLastFedTime(), 4));
