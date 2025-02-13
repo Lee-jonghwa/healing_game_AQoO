@@ -20,6 +20,7 @@ import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import { gsap } from "gsap";
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
+import axiosInstance from "@/services/axiosInstance";
 
 // 🔹 물고기 데이터 타입 정의
 interface FishData {
@@ -163,8 +164,8 @@ export default function MainPage() {
     if (!auth.user?.id || userInfo?.mainAquarium === undefined) return;
 
     // 물고기 데이터 불러오기 (API 호출)
-    axios
-      .get(`${API_BASE_URL}/aquariums/fish/${userInfo.mainAquarium}`, { withCredentials: true })
+    axiosInstance
+      .get(`aquariums/fish/${userInfo.mainAquarium}`, { withCredentials: true })
       .then((response: AxiosResponse<FishData[] | { message: string }>) => {
         console.log("🐠 내 물고기 목록:", response.data);
         if (Array.isArray(response.data)) {

@@ -49,7 +49,7 @@ export const logout = async (): Promise<void> => {
       localStorage.removeItem("loggedInUser");
       return;
     }
-
+    console.log("logout 불림")
     // userId를 포함한 로그아웃 엔드포인트 호출 (withCredentials 옵션 포함)
     await axios.delete(`${AUTH_API_URL}/logout/${userId}`, { withCredentials: true });
     
