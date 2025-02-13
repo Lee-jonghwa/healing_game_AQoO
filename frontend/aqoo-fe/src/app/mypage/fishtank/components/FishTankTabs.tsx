@@ -1,4 +1,3 @@
-// FishTankTabs.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,6 +5,7 @@ import FishTankTabContent from "./FishTankTabContent";
 import { useRecoilValue } from "recoil";
 import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
+import { fetchUser } from "@/services/authService";
 
 interface AquariumTab {
   id: number;
@@ -25,14 +25,28 @@ export default function FishTankTabs() {
   // 삭제 모달 관련 상태
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [tabToDelete, setTabToDelete] = useState<AquariumTab | null>(null);
+  // 대표 어항 ID 상태
+  const [mainAquariumId, setMainAquariumId] = useState<number | null>(null);
 
   // 리프레시 트리거: MyFishCollection과 TankFishCollection을 각각 새로고침
   const [refreshMyFish, setRefreshMyFish] = useState(0);
   const [refreshTankFish, setRefreshTankFish] = useState(0);
 
-  // 유저의 어항 목록을 API에서 가져오기
+  // 유저의 어항 목록 및 대표 어항 정보 가져오기
   useEffect(() => {
     if (auth.user?.id) {
+      // fetchUser를 호출하여 대표 어항 정보 가져오기
+      fetchUser()
+        .then((user) => {
+          if (user && typeof user.mainAquarium === "number") {
+            setMainAquariumId(user.mainAquarium);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user info:", error);
+        });
+
+      // 어항 목록 가져오기
       axiosInstance
         .get(`/aquariums/all/${auth.user.id}`)
         .then((response) => {
@@ -128,6 +142,15 @@ export default function FishTankTabs() {
 
   const handleConfirmDelete = () => {
     if (tabToDelete) {
+      // 대표 어항 삭제 방지 로직
+      if (mainAquariumId === tabToDelete.id) {
+        alert("대표 어항은 삭제할 수 없습니다.");
+        setShowDeleteModal(false);
+        setTabToDelete(null);
+        return;
+      }
+
+      // 어항 삭제 진행
       axiosInstance
         .delete("/aquariums", { data: { aquariumId: tabToDelete.id } })
         .then((response) => {
@@ -157,6 +180,7 @@ export default function FishTankTabs() {
         aquariumId: tabs[selectedIndex].id,
       });
       alert("대표 어항 설정이 완료되었습니다.");
+      setMainAquariumId(tabs[selectedIndex].id);
     } catch (error) {
       console.error("Error setting main aquarium:", error);
     }
