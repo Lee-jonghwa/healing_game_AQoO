@@ -71,6 +71,7 @@ function fetchUserData(userId: string): Promise<any> {
  * 실제 UI를 렌더링하는 컴포넌트
  */
 function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal: number }) {
+  const API_BASE_URL = "https://i12e203.p.ssafy.io";
   return (
     <div
       className="
@@ -104,7 +105,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]
             "
           >
-            <img src={userData.mainFishImage} alt="대표 이미지" className="object-contain w-full h-full" />
+            <img src={userData.mainFishImage ? userData.mainFishImage : `${API_BASE_URL}/images/미등록이미지.png`} alt="대표 이미지" className="object-contain w-full h-full" />
           </div>
         </div>
 
