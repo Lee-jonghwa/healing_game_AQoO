@@ -220,15 +220,14 @@ function EditProfilePage() {
           <div className="w-[250px] h-[250px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
             <div className="overflow-hidden w-[220px] h-[220px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
               {userData?.mainFishImage ? (
-                <Image
+                <img
                   src={
-                    // 만약 mainFishImage가 전체 URL이 아니라 파일명만 있다면 기본 URL 붙임
                     userData.mainFishImage.startsWith("http")
                       ? userData.mainFishImage
                       : `images/${userData.mainFishImage}`
                   }
                   alt="대표 물고기"
-                  className="max-w-full max-h-full object-cover"
+                  className="max-w-full max-h-full object-cover object-contain"
                   width={220}
                   height={220}
                 />

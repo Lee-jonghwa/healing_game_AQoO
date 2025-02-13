@@ -48,8 +48,9 @@ function wrapPromise<T>(promise: Promise<T>): { read(): T } {
  */
 function fetchUserData(userId: string): Promise<any> {
   const token = localStorage.getItem("accessToken");
-  const SERVER_API = "https://i12e203.p.ssafy.io";
-  return fetch(`${SERVER_API}/api/v1/users/${userId}`, {
+  const API_BASE_URL = "https://i12e203.p.ssafy.io";
+  // const IMAGE_API_BASE_URL = "https://i12e203.p.ssafy.io/images";
+  return fetch(`${API_BASE_URL}/api/v1/users/${userId}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -101,13 +102,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]
             "
           >
-            <Image
-              src={userData.mainFishImage}
-              alt="대표 이미지"
-              width={130}
-              height={130}
-              style={{ objectFit: "cover" }}
-            />
+            <img src={userData.mainFishImage} alt="대표 이미지" className="object-contain max-w-full max-h-full" />
           </div>
         </div>
 
