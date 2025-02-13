@@ -20,13 +20,10 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
-  users?: {
-    userName: string;
-    ready: boolean;
-    isHost: boolean;
-    mainFishImage: string;
-  }[];
+  // 게임 관련 메시지와 함께 유저 목록 업데이트용 필드 (채팅방 사용자용)
+  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[];
   players?: Player[];
+  // GAME_STARTED 메시지의 경우 players 필드가 포함됨
   targetUser?: string;
 }
 
@@ -69,7 +66,7 @@ export default function IntegratedRoom({
 
     const intervalId = setInterval(() => {
       if (client.connected) {
-        setIsConnected(true);
+        setIsConnected(true);  // 연결 확정정
         if (!hasSentJoinRef.current) {
           const joinMessage = { roomId, sender: userName };
           client.publish({
@@ -79,28 +76,24 @@ export default function IntegratedRoom({
           console.log('Join room message sent:', joinMessage);
           hasSentJoinRef.current = true;
         }
-        const subscription = client.subscribe(
-          `/topic/room/${roomId}`,
-          (message) => {
-            const data: RoomUpdate = JSON.parse(message.body);
-            console.log('Room update received:', data);
-            if (data.message === 'GAME_STARTED') {
-              setGamePlayers(data.players ?? []);
-              setScreen('game');
-            } else if (data.message === 'USER_LIST') {
-              console.log('data.users:', data.users);
-              setUsers(data.users ?? []);
-            } else if (data.message === 'USER_KICKED') {
-              if (data.targetUser === userName) {
-                router.push('/main?status=kicked');
-              } else {
-                setUsers((prevUsers) =>
-                  prevUsers.filter((u) => u.userName !== data.targetUser)
-                );
-              }
+        const subscription = client.subscribe(`/topic/room/${roomId}`, (message) => {
+          const data: RoomUpdate = JSON.parse(message.body);
+          console.log('Room update received:', data);
+          if (data.message === 'GAME_STARTED') {
+            // GAME_STARTED 메시지에는 players 필드가 포함되어 있어야 함
+            setGamePlayers(data.players ?? []);
+            setScreen('game');
+          } else if (data.message === 'USER_LIST') {
+            console.log("data.users:", data.users);
+            setUsers(data.users ?? []);
+          } else if (data.message === 'USER_KICKED') {
+            if (data.targetUser === userName) {
+              router.push('/room?status=kicked');
+            } else {
+              setUsers((prevUsers) => prevUsers.filter((u) => u.userName !== data.targetUser));
             }
           }
-        );
+      });
         clearInterval(intervalId);
         return () => subscription.unsubscribe();
       }
@@ -114,6 +107,35 @@ export default function IntegratedRoom({
     const me = users.find((u) => u.userName === userName);
     setCurrentIsHost(me ? me.isHost : false);
   }, [users, userName]);
+
+  // 방장여부 디버깅
+  useEffect(() => {
+    console.log('Updated users:', users);
+    users.forEach((user) =>
+      console.log(`User ${user.userName}: isHost = ${user.isHost}, ready = ${user.ready}`)
+    );
+  }, [users]);
+
+
+  // ----------------------------
+  // ready / start 관련 상태 계산
+  // ----------------------------
+  // 현재 사용자의 Ready 상태
+  const myReady = users.find((u) => u.userName === userName)?.ready;
+  // 방장의 Start 버튼 활성화를 위한 조건:
+  // - 현재 사용자가 방장인 경우: 자신의 기록은 제외하고 나머지 사용자가 모두 ready 상태이면 true
+  // - 방장이 아닌 경우: 방장이 아닌 사용자들 중 모두 ready 상태이면 true.
+  const nonHostUsers = currentIsHost
+    ? users.filter((u) => u.userName !== userName)
+    : users.filter((u) => !u.isHost);
+  const allNonHostReady =
+    nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
+  // 렌더링할 사용자 목록: 현재 사용자가 방장인데, users 배열에 포함되어 있지 않다면 추가
+  const displayUsers =
+    currentIsHost && !users.some((u) => u.userName === userName)
+      ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
+      : users;
+
 
   // 친구 초대 함수
   const inviteFriend = async (friendUserId: string) => {

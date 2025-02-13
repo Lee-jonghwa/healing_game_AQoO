@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function FishTicketModal({
   onClose,
@@ -97,28 +98,31 @@ export default function FishTicketModal({
               <br />
               <span className="text-blue-500 text-lg">{fishTicket}</span> 개<br />
               <br />
-              {isFirstLogin
+              {fishTicket <= 0
+                ? "물고기 티켓이 없어서 뽑을 수 없습니다! \n 티켓을 모아서 다시 도전해 보세요!"
+                : isFirstLogin
                 ? "물고기를 얻기 위해서는 물고기 티켓이 필요해요! \n 한 번 뽑아볼까요?"
-                : `물고기를 그리거나 뽑을 수 있습니다!`}
+                : "물고기를 그리거나 뽑을 수 있습니다!"}
             </p>
-
-            {/* 선택 버튼 */}
-            <div className="flex justify-center space-x-6 mt-6">
-              <button
-                className="w-[180px] py-3 bg-blue-200 border-[2px] border-black rounded-lg text-lg font-bold hover:bg-blue-300 transition"
-                onClick={handleGacha}
-              >
-                🐠 물고기 뽑기
-              </button>
-              {!isFirstLogin && (
+            {/* 선택 버튼 (티켓이 있을 때만 표시) */}
+            {fishTicket > 0 && (
+              <div className="flex justify-center space-x-6 mt-6">
                 <button
-                  className="w-[180px] py-3 bg-gray-200 border-[2px] border-black rounded-lg text-lg font-bold hover:bg-gray-300 transition"
-                  onClick={() => router.push("/custom")}
+                  className="w-[180px] py-3 bg-blue-200 border-[2px] border-black rounded-lg text-lg font-bold hover:bg-blue-300 transition"
+                  onClick={handleGacha}
                 >
-                  🎨 물고기 그리기
+                  🐠 물고기 뽑기
                 </button>
-              )}
-            </div>
+                {!isFirstLogin && (
+                  <button
+                    className="w-[180px] py-3 bg-gray-200 border-[2px] border-black rounded-lg text-lg font-bold hover:bg-gray-300 transition"
+                    onClick={() => router.push("/custom")}
+                  >
+                    🎨 물고기 그리기
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* 닫기 버튼 */}
             {!isFirstLogin && (
