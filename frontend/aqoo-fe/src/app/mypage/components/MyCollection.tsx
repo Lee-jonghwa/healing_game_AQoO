@@ -24,7 +24,7 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
   };
 
   return (
-    <div className="relative flex flex-col mt-2">
+    <div className="relative flex flex-col mt-2 w-full max-w-[1300px] justify-start '">
       {/* 탭 영역 */}
       <div className="flex items-end mb-0 mt-1 gap-1">
         <button
@@ -32,11 +32,13 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
           className={`
             relative left-[30px] 
             cursor-pointer inline-flex items-center justify-center
-            w-[170px] h-10 px-[20px] py-[10px]
+            w-1/3 sm:w-[180px] md:w-[200px]
+            h-12 px-5 py-2
             rounded-t-xl border-t border-r border-l border-[#1c5e8d]
             bg-[#f0f0f0]
             [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
-            text-[#070707] text-2xl font-[NeoDunggeunmo_Pro] font-normal leading-normal
+            text-[#070707] text-2xl sm:text-xl md:text-2xl
+            font-normal leading-normal
             ${selectedTab === "basic" ? "bg-[#31A9FF] text-2xl text-black border-t-[3px] border-black" : ""}
           `}
         >
@@ -47,11 +49,13 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
           className={`
             relative left-[30px] 
             cursor-pointer inline-flex items-center justify-center
-            w-[170px] h-10 px-[20px] py-[10px]
+            w-1/3 sm:w-[180px] md:w-[200px]
+            h-12 px-5 py-2
             rounded-t-xl border-t border-r border-l border-[#1c5e8d]
             bg-[#f0f0f0]
             [box-shadow:-1px_0px_0px_2px_rgba(0,0,0,0.25)_inset]
-            text-[#070707] text-2xl font-[NeoDunggeunmo_Pro] font-normal leading-normal
+            text-[#070707] text-2xl sm:text-xl md:text-2xl
+            font-normal leading-normal
             ${selectedTab === "custom" ? "bg-[#31A9FF] text-2xl text-black border-t-[3px] border-black" : ""}
           `}
         >
@@ -67,8 +71,9 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
             rounded-xl border border-[#040303] bg-white 
             [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
             flex items-center justify-center
-            text-[#070707] text-center font-[400] text-2xl
-            font-[NeoDunggeunmo_Pro]
+            text-[#070707] text-center font-[400] 
+            text-2xl sm:text-xl md:text-2xl
+          
           "
         >
           어항관리
@@ -78,13 +83,19 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
       {/* 탭 컨텐츠 영역 */}
       <div
         className="
-          w-[1300px] h-screen m-0 p-5
+          w-full max-w-[1300px] h-screen m-0 p-5
           rounded-xl border-2 border-[#1c5e8d] bg-[#31a9ff]
           [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.25)_inset]
           flex flex-col items-center
         "
       >
-        <div className="flex-1 overflow-y-auto bg-white w-full h-full rounded-[30px]">
+        <div
+          className="flex-1 overflow-y-scroll scrollbar-none bg-white w-full h-full rounded-[30px]"
+          style={{
+            msOverflowStyle: "none", // IE, Edge에서 스크롤바 숨기기
+            scrollbarWidth: "none", // Firefox에서 스크롤바 숨기기
+          }}
+        >
           <div className="bg-white overflow-hidden">
             {selectedTab === "basic" && <BasicCollectionTab allFishList={allFishList} userFishList={userFishList} />}
             {selectedTab === "custom" && <CustomCollectionTab customFishList={customFishList} />}

@@ -27,11 +27,12 @@ export default function CollectionItemCard({
     <div
       onClick={onClick}
       className={`
-        flex flex-col m-2
-        w-[170px] h-[170px] flex-shrink-0
+        flex flex-col mt-2 ml-2
+        w-[40vw] sm:w-[150px] h-auto aspect-square flex-shrink-0
         items-center justify-center
         rounded-xl border border-black bg-white
         text-[1.5em] font-bold
+        transition-all duration-200
         ${
           isModal
             ? "hover:border-4 hover:border-green-400 [box-shadow:0px_0px_0px_1px_rgba(0,0,0,0.5)]"
@@ -39,22 +40,24 @@ export default function CollectionItemCard({
         }
         ${isModal && isSelected ? "border-4 border-yellow-400" : ""}
       `}
+      style={{
+        transform: "scale(1)",
+      }}
     >
       <div
         className={`
-          w-[150px] h-[150px]
-          flex flex-col items-center justify-center
+          w-[90%] h-auto aspect-square
+          flex flex-col items-center justify-start
           rounded-xl border border-black bg-white
+          gap-1
         `}
       >
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center w-full h-auto">
           <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full" />
         </div>
         <div
           className="
-          flex items-end gap-2 text-[15px]
-          font-[NeoDunggeunmo_Pro] text-black
-          mt-auto
+          flex items-end gap-1 text-[15px] text-black
         "
         >
           <p>{name}</p>
@@ -63,6 +66,14 @@ export default function CollectionItemCard({
           )}
         </div>
       </div>
+      {/* 배율이 120% 이상이면 크기를 줄이는 스타일 */}
+      <style jsx>{`
+        @media (min-width: 1200px) {
+          div {
+            transform: scale(0.9);
+          }
+        }
+      `}</style>
     </div>
   );
 }
