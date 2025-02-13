@@ -191,7 +191,7 @@ public class FishService {
         // 중복 검사 (이미 해당 이미지 URL이 존재하는 경우 예외 발생)
         String imageUrl = "/" + imagePath;
         if (fishRepository.existsByImageUrl(imageUrl)) {
-            throw new IllegalArgumentException("이미 존재하는 이름입니다.");
+            return "이미 존재하는 이름입니다.";
         }
 
 
@@ -228,7 +228,7 @@ public class FishService {
         // 변경된 user 객체를 DB에 저장
         userRepository.save(user);
 
-        return fishName;
+        return fishName + "을 저장했습니다.";
 
     }
     public File processImage(File inputFile, String outputFilePath) throws Exception {
