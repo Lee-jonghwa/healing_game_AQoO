@@ -12,7 +12,6 @@ import org.com.aqoo.domain.chat.model.ChatRoom;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -61,7 +60,8 @@ public class GameService {
                     .collect(Collectors.toList());
 
             System.out.println("players:" + players);
-            RoomResponse response = new RoomResponse(roomId, players, "GAME_STARTED");
+            // 게임 시작 시 승자와 finishOrder는 아직 없으므로 null로 전달
+            RoomResponse response = new RoomResponse(roomId, players, "GAME_STARTED", null, null);
             messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
             log.info("Broadcasted GAME_STARTED message for roomId: {}", roomId);
         } else {
@@ -121,14 +121,11 @@ public class GameService {
             if (allReached100) {
                 // finishOrder의 첫 번째 사용자가 승자가 됨 (100에 도달한 순서대로)
                 String winner = finishOrder.get(0);
-                RoomResponse response = new RoomResponse(roomId, players, "GAME_ENDED");
-                response.setWinner(winner);
-                // 전체 순위(finishOrder)를 프론트로 전달
-                response.setFinishOrder(finishOrder);
+                RoomResponse response = new RoomResponse(roomId, players, "GAME_ENDED", winner, finishOrder);
                 messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
                 log.info("Broadcasted GAME_ENDED message for roomId: {} with finish order: {}", roomId, finishOrder);
             } else {
-                RoomResponse response = new RoomResponse(roomId, players, "PRESS_UPDATED");
+                RoomResponse response = new RoomResponse(roomId, players, "PRESS_UPDATED", null, null);
                 messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
                 log.info("Broadcasted PRESS_UPDATED message for roomId: {}", roomId);
             }
