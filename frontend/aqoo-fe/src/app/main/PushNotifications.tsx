@@ -11,12 +11,12 @@ import { useRouter } from "next/navigation"; // ✅ next/navigation에서 import
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 export default function PushNotifications({
-   onClose, 
-   setNewNotifications, 
-  }: { 
-    onClose: () => void; 
-    setNewNotifications: (newNotifications: boolean) => void; 
-  }) {
+  onClose,
+  setNewNotifications,
+}: {
+  onClose: () => void;
+  setNewNotifications: (newNotifications: boolean) => void;
+}) {
   const { auth } = useAuth(); // ✅ 로그인된 사용자 정보 가져오기
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export default function PushNotifications({
   const [showFriendRequestModal, setShowFriendRequestModal] = useState(false);
   const [selectedFriendRequest, setSelectedFriendRequest] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refreshNotifications = () => {
     if (!auth.user?.id) return; // ✅ 로그인되지 않은 경우 API 호출 안함
 
     // ✅ 현재 로그인된 유저의 ID로 알림 가져오기
@@ -44,6 +44,10 @@ export default function PushNotifications({
         setError("알림을 불러오는데 실패했습니다.");
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    refreshNotifications();
   }, [auth.user?.id, setNewNotifications]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
 
   // ✅ 읽음 처리 API 호출 함수
@@ -96,6 +100,7 @@ export default function PushNotifications({
                     }
                   : undefined
               }
+              refreshNotifications={refreshNotifications} // 알림 목록을 다시 불러오는 함수 전달
             />
           ))}
         </div>
@@ -108,15 +113,31 @@ export default function PushNotifications({
     </div>
   );
 }
+
+// ✅ 날짜 변환 함수 (YYYY-MM-DD HH:mm 형식)
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
 // 🔹 알림 아이템 컴포넌트 수정
 function NotificationItem({
   notification,
   onFriendRequestClick,
+  refreshNotifications,
 }: {
   notification: Notification;
   onFriendRequestClick?: () => void;
+  refreshNotifications: () => void;
 }) {
-  const { type, message, status, data } = notification;
+  const { type, message, status, data, createdAt, id } = notification;
+  const [loading, setLoading] = useState(false); // 삭제 중 상태
+  const [error, setError] = useState(""); // 에러 상태
 
   // ✅ 알림 타입별 아이콘 매핑
   const getIconSrc = (type: string) => {
@@ -137,11 +158,41 @@ function NotificationItem({
     }
   };
 
+  const handleDelete = (id: number) => {
+    console.log(id);
+    setLoading(true);
+    setError(""); // 이전 에러 초기화
+
+    // 삭제 요청 보내기
+    axios
+      .post(`${API_BASE_URL}/notification/delete`, { notificationId: id })
+      .then((response) => {
+        console.log(response.data.message); // 삭제 성공 메시지 출력
+        // 여기에서 알림 삭제 후 UI 업데이트 (예: 삭제된 알림을 상태에서 제거)
+        refreshNotifications(); // 부모 컴포넌트의 알림 업데이트 함수 호출
+      })
+      .catch((error) => {
+        console.error("❌ 알림 삭제 실패", error);
+        setError("알림 삭제에 실패했습니다.");
+      })
+      .finally(() => setLoading(false));
+  };
+
   return (
     <div
       className="relative p-3 bg-white border rounded-lg flex items-center space-x-3 shadow cursor-pointer hover:bg-gray-100"
       onClick={onFriendRequestClick}
     >
+      {/* X 버튼 (더 작은 크기, 우측 상단으로 더 가까이 이동) */}
+      <button
+        className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-transparent text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
+        onClick={(e) => {
+          e.stopPropagation(); // 부모 클릭 이벤트 방지
+          handleDelete(id); // X 버튼 클릭 시 삭제 함수 호출
+        }}
+      >
+        <span className="text-lg font-bold">×</span> {/* 글자 크기도 조금 줄였어 */}
+      </button>
       <div className="relative flex items-center">
         <Image src={getIconSrc(type)} alt={type} width={32} height={32} className="w-8 h-8 " />
         {!status && <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></div>}
@@ -149,10 +200,13 @@ function NotificationItem({
 
       {/* ✅ GAME INVITE일 때 입장 버튼 포함 */}
       {type === "GAME INVITE" ? (
-        <GameInviteNotification message={message} gameRoomId={data} />
+        <GameInviteNotification message={message} gameRoomId={data} createdAt={createdAt} />
       ) : (
         <div>
-          <p className="font-bold">{getNotificationLabel(type)}</p>
+          <div className="flex items-end space-x-4">
+            <p className="font-bold">{getNotificationLabel(type)}</p>
+            <p className="text-xs text-gray-400">{formatDate(createdAt)}</p> {/* 🔹 날짜 추가 */}
+          </div>
           <p className="text-sm text-gray-500">{message}</p>
         </div>
       )}
@@ -161,7 +215,15 @@ function NotificationItem({
 }
 
 // 🔹 게임 초대 알림 (입장 버튼 추가)
-function GameInviteNotification({ message, gameRoomId }: { message: string; gameRoomId?: string }) {
+function GameInviteNotification({
+  message,
+  gameRoomId,
+  createdAt,
+}: {
+  message: string;
+  gameRoomId?: string;
+  createdAt: string;
+}) {
   const router = useRouter(); // ✅ Next.js App Router 사용
   const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
 
@@ -179,16 +241,22 @@ function GameInviteNotification({ message, gameRoomId }: { message: string; game
   };
 
   return (
-    <div className="flex items-center justify-between w-full">
-      <div>
+    <div className="flex flex-col items-start justify-between w-full">
+      <div className="flex items-end w-full mb-2">
+        {" "}
+        {/* mb-2 추가로 날짜와 버튼의 아래 간격을 늘림 */}
         <p className="font-bold text-red-500">게임 초대</p>
-        <p className="text-sm text-gray-500">{message}</p>
+        <p className="text-xs text-gray-400 ml-5">{formatDate(createdAt)}</p>
+        {gameRoomId && (
+          <button
+            onClick={handleEnterGame}
+            className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md ml-auto mr-10"
+          >
+            입장
+          </button>
+        )}
       </div>
-      {gameRoomId && (
-        <button onClick={handleEnterGame} className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md">
-          입장
-        </button>
-      )}
+      <p className="text-sm text-gray-500">{message}</p>
     </div>
   );
 }
