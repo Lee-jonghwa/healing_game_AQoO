@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import MenuButton from "../main/MenuButton";
 import axios from "axios";
+import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import axiosInstance from "@/services/axiosInstance";
 
 export default function CustomFishPages() {
   const router = useRouter();
@@ -321,10 +321,18 @@ export default function CustomFishPages() {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        console.log("✅ 성공:", response.data);
+        console.log("✅ 응답 :", response.data);
+
+        // 서버에서 중복된 이름일 경우 "이미 존재하는 이름입니다."라는 문자열을 반환하는 경우
+        if (typeof response.data === "string" && response.data.includes("이미 존재하는 이름입니다")) {
+          alert("이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!");
+          setFishName(""); // 기존 입력값 초기화 (선택)
+          return;
+        }
+
         alert("그림이 저장되었습니다!");
-        router.push("/mypage/fishtank"); // ✅ 저장 후 리디렉션할 페이지
-      } catch (error) {
+        router.push("/mypage/fishtank");
+      } catch (error: any) {
         console.error("🚨 오류:", error);
         alert("저장 중 오류가 발생했습니다.");
       }
@@ -429,7 +437,7 @@ export default function CustomFishPages() {
               className={`${fillMode ? "bg-gray-300" : "bg-white"}  !w-14 !h-14`}
             />
             <MenuButton
-              icon="/icon/drawtool/clearIcon.png"
+              icon="/icon/drawtool/ClearIcon.png"
               label="Clear"
               onClick={clearCanvas}
               className={"!w-14 !h-14"}
