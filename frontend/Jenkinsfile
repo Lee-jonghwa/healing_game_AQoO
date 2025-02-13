@@ -11,29 +11,13 @@ pipeline {
             steps {
                 git branch: 'frontend',
                     url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
-                    credentialsId: 'songhun-gitlab'
-            }
-        }
-
-        stage('Check Node Version') {
-            steps {
-                // Node.js가 설치되어 있는지 확인
-                sh 'npm --version'  // npm 버전 출력
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir('frontend/aqoo-fe') {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
+                    credentialsId: 'ssafy203'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir('frontend') {
+                dir('frontend') { // Dockerfile이 위치한 frontend 디렉토리로 이동
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
@@ -49,6 +33,29 @@ pipeline {
                         docker run -d --name ${CONTAINER_NAME} --network host \
                         -p 3000:3000 ${DOCKER_IMAGE}
                     """
+                }
+            }
+        }
+
+        stage('Clean-up') {
+            steps {
+                script {
+                    echo "Cleaning up unused resources..."
+                    
+                    // 1. 중간 빌드 단계에서 생성된 파일 삭제
+                    sh """
+                        rm -rf frontend/aqoo-fe/node_modules
+                        rm -rf frontend/aqoo-fe/.next
+                        rm -rf frontend/aqoo-fe/package-lock.json
+                    """
+                    
+                    // 2. 사용되지 않는 Docker 이미지를 정리
+                    sh "docker image prune -f"
+
+                    // 3. 사용되지 않는 Docker 컨테이너, 네트워크, 볼륨 정리 (필요 시)
+                    sh "docker container prune -f"
+                    sh "docker volume prune -f"
+                    sh "docker network prune -f"
                 }
             }
         }

@@ -113,6 +113,19 @@ export default function MyFishCollection({
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isModalOpen && event.key === "Enter") {
+        handleModalConfirm();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isModalOpen, selectedFish]);
+
   return (
     <div>
       <div className="flex flex-wrap gap-4">

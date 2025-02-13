@@ -16,6 +16,8 @@ import Link from "next/link";
 import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import { gsap } from "gsap";
+import FirstLoginModal from "@/app/main/components/FirstLoginModal";
+
 import { increaseUserExp } from "@/services/userService";
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
 
@@ -40,15 +42,15 @@ export default function MainPage() {
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
   const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
+  const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(null);
+  const [firstLoginModal, setFirstLoginModal] = useState<{ status: boolean } | null>(null);
 
   // 모달 상태 중앙 관리
-  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [showFishTicketModal, setShowFishTicketModal] = useState(false);
 
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   useEffect(() => {
-    // TODO: 첫 로그인 판단 후, 밑의 동작 수행하고 아니면 패스
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/firebase-messaging-sw.js")
@@ -57,7 +59,27 @@ export default function MainPage() {
         })
         .catch((err: unknown) => console.error("🔥 서비스 워커 등록 실패:", err));
     }
+
+    const fetchIsFirstLogin = async () => {
+      if (!auth.user) return; // ✅ auth.user가 없으면 실행 X
+
+      try {
+        const response = await axios.get<boolean>(`${API_BASE_URL}/users/isFirst/${auth.user.id}`);
+        console.log("첫 로그인인지 아닌지:", response.data);
+        setFirstLoginStatus(response.data); // ✅ true/false 할당
+      } catch (error) {
+        console.error("API 호출 중 오류 발생:", error);
+      }
+    };
+
+    fetchIsFirstLogin();
   }, []);
+
+  useEffect(() => {
+    if (firstLoginStatus) {
+      setFirstLoginModal({ status: true }); // ✅ 첫 로그인 모달 자동 활성화
+    }
+  }, [firstLoginStatus]); // ✅ firstLoginStatus 변경 시 실행
 
   useEffect(() => {
     if (levelUpInfo) {
@@ -113,6 +135,7 @@ export default function MainPage() {
   };
 
   useEffect(() => {
+    // TODO  배경화면 제대로 불러오기 로직 추가
     const savedBg = localStorage.getItem("background");
     if (savedBg) {
       setBackground(savedBg);
@@ -235,6 +258,17 @@ export default function MainPage() {
         </div>
       )}
 
+      {/* 첫 로그인 시 뜰 모달 */}
+      {firstLoginStatus && firstLoginModal && (
+        <FirstLoginModal
+          onClose={() => setFirstLoginModal(null)}
+          onOpenFishModal={() => {
+            setFirstLoginModal(null);
+            setShowFishTicketModal(true);
+          }}
+        />
+      )}
+
       {/* 📌 물고기 뽑기 모달 */}
       {showFishTicketModal && userInfo && (
         <FishTicketModal
@@ -242,6 +276,7 @@ export default function MainPage() {
           fishTicket={userInfo.fishTicket}
           refreshUserInfo={refreshUserInfo}
           onClose={() => setShowFishTicketModal(false)}
+          isFirstLogin={firstLoginStatus ?? false} // ✅ 첫 로그인 여부 전달
         />
       )}
     </div>

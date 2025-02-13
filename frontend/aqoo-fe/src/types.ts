@@ -5,6 +5,9 @@ export interface UserInfo {
   exp: number;
   mainAquarium: number;
   fishTicket: number;
+  email: string;
+  mainFishImage: string;
+  status: boolean;
 }
 
 // 🔹 어항 상태 데이터 타입 정의
@@ -45,6 +48,15 @@ export interface Notification {
   createdAt: string;
 }
 
+// 닉네임 변경 위한 프로필 폼 타입
 export interface ProfileFormInputs {
   nickname: string;
+}
+
+// 유저 정보 타입
+export interface UserData {
+  id: string;
+  email: string;
+  nickname: string;
+  mainFishImage: string;
 }
