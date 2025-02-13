@@ -49,8 +49,8 @@ export default function Game({
   // **추가**: 게임 시작 여부를 판단하는 상태
   const [hasStarted, setHasStarted] = useState(false);
 
-  // **추가**: 게임 시간 상태 (게임 시작 후 1초마다 증가)
-  const [gameTime, setGameTime] = useState(0);
+  // **변경**: 게임 시간을 30초에서 시작 → 1초마다 1씩 감소
+  const [gameTime, setGameTime] = useState(30);
 
   // 모달 창 닫힘 상태 (확인 버튼 클릭 시 true로 설정)
   const [modalDismissed, setModalDismissed] = useState(false);
@@ -152,7 +152,7 @@ export default function Game({
           setPlayers(data.players ?? []);
           if (data.message === 'GAME_ENDED') {
             setGameEnded(true);
-            console.log("winner:", data.winner);
+            console.log('winner:', data.winner);
             setWinner(data.winner || null);
             if (data.finishOrder) {
               setFinishOrder(data.finishOrder);
@@ -171,7 +171,10 @@ export default function Game({
         const prevPlayer = previousPlayersRef.current.find(
           (p) => p.userName === player.userName
         );
-        if (!prevPlayer || player.totalPressCount > prevPlayer.totalPressCount) {
+        if (
+          !prevPlayer ||
+          player.totalPressCount > prevPlayer.totalPressCount
+        ) {
           setWindEffects((prev) => ({ ...prev, [player.userName]: true }));
           setTimeout(() => {
             setWindEffects((prev) => ({ ...prev, [player.userName]: false }));
@@ -182,25 +185,27 @@ export default function Game({
     previousPlayersRef.current = players;
   }, [players, userName]);
 
-  // **추가**: 게임 시작 후 1초마다 gameTime 상태 증가
+  // **변경**: 게임 시작 후 1초마다 gameTime 상태 감소
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     const timer = setInterval(() => {
-      setGameTime((prev) => prev + 1);
+      setGameTime((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
   }, [hasStarted, gameEnded]);
 
-  // **추가**: 모든 플레이어가 100번 이상 탭하거나 gameTime이 30 도달하면 게임 종료
+  // **변경**: gameTime이 0이 되거나 모든 플레이어가 100 탭 이상 시 게임 종료
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     if (
-      gameTime >= 30 ||
-      (players.length > 0 && players.every((player) => player.totalPressCount >= 100))
+      gameTime <= 0 ||
+      (players.length > 0 &&
+        players.every((player) => player.totalPressCount >= 100))
     ) {
       setGameEnded(true);
-      const maxPlayer = players.reduce((prev, cur) =>
-        cur.totalPressCount > prev.totalPressCount ? cur : prev,
+      const maxPlayer = players.reduce(
+        (prev, cur) =>
+          cur.totalPressCount > prev.totalPressCount ? cur : prev,
         players[0]
       );
       setWinner(maxPlayer?.userName || null);
@@ -221,7 +226,9 @@ export default function Game({
 
   // 현재 유저의 플레이어 정보 확인
   const currentUserPlayer = players.find((p) => p.userName === userName);
-  const hasArrived = currentUserPlayer ? currentUserPlayer.totalPressCount >= 100 : false;
+  const hasArrived = currentUserPlayer
+    ? currentUserPlayer.totalPressCount >= 100
+    : false;
 
   // 게임 종료 후 결과 확인 버튼 클릭 시
   const handleResultCheck = () => {
@@ -231,26 +238,38 @@ export default function Game({
   // 결승 모달을 닫기 위한 버튼 클릭 핸들러
   const handleModalClose = () => {
     setModalDismissed(true);
-  }
+  };
 
   // 게임 종료 화면
   if (gameEnded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br">
-        <div className="bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4">
-          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">Game Over</h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Winner: <span className="font-bold text-gray-900">{winner || 'No Winner'}</span>
+      <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
+        <div className='bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4'>
+          <h1 className='text-4xl font-extrabold text-gray-800 mb-6'>
+            Game Over
+          </h1>
+          <p className='text-xl text-gray-600 mb-8'>
+            Winner:{' '}
+            <span className='font-bold text-gray-900'>
+              {winner || 'No Winner'}
+            </span>
           </p>
           {finishOrder.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">전체 순위</h2>
-              <div className="bg-gray-100 rounded-lg shadow-md p-4">
-                <ol className="divide-y divide-gray-300">
+            <div className='mb-8'>
+              <h2 className='text-3xl font-bold text-gray-800 mb-4'>
+                전체 순위
+              </h2>
+              <div className='bg-gray-100 rounded-lg shadow-md p-4'>
+                <ol className='divide-y divide-gray-300'>
                   {finishOrder.map((user, index) => (
-                    <li key={user} className="py-2 flex justify-between items-center">
-                      <span className="font-semibold text-gray-700">{index + 1}.</span>
-                      <span className="text-gray-900">{user}</span>
+                    <li
+                      key={user}
+                      className='py-2 flex justify-between items-center'
+                    >
+                      <span className='font-semibold text-gray-700'>
+                        {index + 1}.
+                      </span>
+                      <span className='text-gray-900'>{user}</span>
                     </li>
                   ))}
                 </ol>
@@ -259,7 +278,7 @@ export default function Game({
           )}
           <button
             onClick={handleResultCheck}
-            className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300"
+            className='w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300'
           >
             채팅방으로 돌아가기
           </button>
@@ -267,8 +286,6 @@ export default function Game({
       </div>
     );
   }
-  
-  
 
   return (
     <div
@@ -278,13 +295,15 @@ export default function Game({
     >
       {/* 결승점 도착한 경우 모달 띄우기 (게임 종료 전) */}
       {!gameEnded && hasArrived && !modalDismissed && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
-          <div className="bg-white p-8 rounded-lg shadow-lg text-center">
-            <h2 className="text-2xl font-bold mb-4">결승점 도착!</h2>
-            <p className="text-xl mb-4">다른 물고기들이 도착할 때까지 기다려주세요!</p>
+        <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30'>
+          <div className='bg-white p-8 rounded-lg shadow-lg text-center'>
+            <h2 className='text-2xl font-bold mb-4'>결승점 도착!</h2>
+            <p className='text-xl mb-4'>
+              다른 물고기들이 도착할 때까지 기다려주세요!
+            </p>
             <button
               onClick={handleModalClose}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded"
+              className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded'
             >
               확인
             </button>
@@ -330,9 +349,9 @@ export default function Game({
         </div>
       )}
 
-      {/* **변경**: 게임 진행 중 상단 중앙에 게임 시간 표시 */}
+      {/* **변경**: 게임 진행 중 상단 중앙에 남은 시간 표시 (gameTime) */}
       {hasCountdownFinished && !gameEnded && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800">
+        <div className='absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
           Time: {gameTime}s
         </div>
       )}
@@ -359,7 +378,10 @@ export default function Game({
           {/* 하단 경계 */}
           <div
             className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
-            style={{ top: `${laneAreaTopOffset + laneAreaHeight}px`, zIndex: 2 }}
+            style={{
+              top: `${laneAreaTopOffset + laneAreaHeight}px`,
+              zIndex: 2,
+            }}
           />
         </>
       )}
@@ -374,7 +396,9 @@ export default function Game({
         const laneIndex = index + offset;
         const fishSize = laneHeight * 0.8;
         const topPos =
-          laneAreaTopOffset + laneIndex * laneHeight + (laneHeight - fishSize) / 2;
+          laneAreaTopOffset +
+          laneIndex * laneHeight +
+          (laneHeight - fishSize) / 2;
         const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
         const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
         const leftPos =
