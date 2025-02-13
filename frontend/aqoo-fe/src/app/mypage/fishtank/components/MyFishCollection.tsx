@@ -18,6 +18,7 @@ interface MyFishCollectionProps {
   aquariumName: string;
   refresh: number;
   onFishAdded?: () => void;
+  maxFishCount?: number; // 추가된 부분: 어항 최대 수용 가능 물고기 수
 }
 
 export default function MyFishCollection({
@@ -25,12 +26,14 @@ export default function MyFishCollection({
   aquariumName,
   refresh,
   onFishAdded,
+  maxFishCount = 40, // 기본값: 40마리 제한
 }: MyFishCollectionProps) {
   const auth = useRecoilValue(authAtom);
   const [myFishList, setMyFishList] = useState<MyFish[]>([]);
   const [selectedFish, setSelectedFish] = useState<MyFish | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [currentFishCount, setCurrentFishCount] = useState<number>(0); // 어항에 있는 현재 물고기 수
 
   const fetchData = useCallback(() => {
     if (auth.user?.id) {
@@ -67,9 +70,25 @@ export default function MyFishCollection({
     }
   }, [auth.user]);
 
+  const fetchCurrentFishCount = useCallback(() => {
+    axiosInstance
+      .get(`/aquariums/fish/${aquariumId}`)
+      .then((response) => {
+        if (Array.isArray(response.data)) {
+          setCurrentFishCount(response.data.length); // 현재 어항에 있는 물고기 수 설정
+        } else {
+          setCurrentFishCount(0);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching current fish count:", error);
+      });
+  }, [aquariumId]);
+
   useEffect(() => {
     fetchData();
-  }, [auth.user?.id, refresh, fetchData]);
+    fetchCurrentFishCount();
+  }, [auth.user?.id, refresh, fetchData, fetchCurrentFishCount]);
 
   const handleFishClick = (fish: MyFish) => {
     setSelectedFish(fish);
@@ -83,6 +102,15 @@ export default function MyFishCollection({
 
   const handleModalConfirm = async () => {
     if (!selectedFish) return;
+
+    // 현재 어항에 있는 물고기가 40마리 이상이면 추가 불가
+    if (currentFishCount >= maxFishCount) {
+      alert(`어항에 물고기를 더 추가할 수 없습니다. (최대 ${maxFishCount}마리)`);
+      setIsModalOpen(false);
+      setSelectedFish(null);
+      return;
+    }
+
     const fishIdToAdd = selectedFish.fishIds[0];
     // Optimistic update: 바로 로컬 상태 업데이트
     setMyFishList((prevList) =>
@@ -103,8 +131,10 @@ export default function MyFishCollection({
         })
         .filter((fish): fish is MyFish => fish !== null)
     );
+    setCurrentFishCount((prevCount) => prevCount + 1); // 현재 어항 물고기 수 증가
     setIsModalOpen(false);
     setSelectedFish(null);
+
     try {
       await axiosInstance.post("/aquariums/fish/add", {
         userFishId: fishIdToAdd,
@@ -117,7 +147,6 @@ export default function MyFishCollection({
     }
   };
 
-  // 기존 키 이벤트 로직은 그대로 유지
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isModalOpen && event.key === "Enter") {
@@ -129,11 +158,10 @@ export default function MyFishCollection({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isModalOpen, selectedFish]);
+  }, [isModalOpen, selectedFish, currentFishCount]);
 
   return (
     <div>
-      {/* 고정 높이 400px, 내용 초과 시 세로 스크롤 */}
       <div className="max-h-[300px] overflow-y-auto">
         <div className="flex flex-wrap gap-4">
           {myFishList.map((fish) => (

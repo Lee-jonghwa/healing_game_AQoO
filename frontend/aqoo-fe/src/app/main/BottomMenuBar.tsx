@@ -4,7 +4,8 @@ import { AquariumData, UserInfo } from "@/types";
 import { useEffect, useState } from "react";
 
 import MenuButton from "./MenuButton";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
+import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
@@ -16,6 +17,7 @@ export default function BottomMenuBar({
   refreshAquariumData, // ✅ 어항 상태 새로고침 함수
   onOpenFishModal,
   handleIncreaseExp, // ✅ 경험치 증가 함수 추가
+  newNotifications,
 }: {
   setActiveComponent: (value: string | null) => void;
   userInfo: UserInfo;
@@ -23,7 +25,9 @@ export default function BottomMenuBar({
   refreshAquariumData: () => void;
   handleIncreaseExp: (earnedExp: number) => void;
   onOpenFishModal: () => void;
-}) {
+  newNotifications: boolean;
+}) 
+{
   const router = useRouter();
 
   // ✅ 버튼이 비활성화되는 상태 체크
@@ -74,6 +78,8 @@ export default function BottomMenuBar({
 
   // 🚀 경험치 바 최소 5% 보장
   const progressBarWidth = Math.max(0, Math.min(expProgress, 100));
+  const { auth } = useAuth(); // ✅ 로그인된 사용자 정보 가져오기
+  
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[1400px] bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md">
@@ -86,7 +92,13 @@ export default function BottomMenuBar({
         <MenuButton icon="/icon/friendIcon.png" label="Friends" onClick={() => setActiveComponent("friends")} />
 
         {/* ✅ Push 알림 */}
-        <MenuButton icon="/icon/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
+        <div className="relative">
+          {/* 푸시 알람 버튼 */}
+          <MenuButton icon="/icon/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
+  
+          {/* 알림 동그라미 애니메이션 */}
+          {newNotifications && <div className="notification-dot absolute top-2 right-2" />}
+        </div>
 
         {/* ✅ Game 히스토리 */}
         <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
@@ -137,7 +149,12 @@ export default function BottomMenuBar({
           value={aquariumData?.pollutionStatus ?? 0}
           color="bg-indigo-400"
         />
-        <StatusBar icon="icon/feedIcon.png" label="포만감" value={aquariumData?.feedStatus ?? 0} color="bg-cyan-400" />{" "}
+        <StatusBar 
+          icon="icon/feedIcon.png" 
+          label="포만감" 
+          value={aquariumData?.feedStatus ?? 0} 
+          color="bg-cyan-400" 
+        />{" "}
       </div>
 
       {/* 우측 메뉴 */}

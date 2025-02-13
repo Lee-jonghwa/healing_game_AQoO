@@ -10,7 +10,13 @@ import { useRouter } from "next/navigation"; // ✅ next/navigation에서 import
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
-export default function PushNotifications({ onClose }: { onClose: () => void }) {
+export default function PushNotifications({
+   onClose, 
+   setNewNotifications, 
+  }: { 
+    onClose: () => void; 
+    setNewNotifications: (newNotifications: boolean) => void; 
+  }) {
   const { auth } = useAuth(); // ✅ 로그인된 사용자 정보 가져오기
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,13 +37,14 @@ export default function PushNotifications({ onClose }: { onClose: () => void }) 
         // ✅ 안 읽은 알림들만 읽음 처리 API 호출
         const unreadNotifications = response.data.filter((notif) => notif.status === false);
         markNotificationsAsRead(unreadNotifications);
+        setNewNotifications(false);
       })
       .catch((error) => {
         console.error("❌ 알림 불러오기 실패", error);
         setError("알림을 불러오는데 실패했습니다.");
       })
       .finally(() => setLoading(false));
-  }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
+  }, [auth.user?.id, setNewNotifications]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
 
   // ✅ 읽음 처리 API 호출 함수
   const markNotificationsAsRead = async (unreadNotifs: Notification[]) => {
