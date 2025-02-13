@@ -49,10 +49,11 @@ export default function CollectionItemCard({
           flex flex-col items-center justify-start
           rounded-xl border border-black bg-white
           gap-1
+          overflow-hidden
         `}
       >
-        <div className="flex-1 flex items-center justify-center w-full h-auto">
-          <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full" />
+        <div className="flex-1 flex items-center justify-center w-full h-auto aspect-square overflow-hidden">
+          <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full w-full h-full" />
         </div>
         <div
           className="

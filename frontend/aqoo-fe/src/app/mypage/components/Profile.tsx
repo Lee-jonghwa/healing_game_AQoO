@@ -105,7 +105,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]
             "
           >
-            <img src={userData.mainFishImage ? userData.mainFishImage : `${API_BASE_URL}/images/미등록이미지.png`} alt="대표 이미지" className="object-contain w-full h-full" />
+            <img src={!`${API_BASE_URL}/images/fish.png` ? userData.mainFishImage : `${API_BASE_URL}/images/미등록이미지.png`} alt="대표 이미지" className="object-contain w-full h-full" />
           </div>
         </div>
 
