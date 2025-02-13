@@ -70,9 +70,9 @@ export default function NotificationComponent({
       onMessage(messaging, (payload) => {
         console.log("📢 포그라운드 메시지 수신:", payload);
 
-        const title = payload.notification?.title || payload.data?.title;
-        const body = payload.notification?.body || payload.data?.body;
-        const type = payload.notification?.type || payload.data?.type;
+        const title =  payload.data?.title;
+        const body = payload.data?.body;
+        const type = payload.data?.type;
 
       // 알림을 수신하면 `refreshAquariumData()`를 호출
       refreshAquariumData()
