@@ -56,6 +56,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
       ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
       : users;
 
+  // 🐠 물고기 컴포넌트
   function Fish({ fish }: { fish: FishData }) {
     const fishRef = useRef<HTMLImageElement | null>(null);
     const directionRef = useRef(1);
@@ -74,15 +75,13 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     useEffect(() => {
       if (!fishRef.current) return;
 
+      // 시작 위치 설정
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
 
-      // 안전 범위 (필요하다면 줄이거나 제거)
-      const safeMargin = 80;
+      // 물고기 시작 위치(무작위)
+      const safeMargin = 80; // 필요하면 제거
       const bottomMargin = 100;
-      const upperLimit = windowHeight * 0.2;
-
-      // 시작 위치 설정
       const randomStartX = Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
       const randomStartY = Math.random() * (windowHeight - bottomMargin - 50) + 50;
 
@@ -94,6 +93,10 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
 
       const moveFish = () => {
         if (!fishRef.current) return;
+
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
         const randomSpeed = Math.random() * 7 + 9;
         const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
         let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
@@ -101,27 +104,26 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
         const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
         let moveDistanceY = windowHeight * (0.1 + Math.random() * 0.15) * (Math.random() > 0.65 ? 1 : -1);
 
-        if (currentY < upperLimit) {
+        // 네비게이션 영역 아래쪽으로 보정 (상단에 너무 가깝다면 아래로 이동)
+        if (currentY < windowHeight * 0.2) {
           moveDistanceY = windowHeight * (0.1 + Math.random() * 0.2);
         }
 
         let newX = parseFloat(gsap.getProperty(fishRef.current, "x") as string) + moveDistanceX;
         let newY = currentY + moveDistanceY;
 
-        // 경계 체크
-        if (newX < safeMargin) {
-          newX = safeMargin + Math.random() * 50;
-          moveDistanceX = Math.abs(moveDistanceX);
-        }
-        if (newX > windowWidth - safeMargin) {
-          newX = windowWidth - safeMargin - Math.random() * 50;
-          moveDistanceX = -Math.abs(moveDistanceX);
-        }
-        if (newY < 50) newY = 50 + Math.random() * 30;
-        if (newY > windowHeight - bottomMargin) {
-          newY = windowHeight - bottomMargin - Math.random() * 30;
-        }
+        // 경계값 설정 (UI 요소 기준)
+        // 값은 예시이므로, 실제 UI 배치에 맞게 조정 필요
+        const topBoundary = 80;           // 네비게이션 영역 아래
+        const leftBoundary = 100;         // AQoO 로고 오른쪽
+        const rightBoundary = windowWidth - 180; // 나가기 버튼 왼쪽
+        const bottomBoundary = windowHeight - 80; // 게임시작 버튼 위
 
+        // 클램핑: 물고기가 경계를 벗어나지 않도록 제한
+        newX = Math.max(leftBoundary, Math.min(newX, rightBoundary));
+        newY = Math.max(topBoundary, Math.min(newY, bottomBoundary));
+
+        // 방향 설정: X 이동 거리 기준으로 이미지 반전
         directionRef.current = moveDistanceX > 0 ? -1 : 1;
 
         gsap.to(fishRef.current, {
@@ -147,8 +149,8 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
         ref={fishRef}
         src={fish.fishImage}
         alt={fish.fishName}
-        width={128}
-        height={128}
+        width={100}
+        height={100}
         className="absolute"
         style={{ zIndex: 9999 }}
         onClick={handleClick}
@@ -285,7 +287,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                 backgroundPosition: "center"
               }}
             >
-              {/* 🐠 물고기 렌더링을 가장 상위 컨테이너에 배치 */}
+              {/* 물고기 렌더링: 화면 전체를 기준으로 떠다님 */}
               {fishes.map((fish) => (
                 <Fish key={fish.fishId} fish={fish} />
               ))}
