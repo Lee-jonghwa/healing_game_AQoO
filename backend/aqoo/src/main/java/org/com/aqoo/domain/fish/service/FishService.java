@@ -186,8 +186,14 @@ public class FishService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
 
-
         String imagePath = imageFile.getOriginalFilename();
+
+        // 중복 검사 (이미 해당 이미지 URL이 존재하는 경우 예외 발생)
+        String imageUrl = "/" + imagePath;
+        if (fishRepository.existsByImageUrl(imageUrl)) {
+            throw new IllegalArgumentException("이미 있는 이름입니다.");
+        }
+
 
         // 이미지 저장 경로 설정
         String uploadDir = "/home/ubuntu/images/";

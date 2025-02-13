@@ -21,9 +21,9 @@ public class PushScheduleService {
     private PushService pushService;
 
     // 각 상태 시간 주기
-    private static final int FEED_INTERVAL = 4;
-    private static final int CLEAN_INTERVAL = 12;
-    private static final int WATER_INTERVAL = 24;
+    private static final int FEED_INTERVAL = 1;
+    private static final int CLEAN_INTERVAL = 4;
+    private static final int WATER_INTERVAL = 7;
 
     // 먹이 상태 알람 (2시간마다 실행)
     @Scheduled(fixedRate = 2 * 60 * 60 * 1000)
