@@ -2,10 +2,11 @@
 
 import "@/lib/firebase"; // Firebase 초기화
 
-import { AquariumData, UserInfo } from "@/types";
+import { AquariumData, UserInfo,  Notification } from "@/types";
 import React, { useEffect, useRef, useState } from "react";
 import axios, { AxiosResponse } from "axios";
 
+import NotificationComponent from "@/components/NotificationComponent";
 import BottomMenuBar from "@/app/main/BottomMenuBar";
 import CleanComponent from "@/app/main/CleanComponent";
 import FishTicketModal from "@/components/FishTicketModal"; // 물고기 뽑기 모달
@@ -13,7 +14,6 @@ import FriendsList from "@/app/main/FriendsList";
 import Image from "next/image";
 import LevelUpModal from "@/components/LevelUpModal"; // 레벨업 모달
 import Link from "next/link";
-import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import { gsap } from "gsap";
 import FirstLoginModal from "@/app/main/components/FirstLoginModal";
@@ -44,6 +44,13 @@ export default function MainPage() {
   const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
   const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(null);
   const [firstLoginModal, setFirstLoginModal] = useState<{ status: boolean } | null>(null);
+
+
+  //알람 처리
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [newNotifications, setNewNotifications] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // 모달 상태 중앙 관리
   const [showFishTicketModal, setShowFishTicketModal] = useState(false);
@@ -188,6 +195,37 @@ export default function MainPage() {
       .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
   }, [userInfo]);
 
+  useEffect(() => {
+    const checkUnreadNotifications = async () => {
+    if (!auth.user?.id) return; // ✅ 로그인되지 않은 경우 API 호출 안함
+
+    // ✅ 현재 로그인된 유저의 ID로 알림 가져오기
+    axios
+      .get(`${API_BASE_URL}/notification/${auth.user.id}`)
+      .then((response: AxiosResponse<Notification[]>) => {
+        console.log("🔔 알림 데이터:", response.data);
+        setNotifications(response.data);
+
+        // ✅ 안 읽은 알림들만 읽음 처리 API 호출
+        const unreadNotifications = response.data.filter((notif) => notif.status === false);
+
+        if (unreadNotifications.length > 0) {
+          console.log("안 읽은 알람 있음");
+          setNewNotifications(true);
+        } else {
+          console.log("안 읽은 알람 없음");
+          setNewNotifications(false);
+        }
+      })
+      .catch((error) => {
+        console.error("❌ 알림 불러오기 실패", error);
+        setError("알림을 불러오는데 실패했습니다.");
+      })
+      .finally(() => setLoading(false));
+    };
+      checkUnreadNotifications();
+  }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
+
   if (!userInfo) return <div>유저 정보 불러오는 중...</div>;
   if (!aquariumData) return <div>아쿠아리움 정보 로딩 중...</div>;
 
@@ -209,8 +247,6 @@ export default function MainPage() {
         <Fish key={fish.fishId} fish={fish} />
       ))}
 
-      <NotificationComponent refreshAquariumData={refreshAquariumData} />
-
       {/* 📌 하단 메뉴 바 */}
       <BottomMenuBar
         setActiveComponent={setActiveComponent}
@@ -219,6 +255,7 @@ export default function MainPage() {
         refreshAquariumData={refreshAquariumData}
         onOpenFishModal={() => setShowFishTicketModal(true)}
         handleIncreaseExp={handleIncreaseExp}
+        newNotifications={newNotifications}
       />
 
       {/* ✅ CleanComponent를 BottomMenuBar 위에 정확하게 배치 */}
@@ -243,9 +280,15 @@ export default function MainPage() {
       {/* ✅ PushNotifications도 같은 방식 적용 */}
       {activeComponent === "push" && (
         <div className="absolute bottom-[130px] left-[100px] z-50">
-          <PushNotifications onClose={() => setActiveComponent(null)} />
+          <PushNotifications 
+          onClose={() => setActiveComponent(null)} 
+          setNewNotifications={setNewNotifications} />
         </div>
       )}
+      <NotificationComponent 
+        refreshAquariumData={refreshAquariumData} 
+        setNewNotifications={setNewNotifications} // 이 부분 추가
+      />
 
       {/* 📌 레벨업 모달 */}
       {levelUpInfo && (
@@ -280,6 +323,7 @@ export default function MainPage() {
         />
       )}
     </div>
+    
   );
 }
 

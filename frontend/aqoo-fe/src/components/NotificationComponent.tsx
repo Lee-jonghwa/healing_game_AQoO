@@ -3,7 +3,13 @@ import { useEffect, useState } from "react";
 import { app } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function NotificationComponent({ refreshAquariumData }: { refreshAquariumData: () => void }) {
+export default function NotificationComponent({ 
+  refreshAquariumData,
+  setNewNotifications,
+ }: { 
+  refreshAquariumData: () => void;
+  setNewNotifications: (newNotifications: boolean) => void;
+ }) {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const { auth } = useAuth();
 
@@ -74,14 +80,18 @@ export default function NotificationComponent({ refreshAquariumData }: { refresh
         if (title && body) {
           if(type === "FRIEND REQUEST" || type === "FRIEND ACCEPT" || type === "GAME INVITE")
             //알람 테이블에 추가해야 할 알람 처리 ->
-            alert(`알림 제목: ${title}\n알림 내용: ${body}`);
+            //alert(`알림 제목: ${title}\n알림 내용: ${body}`);
+
+            // 새로운 알림이 있을 경우 상태 업데이트
+            setNewNotifications(true); // BottomMenuBar에 알림 상태 변경 전달
+
         } else {
           console.log("⚠️ 알림 정보가 없습니다.");
         }
       });
     }
 
-  }, [refreshAquariumData, auth?.user?.id]); // `refreshAquariumData`와 `auth?.user?.id`에 의존
+  }, [refreshAquariumData, auth?.user?.id, setNewNotifications]); // `refreshAquariumData`와 `auth?.user?.id`에 의존
 
-  return <div>FCM Token: {fcmToken}</div>;
+  return null;
 }
