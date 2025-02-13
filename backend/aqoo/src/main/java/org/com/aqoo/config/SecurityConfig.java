@@ -44,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/users/isActivate/*",
                                 "/api/v1/auth/register/*",
                                 "/api/v1/auth/login/*",
+                                "/api/v1/users/*",
                                 "/oauth2/*",
                                 "/api/v1/auth/validate-id",
                                 "/api/v1/auth/validate-email",
