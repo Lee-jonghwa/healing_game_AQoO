@@ -106,14 +106,15 @@ export default function CleanComponent({
 
             if (results.multiHandLandmarks) {
               for (const landmarks of results.multiHandLandmarks) {
-                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-                  color: "#00FF00",
-                  lineWidth: 2,
-                });
-                drawLandmarks(canvasCtx, landmarks, {
-                  color: "#FF0000",
-                  lineWidth: 0.5,
-                });
+                // 랜드마크에 선 추가
+                // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+                //   color: "#00FF00",
+                //   lineWidth: 2,
+                // });
+                // drawLandmarks(canvasCtx, landmarks, {
+                //   color: "#FF0000",
+                //   lineWidth: 0.5,
+                // });
 
                 // 🏷️ 주요 랜드마크에 캡션 추가
                 // labelLandmarks(canvasCtx, landmarks);
