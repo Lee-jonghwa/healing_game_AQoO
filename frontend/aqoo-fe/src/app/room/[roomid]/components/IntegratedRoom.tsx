@@ -7,6 +7,7 @@ import ChatBox from './ChatBox';
 import Game from './game';
 import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
+import { gsap } from "gsap";
 
 // 플레이어 타입 정의
 interface Player {
@@ -20,16 +21,22 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
-  // 게임 관련 메시지와 함께 유저 목록 업데이트용 필드 (채팅방 사용자용)
   users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[];
   players?: Player[];
-  // GAME_STARTED 메시지의 경우 players 필드가 포함됨
   targetUser?: string;
 }
 
 interface IntegratedRoomProps {
   roomId: string;
   userName: string;
+}
+
+interface FishData {
+  aquariumId: number;
+  fishId: number;
+  fishTypeId: number;
+  fishName: string;
+  fishImage: string;
 }
 
 export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps) {
@@ -41,6 +48,113 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
   const [showFriendList, setShowFriendList] = useState(false);
   const hasSentJoinRef = useRef(false);
   const router = useRouter();
+  const [fishes, setFishes] = useState<FishData[]>([]);
+
+  // 사용자 목록 상태 및 displayUsers 선언
+  const displayUsers =
+    currentIsHost && !users.some((u) => u.userName === userName)
+      ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
+      : users;
+
+  function Fish({ fish }: { fish: FishData }) {
+    const fishRef = useRef<HTMLImageElement | null>(null);
+    const directionRef = useRef(1);
+
+    const handleClick = () => {
+      if (!fishRef.current) return;
+      gsap.to(fishRef.current, {
+        scale: 0.9,
+        duration: 0.15,
+        ease: "power1.inOut",
+        yoyo: true,
+        repeat: 1,
+      });
+    };
+
+    useEffect(() => {
+      if (!fishRef.current) return;
+
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      // 안전 범위 (필요하다면 줄이거나 제거)
+      const safeMargin = 80;
+      const bottomMargin = 100;
+      const upperLimit = windowHeight * 0.2;
+
+      // 시작 위치 설정
+      const randomStartX = Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
+      const randomStartY = Math.random() * (windowHeight - bottomMargin - 50) + 50;
+
+      gsap.set(fishRef.current, {
+        x: randomStartX,
+        y: randomStartY,
+        scaleX: -1,
+      });
+
+      const moveFish = () => {
+        if (!fishRef.current) return;
+        const randomSpeed = Math.random() * 7 + 9;
+        const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
+        let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
+
+        const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
+        let moveDistanceY = windowHeight * (0.1 + Math.random() * 0.15) * (Math.random() > 0.65 ? 1 : -1);
+
+        if (currentY < upperLimit) {
+          moveDistanceY = windowHeight * (0.1 + Math.random() * 0.2);
+        }
+
+        let newX = parseFloat(gsap.getProperty(fishRef.current, "x") as string) + moveDistanceX;
+        let newY = currentY + moveDistanceY;
+
+        // 경계 체크
+        if (newX < safeMargin) {
+          newX = safeMargin + Math.random() * 50;
+          moveDistanceX = Math.abs(moveDistanceX);
+        }
+        if (newX > windowWidth - safeMargin) {
+          newX = windowWidth - safeMargin - Math.random() * 50;
+          moveDistanceX = -Math.abs(moveDistanceX);
+        }
+        if (newY < 50) newY = 50 + Math.random() * 30;
+        if (newY > windowHeight - bottomMargin) {
+          newY = windowHeight - bottomMargin - Math.random() * 30;
+        }
+
+        directionRef.current = moveDistanceX > 0 ? -1 : 1;
+
+        gsap.to(fishRef.current, {
+          x: newX,
+          y: newY,
+          scaleX: directionRef.current,
+          duration: randomSpeed,
+          ease: "power2.inOut",
+          onUpdate: () => {
+            const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
+            directionRef.current = newX > prevX ? -1 : 1;
+            gsap.set(fishRef.current, { scaleX: directionRef.current });
+          },
+          onComplete: moveFish,
+        });
+      };
+
+      moveFish();
+    }, []);
+
+    return (
+      <img
+        ref={fishRef}
+        src={fish.fishImage}
+        alt={fish.fishName}
+        width={128}
+        height={128}
+        className="absolute"
+        style={{ zIndex: 9999 }}
+        onClick={handleClick}
+      />
+    );
+  }
 
   // STOMP 연결 활성화
   useEffect(() => {
@@ -49,6 +163,20 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     });
   }, []);
 
+  // 참가자 대표 물고기 -> fishes 배열 업데이트
+  useEffect(() => {
+    const fishList: FishData[] = displayUsers
+      .filter((user) => user.mainFishImage)
+      .map((user, index) => ({
+        aquariumId: 0,
+        fishId: index,
+        fishTypeId: 0,
+        fishName: user.userName,
+        fishImage: user.mainFishImage,
+      }));
+    setFishes(fishList);
+  }, [displayUsers]);
+
   // join 메시지 전송 및 구독 설정
   useEffect(() => {
     const client = getStompClient();
@@ -56,7 +184,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
 
     const intervalId = setInterval(() => {
       if (client.connected) {
-        setIsConnected(true);  // 연결 확정정
+        setIsConnected(true);
         if (!hasSentJoinRef.current) {
           const joinMessage = { roomId, sender: userName };
           client.publish({
@@ -70,7 +198,6 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
           const data: RoomUpdate = JSON.parse(message.body);
           console.log('Room update received:', data);
           if (data.message === 'GAME_STARTED') {
-            // GAME_STARTED 메시지에는 players 필드가 포함되어 있어야 함
             setGamePlayers(data.players ?? []);
             setScreen('game');
           } else if (data.message === 'USER_LIST') {
@@ -98,7 +225,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     setCurrentIsHost(me ? me.isHost : false);
   }, [users, userName]);
 
-  // 방장여부 디버깅
+  // 디버깅
   useEffect(() => {
     console.log('Updated users:', users);
     users.forEach((user) =>
@@ -106,25 +233,12 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     );
   }, [users]);
 
-  // 버튼복구
-  // ----------------------------
   // ready / start 관련 상태 계산
-  // ----------------------------
-  // 현재 사용자의 Ready 상태
   const myReady = users.find((u) => u.userName === userName)?.ready;
-  // 방장의 Start 버튼 활성화를 위한 조건:
-  // - 현재 사용자가 방장인 경우: 자신의 기록은 제외하고 나머지 사용자가 모두 ready 상태이면 true
-  // - 방장이 아닌 경우: 방장이 아닌 사용자들 중 모두 ready 상태이면 true.
   const nonHostUsers = currentIsHost
     ? users.filter((u) => u.userName !== userName)
     : users.filter((u) => !u.isHost);
-  const allNonHostReady =
-    nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
-  // 렌더링할 사용자 목록: 현재 사용자가 방장인데, users 배열에 포함되어 있지 않다면 추가
-  const displayUsers =
-    currentIsHost && !users.some((u) => u.userName === userName)
-      ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
-      : users;
+  const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
 
   // 친구 초대 함수
   const inviteFriend = async (friendUserId: string) => {
@@ -162,32 +276,33 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
       ) : (
         <>
           {screen === 'chat' && (
-            <div 
+            <div
               className="relative w-full h-full min-h-screen flex items-center justify-center bg-gray-100"
-              style={{ 
-                backgroundImage: "url('/chat_images/background.png')" ,
+              style={{
+                backgroundImage: "url('/chat_images/background.png')",
                 backgroundSize: "cover",
                 backgroundAttachment: "fixed",
                 backgroundPosition: "center"
               }}
             >
+              {/* 🐠 물고기 렌더링을 가장 상위 컨테이너에 배치 */}
+              {fishes.map((fish) => (
+                <Fish key={fish.fishId} fish={fish} />
+              ))}
+
               <div className="absolute inset-0 bg-white opacity-20"></div>
 
               {/* 나가기 버튼 + 친구 초대 버튼 + 참가자 리스트 (오른쪽 상단) */}
               <div className="absolute top-20 right-[110px] w-[250px]">
-                {/* 친구 초대 버튼과 목록을 감싸는 relative 컨테이너 */}
                 <div className="relative inline-block">
                   <div className="flex space-x-2 mb-2">
-                    {/* 친구 초대 버튼 */}
-                    <button 
-                      onClick={() => setShowFriendList((prev) => !prev)} 
+                    <button
+                      onClick={() => setShowFriendList((prev) => !prev)}
                       className="w-40 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors whitespace-nowrap text-center"
                     >
                       친구 초대
                     </button>
-
-                    {/* 나가기 버튼 */}
-                    <button 
+                    <button
                       onClick={() => {
                         const client = getStompClient();
                         if (client && client.connected) {
@@ -196,35 +311,38 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                             body: JSON.stringify({ roomId, sender: userName }),
                           });
                           console.log('Leave room message sent');
-                          router.replace('/main');
+                          router.push('/room');
                         } else {
                           console.error('STOMP client is not connected yet.');
                         }
-                      }} 
+                      }}
                       className="w-40 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors whitespace-nowrap text-center"
                     >
                       나가기
                     </button>
                   </div>
-                  {/* 친구 초대 목록 - 버튼의 왼쪽에 나타나도록 설정 */}
                   {showFriendList && (
                     <div className="absolute top-0 right-full mr-2 w-[300px] bg-white shadow-md p-4 rounded-lg">
-                      <button 
-                        onClick={() => setShowFriendList(false)} 
+                      <button
+                        onClick={() => setShowFriendList(false)}
                         className="absolute top-2 right-2 text-gray-600 hover:text-black"
                       >
                         ❌
                       </button>
-                      <FriendList userName={userName} roomId={roomId} isHost={currentIsHost} onInvite={inviteFriend} />
+                      <FriendList
+                        userName={userName}
+                        roomId={roomId}
+                        isHost={currentIsHost}
+                        onInvite={inviteFriend}
+                      />
                     </div>
                   )}
                 </div>
 
-                {/* 참가자 리스트 */}
-                <ParticipantList 
-                  users={displayUsers} 
-                  currentUser={userName} 
-                  currentIsHost={currentIsHost} 
+                <ParticipantList
+                  users={displayUsers}
+                  currentUser={userName}
+                  currentIsHost={currentIsHost}
                   onKickUser={(target) => {
                     const client = getStompClient();
                     if (client && client.connected) {
@@ -236,7 +354,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                     } else {
                       console.error('STOMP client is not connected yet.');
                     }
-                  }} 
+                  }}
                 />
               </div>
 
