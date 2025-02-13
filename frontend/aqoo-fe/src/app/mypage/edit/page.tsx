@@ -114,12 +114,13 @@ function EditProfilePage() {
 
   // userData 리소스: auth.user가 변경될 때마다 최신 데이터를 가져옴
   const userDataResourceRef = useRef<{ read: () => any } | null>(null);
+  const [userDataResource, setUserDataResource] = useState<{ read: () => any } | null>(null);
 
   useEffect(() => {
     // auth.user?.id가 준비되었고, 아직 리소스가 생성되지 않았다면 생성
     if (auth.user?.id) {
       const token = localStorage.getItem("accessToken");
-      userDataResourceRef.current = wrapPromise(
+      const resource = wrapPromise(
         fetch(`${API_BASE_URL}/api/v1/users/${auth.user.id}`, {
           method: "GET",
           headers: {
@@ -133,12 +134,13 @@ function EditProfilePage() {
           return response.json();
         })
       );
+      setUserDataResource(resource);
     }
   }, [auth.user]); // auth.user가 변경될 때마다 리소스 재생성
 
   // Suspense 내부에서 호출 (리소스가 준비되지 않았다면 Promise를 throw하여 fallback 표시)
-  const userData = userDataResourceRef.current ? userDataResourceRef.current.read() : null;
-
+  // 렌더 시점에 바로 읽기
+  const userData = userDataResource ? userDataResource.read() : null;
   useEffect(() => {
     if (userData) {
       setValue("nickname", userData.nickname || "");
@@ -218,15 +220,14 @@ function EditProfilePage() {
           <div className="w-[250px] h-[250px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
             <div className="overflow-hidden w-[220px] h-[220px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
               {userData?.mainFishImage ? (
-                <Image
+                <img
                   src={
-                    // 만약 mainFishImage가 전체 URL이 아니라 파일명만 있다면 기본 URL 붙임
                     userData.mainFishImage.startsWith("http")
                       ? userData.mainFishImage
                       : `images/${userData.mainFishImage}`
                   }
                   alt="대표 물고기"
-                  className="max-w-full max-h-full object-cover"
+                  className="max-w-full max-h-full object-cover object-contain"
                   width={220}
                   height={220}
                 />
@@ -275,7 +276,7 @@ function EditProfilePage() {
       </div>
 
       {isPasswordModalOpen && <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />}
-      {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} />}
+      {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} userData={userData} />}
       {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} userData={userData} />}
     </div>
   );

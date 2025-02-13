@@ -27,11 +27,24 @@ const config: Config = {
           "0%, 100%": { transform: "scale(1)", transformOrigin: "center" },
           "50%": { transform: "scale(0.95)", transformOrigin: "center" }, // 중앙을 기준으로 작아졌다 커지기
         },
+        // ✅ 추가된 애니메이션 (캡슐 흔들리기 & 물고기 등장)
+        shake: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "25%": { transform: "rotate(-5deg)" },
+          "50%": { transform: "rotate(5deg)" },
+          "75%": { transform: "rotate(-5deg)" },
+        },
+        fishGrow: {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         shrinkExpand: "shrinkExpand 0.3s ease-in-out", // 0.3초 동안 실행
+        // ✅ 추가된 애니메이션 적용
+        shake: "shake 0.3s ease-in-out infinite", // 캡슐 흔들림
+        fishGrow: "fishGrow 0.5s ease-out forwards", // 물고기 등장
       },
-
     },
   },
   // eslint-disable-next-line @typescript-eslint/no-require-imports

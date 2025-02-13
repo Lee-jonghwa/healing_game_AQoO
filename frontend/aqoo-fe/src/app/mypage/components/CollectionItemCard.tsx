@@ -48,7 +48,7 @@ export default function CollectionItemCard({
         `}
       >
         <div className="flex-1 flex items-center justify-center">
-          <Image src={imageSrc} alt={name} width={130} height={130} style={{ objectFit: "cover" }} unoptimized />
+          <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full" />
         </div>
         <div
           className="

@@ -21,11 +21,12 @@ interface TankFishCollectionProps {
   aquariumId: number;
   refresh: number;
   onFishRemoved?: () => void;
+  onCountChange?: (count: number) => void; // 부모로 총 마릿수를 전달하는 prop
 }
 
-export default function TankFishCollection({ aquariumId, refresh, onFishRemoved }: TankFishCollectionProps) {
+export default function TankFishCollection({ aquariumId, refresh, onFishRemoved, onCountChange }: TankFishCollectionProps) {
   const [aquariumDetails, setAquariumDetails] = useState<AquariumDetails | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
   const [selectedFish, setSelectedFish] = useState<AggregatedFishData | null>(null);
@@ -33,7 +34,9 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
 
   const fetchData = useCallback(() => {
     if (!aquariumId) return;
-    setLoading(true);
+    if (refresh === 0) {
+      setLoading(true);
+    }
     axiosInstance
       .get(`/aquariums/fish/${aquariumId}`)
       .then((response) => {
@@ -53,26 +56,37 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
               };
             }
           });
-          setAquariumDetails({
+          const details: AquariumDetails = {
             id: aquariumId,
             aquariumName: `어항 ${aquariumId}`,
             fishes: Object.values(grouped),
-          });
+          };
+          setAquariumDetails(details);
+          const totalFish = details.fishes.reduce((sum, group) => sum + group.cnt, 0);
+          if (onCountChange) {
+            onCountChange(totalFish);
+          }
         } else {
           setAquariumDetails({
             id: aquariumId,
             aquariumName: `어항 ${aquariumId}`,
             fishes: [],
           });
+          if (onCountChange) {
+            onCountChange(0);
+          }
         }
-        setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching aquarium details:", err);
         setError("어항 정보를 불러오는 데 실패했습니다.");
-        setLoading(false);
+      })
+      .finally(() => {
+        if (refresh === 0) {
+          setLoading(false);
+        }
       });
-  }, [aquariumId]);
+  }, [aquariumId, refresh, onCountChange]);
 
   useEffect(() => {
     fetchData();
@@ -126,13 +140,14 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved 
     }
   };
 
-  if (loading) return <div>로딩중...</div>;
   if (error) return <div>{error}</div>;
+  if (!aquariumDetails && loading) return <div>로딩중...</div>;
   if (!aquariumDetails || aquariumDetails.fishes.length === 0)
     return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    <div >
+    // 고정 높이를 400px로 설정하고 내용이 초과하면 세로 스크롤이 생기도록 함.
+    <div className="bg-white w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "400px" }}>
       <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (
           <div

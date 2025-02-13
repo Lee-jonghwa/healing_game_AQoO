@@ -14,22 +14,33 @@ export default function BottomMenuBar({
   userInfo,
   aquariumData,
   refreshAquariumData, // ✅ 어항 상태 새로고침 함수
-  refreshUserData, // ✅ 추가
-
+  onOpenFishModal,
   handleIncreaseExp, // ✅ 경험치 증가 함수 추가
 }: {
   setActiveComponent: (value: string | null) => void;
   userInfo: UserInfo;
   aquariumData?: AquariumData;
   refreshAquariumData: () => void;
-  refreshUserData: () => Promise<void>; // ✅ 추가
   handleIncreaseExp: (earnedExp: number) => void;
+  onOpenFishModal: () => void;
 }) {
   const router = useRouter();
+
+  // ✅ 버튼이 비활성화되는 상태 체크
+  const isWaterMaxed = aquariumData?.waterStatus === 5;
+  const isPollutionMaxed = aquariumData?.pollutionStatus === 5;
+  const isFeedMaxed = aquariumData?.feedStatus === 5;
 
   // ✅ Water & Feed 버튼 클릭 시 실행할 함수 (type에 따라 분기)
   const handleAquariumUpdate = async (type: "water" | "feed") => {
     if (!userInfo?.mainAquarium) return;
+
+    // ✅ 만약 상태가 최대(5)라면 실행 X, Alert 띄우기
+    if ((type === "water" && isWaterMaxed) || (type === "feed" && isFeedMaxed)) {
+      alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
+      return;
+    }
+
     try {
       // 1️⃣ 어항 상태 업데이트 API 호출
       await axios
@@ -79,6 +90,9 @@ export default function BottomMenuBar({
 
         {/* ✅ Game 히스토리 */}
         <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
+
+        {/* ✅ FishTicket 물고기 뽑기 */}
+        <MenuButton icon="/fish-3.png" label="Ticket" onClick={onOpenFishModal} />
       </div>
       {/* 중앙: 사용자 정보 */}
       <div className="flex flex-col items-center text-center">
@@ -128,9 +142,20 @@ export default function BottomMenuBar({
 
       {/* 우측 메뉴 */}
       {/* TODO 상태가 full일 경우는 동작할 수 없도록 막아야 함 */}
+      {/* TODO 청소하는 거 미디어파이프 말고 버튼으로도 처리할 수 있도록 */}
       <div className="flex space-x-2 md:space-x-4">
         <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
-        <MenuButton icon="/icon/cleanIcon.png" label="Clean" onClick={() => setActiveComponent("clean")} />
+        <MenuButton
+          icon="/icon/cleanIcon.png"
+          label="Clean"
+          onClick={() => {
+            if (isPollutionMaxed) {
+              alert("👍👍 청결 상태가 이미 최고 상태입니다! 👍👍");
+              return;
+            }
+            setActiveComponent("clean");
+          }}
+        />
         <MenuButton icon="/icon/feedIcon.png" label="Feed" onClick={() => handleAquariumUpdate("feed")} />
       </div>
     </div>
@@ -145,7 +170,7 @@ function StatusBar({ icon, label, value, color }: { icon: string; label: string;
   return (
     <div className="flex items-center space-x-3">
       {/* 아이콘 */}
-      <img src={`/${icon}`} alt={label} className="w-6 h-6 md:w-8 md:h-8" />
+      <img src={`/${icon}`} alt={label} className="w-[24px] h-[24px] md:w-[24px] md:h-[24px]" />
 
       {/* 라벨 */}
       <span className="w-[72px] md:w-[86px] text-xs md:text-base text-black text-center">{label}</span>
