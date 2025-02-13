@@ -30,8 +30,6 @@ interface FishData {
   fishImage: string;
 }
 
-// ✅ 추방 모달 컴포넌트 추가
-
 export default function MainPage() {
   const { auth } = useAuth(); // 로그인한 유저 정보 가져오기
 
