@@ -78,7 +78,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
             setUsers(data.users ?? []);
           } else if (data.message === 'USER_KICKED') {
             if (data.targetUser === userName) {
-              router.push('/room?status=kicked');
+              router.replace('/main?status=kicked');
             } else {
               setUsers((prevUsers) => prevUsers.filter((u) => u.userName !== data.targetUser));
             }
