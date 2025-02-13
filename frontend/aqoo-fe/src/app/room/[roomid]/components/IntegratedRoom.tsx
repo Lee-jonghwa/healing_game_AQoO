@@ -196,7 +196,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                             body: JSON.stringify({ roomId, sender: userName }),
                           });
                           console.log('Leave room message sent');
-                          router.push('/room');
+                          router.replace('/main');
                         } else {
                           console.error('STOMP client is not connected yet.');
                         }
