@@ -2,7 +2,6 @@
 
 import { User, usersState } from "@/store/participantAtom";
 import { useEffect, useState } from "react";
-
 import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
@@ -40,7 +39,6 @@ export default function FriendList() {
       console.warn("⚠ userId가 없음. API 요청을 중단합니다.");
       return;
     }
-
     axios
       .get(`${API_BASE_URL}/friends/${loggedInUser}`)
       .then((response) => {
@@ -53,19 +51,25 @@ export default function FriendList() {
       });
   }, [loggedInUser]);
 
-  // 참가자 추가 함수
-  const handleAddParticipant = (friend: Friend) => {
-    if (users.some((u) => u.friendId === friend.friendId)) return;
-
-    const newUser: User = {
-      ...friend,
-      // mainFishImage가 null일 경우 빈 문자열로 변환
-      mainFishImage: friend.mainFishImage ?? "",
-      ready: false,
-      isHost: false,
-    };
-
-    setUsers((prev) => [...prev, newUser]);
+  // 참가자 토글 함수: 이미 추가되어 있으면 제거, 없으면 추가 (단, 최대 5명 제한)
+  const handleToggleParticipant = (friend: Friend) => {
+    if (users.some((u) => u.friendId === friend.friendId)) {
+      // 이미 추가되어 있으면 제거
+      setUsers(users.filter((u) => u.friendId !== friend.friendId));
+    } else {
+      // 추가되어 있지 않으면 추가 전에 최대 참가자 수(5명) 확인
+      if (users.length >= 5) {
+        alert("참가자는 최대 5명을 초과할 수 없습니다.");
+        return;
+      }
+      const newUser: User = {
+        ...friend,
+        mainFishImage: friend.mainFishImage ?? "",
+        ready: false,
+        isHost: false,
+      };
+      setUsers((prev) => [...prev, newUser]);
+    }
   };
 
   return (
@@ -76,19 +80,27 @@ export default function FriendList() {
       </div>
 
       {/* 친구 리스트 */}
-      <div className="space-y-3 overflow-y-auto scrollbar flex-grow">
+      <div className="space-y-3 overflow-y-auto overflow-x-hidden scrollbar-styled flex-grow">
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
             <div
               key={friend.friendId}
-              className="p-3 bg-white border border-black flex items-center justify-between shadow-[2px_2px_0_rgba(0,0,0,0.3)]"
+              className="p-3 bg-white bg-opacity-80 border border-black rounded-lg flex items-center justify-between shadow-[2px_2px_0_rgba(0,0,0,0.3)] transform transition duration-300 hover:scale-105"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gray-300 rounded-full">
+                <div className="w-12 h-12 bg-gray-300 rounded-full overflow-hidden">
                   {friend.mainFishImage ? (
-                    <img src={friend.mainFishImage} alt="친구의 대표 물고기" className=" rounded-full" />
+                    <img
+                      src={friend.mainFishImage}
+                      alt="친구의 대표 물고기"
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   ) : (
-                    <img src="/fish/default.png" alt="기본 물고기 이미지" className="w-full h-full rounded-full" />
+                    <img
+                      src="/fish/default.png"
+                      alt="기본 물고기 이미지"
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   )}
                 </div>
                 <div>
@@ -98,14 +110,17 @@ export default function FriendList() {
                 </div>
               </div>
               <button
-                onClick={() => handleAddParticipant(friend)}
-                className={`px-3 py-1 text-sm rounded-md ${
+                onClick={() => handleToggleParticipant(friend)}
+                disabled={!users.some((u) => u.friendId === friend.friendId) && users.length >= 5}
+                className={`px-3 py-1 text-sm rounded-md border border-black cursor-pointer transition duration-300 ${
                   users.some((u) => u.friendId === friend.friendId)
-                    ? "bg-white text-black border border-black shadow-[2px_2px_0_rgba(0,0,0,0.3)] cursor-default"
-                    : "bg-white text-black border border-black cursor-pointer"
+                    ? "bg-white text-black hover:bg-red-500 hover:text-white"
+                    : "bg-white text-black hover:bg-blue-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 }`}
               >
-                {users.some((u) => u.friendId === friend.friendId) ? "✔" : "추가"}
+                {users.some((u) => u.friendId === friend.friendId)
+                  ? "제거"
+                  : "추가"}
               </button>
             </div>
           ))
@@ -113,6 +128,31 @@ export default function FriendList() {
           <p className="text-center text-gray-500">아직 친구가 없습니다.</p>
         )}
       </div>
+      <style jsx>{`
+        /* 수평 스크롤바 숨김 */
+        .overflow-x-hidden::-webkit-scrollbar {
+          display: none;
+        }
+        .overflow-x-hidden {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        /* 수직 스크롤바 커스텀 스타일 */
+        .scrollbar-styled::-webkit-scrollbar {
+          width: 8px;
+        }
+        .scrollbar-styled::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 8px;
+        }
+        .scrollbar-styled::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 8px;
+        }
+        .scrollbar-styled::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+      `}</style>
     </div>
   );
 }

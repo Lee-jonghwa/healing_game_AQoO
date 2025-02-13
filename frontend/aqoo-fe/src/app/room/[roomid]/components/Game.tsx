@@ -191,11 +191,11 @@ export default function Game({
     return () => clearInterval(timer);
   }, [hasStarted, gameEnded]);
 
-  // **추가**: 모든 플레이어가 100번 이상 탭하거나 gameTime이 100초에 도달하면 게임 종료
+  // **추가**: 모든 플레이어가 100번 이상 탭하거나 gameTime이 30 도달하면 게임 종료
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     if (
-      gameTime >= 100 ||
+      gameTime >= 30 ||
       (players.length > 0 && players.every((player) => player.totalPressCount >= 100))
     ) {
       setGameEnded(true);

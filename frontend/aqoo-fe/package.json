@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "electron:dev": "electron .",
+    "electron:build": "electron-builder",
     "lint": "next lint"
   },
   "dependencies": {
@@ -24,6 +26,7 @@
     "react-hook-form": "^7.50.1",
     "react-icons": "^5.4.0",
     "react-query": "^3.39.3",
+    "react-transition-group": "^4.4.5",
     "react-webcam": "^7.2.0",
     "recoil": "^0.7.7",
     "recoil-persist": "^5.1.0",
@@ -39,6 +42,8 @@
     "@types/sockjs-client": "^1.5.4",
     "@types/styled-components": "^5.1.34",
     "autoprefixer": "^10.4.20",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
     "eslint": "^8",
     "eslint-config-next": "14.2.23",
     "postcss": "^8.5.1",

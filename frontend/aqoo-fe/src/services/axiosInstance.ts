@@ -50,11 +50,11 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // 500 에러 처리
-    if (error.response?.status === 500) {
-      console.error("500 서버 에러 발생 - 강제 로그아웃");
-      forceLogout();
-      return Promise.reject(error);
-    }
+    // if (error.response?.status === 500) {
+    //   console.error("500 서버 에러 발생 - 강제 로그아웃");
+    //   forceLogout();
+    //   return Promise.reject(error);
+    // }
 
     // JWT 검증 오류 처리
     if (error.response?.data) {
