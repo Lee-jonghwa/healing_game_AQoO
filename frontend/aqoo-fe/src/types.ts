@@ -17,6 +17,7 @@ export interface AquariumData {
   waterStatus: number;
   pollutionStatus: number;
   feedStatus: number;
+  aquariumBackgroundId: number;
 }
 
 // 친구 데이터 타입
