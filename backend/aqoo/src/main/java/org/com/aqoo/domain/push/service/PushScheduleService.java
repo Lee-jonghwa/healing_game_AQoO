@@ -21,9 +21,9 @@ public class PushScheduleService {
     private PushService pushService;
 
     // 각 상태 시간 주기
-    private static final int FEED_INTERVAL = 4;
-    private static final int CLEAN_INTERVAL = 12;
-    private static final int WATER_INTERVAL = 24;
+    private static final int FEED_INTERVAL = 1;
+    private static final int CLEAN_INTERVAL = 4;
+    private static final int WATER_INTERVAL = 7;
 
     // 먹이 상태 알람 (2시간마다 실행)
     @Scheduled(fixedRate = 2 * 60 * 60 * 1000)
@@ -58,7 +58,7 @@ public class PushScheduleService {
                 default -> -1;
             };
 
-            processNotification(aquarium.getUserId(), type, level);
+            processNotification(aquarium.getUserId(), aquarium.getAquariumName(), type, level);
         }
     }
     public static int getLastPassedInterval(LocalDateTime savedTime, int timeInterval) {
@@ -81,17 +81,17 @@ public class PushScheduleService {
         }
     }
 
-    private void processNotification(String userId, String type, int level) {
+    private void processNotification(String userId, String aquariumName, String type, int level) {
 
         if(level == -1){
-            System.out.println(userId + "님께  푸시 알람을 전송을 실패했습니다.");
+            System.out.println(userId + "님의 " + aquariumName + " 어항에 푸시 알람을 전송을 실패했습니다.");
             return;
         }
 
 
         try {
-            System.out.println(userId + "님께 " + type + " 푸시 알람을 전송합니다. 현재 상태는 : " + level);
-            pushService.sendPush(new PushRequest(null, userId, type, Integer.toString(level)));
+            System.out.println(userId + "님의 " + aquariumName + " 어항에 푸시 알람을 전송합니다. 현재 상태는 : " + level);
+            pushService.sendPush(new PushRequest(aquariumName, userId, type, Integer.toString(level)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
