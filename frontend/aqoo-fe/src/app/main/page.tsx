@@ -148,11 +148,7 @@ export default function MainPage() {
   };
 
   useEffect(() => {
-    // TODO  배경화면 제대로 불러오기 로직 추가
-    const savedBg = localStorage.getItem("background");
-    if (savedBg) {
-      setBackground(savedBg);
-    }
+    
 
     if (!auth.user?.id) return; // 로그인한 유저 ID가 없으면 API 호출 안 함
 
@@ -197,6 +193,16 @@ export default function MainPage() {
       .then((res: AxiosResponse<AquariumData>) => {
         console.log("✅ 어항 상세 정보:", res.data);
         setAquariumData(res.data);
+
+        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images"
+    // TODO  배경화면 제대로 불러오기 로직 추가
+    // const savedBg = localStorage.getItem("background");
+    
+    const savedBg = BACKGROUND_BASE_URL + res.data.aquariumBackground;
+
+    if (savedBg) {
+      setBackground(savedBg);
+    }
       })
       .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
   }, [userInfo]);
