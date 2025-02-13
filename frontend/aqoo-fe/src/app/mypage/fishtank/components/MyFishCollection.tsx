@@ -181,8 +181,8 @@ export default function MyFishCollection({
       </div>
 
       {isModalOpen && selectedFish && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
+        <div className=" fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
             <p className="mb-4 text-lg">
               활성화 돼있는 <span className="font-bold">{aquariumName}</span> 어항에{" "}
               <span className="font-bold">{selectedFish.fishName}</span>을(를) 넣겠습니까?

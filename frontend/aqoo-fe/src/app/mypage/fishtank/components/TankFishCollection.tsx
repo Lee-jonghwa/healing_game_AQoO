@@ -160,7 +160,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
 
   return (
     // 고정 높이를 400px로 설정하고 내용이 초과하면 세로 스크롤 적용
-    <div className="bg-white w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "300px" }}>
+    <div className="w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "300px" }}>
       <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (
           <div
@@ -179,7 +179,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
 
       {isModalOpen && selectedFish && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
             <p className="mb-4 text-lg">
               <span className="font-bold">{selectedFish.fishName}</span>를 어항밖으로 빼시겠습니까?
             </p>
