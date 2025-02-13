@@ -26,9 +26,21 @@ export default function BottomMenuBar({
 }) {
   const router = useRouter();
 
+  // ✅ 버튼이 비활성화되는 상태 체크
+  const isWaterMaxed = aquariumData?.waterStatus === 5;
+  const isPollutionMaxed = aquariumData?.pollutionStatus === 5;
+  const isFeedMaxed = aquariumData?.feedStatus === 5;
+
   // ✅ Water & Feed 버튼 클릭 시 실행할 함수 (type에 따라 분기)
   const handleAquariumUpdate = async (type: "water" | "feed") => {
     if (!userInfo?.mainAquarium) return;
+
+    // ✅ 만약 상태가 최대(5)라면 실행 X, Alert 띄우기
+    if ((type === "water" && isWaterMaxed) || (type === "feed" && isFeedMaxed)) {
+      alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
+      return;
+    }
+
     try {
       // 1️⃣ 어항 상태 업데이트 API 호출
       await axios
@@ -133,7 +145,17 @@ export default function BottomMenuBar({
       {/* TODO 청소하는 거 미디어파이프 말고 버튼으로도 처리할 수 있도록 */}
       <div className="flex space-x-2 md:space-x-4">
         <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
-        <MenuButton icon="/icon/cleanIcon.png" label="Clean" onClick={() => setActiveComponent("clean")} />
+        <MenuButton
+          icon="/icon/cleanIcon.png"
+          label="Clean"
+          onClick={() => {
+            if (isPollutionMaxed) {
+              alert("👍👍 청결 상태가 이미 최고 상태입니다! 👍👍");
+              return;
+            }
+            setActiveComponent("clean");
+          }}
+        />
         <MenuButton icon="/icon/feedIcon.png" label="Feed" onClick={() => handleAquariumUpdate("feed")} />
       </div>
     </div>
