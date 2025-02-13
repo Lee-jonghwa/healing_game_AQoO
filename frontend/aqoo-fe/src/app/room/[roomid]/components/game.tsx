@@ -210,22 +210,46 @@ export default function Game({
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
-      {/* 시작 및 도착 라인 마커 */}
-      <div className='absolute left-[10%] top-0 h-full pointer-events-none'>
-        <div className='h-full border-l-4 border-green-500'></div>
-        <div className='absolute top-2 -translate-x-1/2 text-green-500 font-bold text-lg'>
-          Start
+      {/* 시작 마커 - 레일 영역 내에 표시 */}
+      {trackDims.height > 0 && (
+        <div
+          className='absolute pointer-events-none'
+          style={{
+            left: trackDims.width ? trackDims.width * 0.1 : 95,
+            top: laneAreaTopOffset,
+            height: laneAreaHeight,
+          }}
+        >
+          <div className='h-full border-l-4 border-green-500'></div>
+          <div className='absolute inset-0 flex items-center justify-center'>
+            <span className='text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+              Start
+            </span>
+          </div>
         </div>
-      </div>
-      <div className='absolute left-[90%] top-0 h-full pointer-events-none'>
-        <div className='h-full border-l-4 border-red-500'></div>
-        <div className='absolute top-2 -translate-x-1/2 text-red-500 font-bold text-lg'>
-          Finish
+      )}
+
+      {/* Finish 마커 - 레일 영역 내에 표시 */}
+      {trackDims.width > 0 && (
+        <div
+          className='absolute pointer-events-none'
+          style={{
+            left: trackDims.width ? trackDims.width * 0.9 : 0,
+            top: laneAreaTopOffset,
+            height: laneAreaHeight,
+          }}
+        >
+          <div className='h-full border-l-4 border-red-500'></div>
+          <div className='absolute inset-0 flex items-center justify-center'>
+            <span className='text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+              Goal
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 레인 구분선 (상단, 하단 경계 포함) */}
-      {trackDims.height && (
+      {trackDims.height > 0 && (
         <>
           {/* 상단 경계 */}
           <div
@@ -252,53 +276,61 @@ export default function Game({
       )}
 
       {/* 플레이어(물고기) 렌더링 */}
-      {players.map((player, index) => {
-        // 플레이어가 총 6마리 미만인 경우 중앙 정렬을 위한 오프셋 계산
-        const offset =
-          players.length < totalLanes
-            ? Math.floor((totalLanes - players.length) / 2)
-            : 0;
-        const laneIndex = index + offset;
-        const fishSize = laneHeight * 0.8;
-        const topPos =
-          laneAreaTopOffset + laneIndex * laneHeight + (laneHeight - fishSize) / 2;
-        const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
-        const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
-        const leftPos =
-          player.userName === userName && !hasStarted
-            ? startOffset
-            : startOffset + Math.floor(player.totalPressCount / 2) * moveFactor;
+{/* 플레이어(물고기) 렌더링 */}
+{players.map((player, index) => {
+  // 플레이어가 총 6마리 미만인 경우 중앙 정렬을 위한 오프셋 계산
+  const offset =
+    players.length < totalLanes
+      ? Math.floor((totalLanes - players.length) / 2)
+      : 0;
+  const laneIndex = index + offset;
+  const fishSize = laneHeight * 0.8;
+  const topPos =
+    laneAreaTopOffset + laneIndex * laneHeight + (laneHeight - fishSize) / 2;
+  const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
+  const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
+  const leftPos =
+    player.userName === userName && !hasStarted
+      ? startOffset
+      : startOffset + Math.floor(player.totalPressCount / 2) * moveFactor;
 
-        return (
-          <div
-            key={player.userName}
-            className='absolute flex flex-col items-center'
-            style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
-          >
-            <div className='relative'>
-              <img
-                src={player.mainFishImage}
-                alt={`${player.userName}의 대표 물고기`}
-                style={{ width: fishSize, height: fishSize }}
-                className='object-contain scale-x-[-1]'
-              />
-              {(player.userName === userName
-                ? isTapping
-                : windEffects[player.userName]) && (
-                <img
-                  src='/chat_images/wind_overlay.png'
-                  alt='Wind effect'
-                  style={{ width: fishSize * 0.3, height: fishSize * 0.3 }}
-                  className='absolute mt-10 inset-0 object-contain pointer-events-none scale-x-[-1]'
-                />
-              )}
-            </div>
-            <span className='mt-[-25px] text-xl font-medium text-gray-900'>
-              {player.userName}
-            </span>
-          </div>
-        );
-      })}
+  return (
+    <div
+      key={player.userName}
+      className='absolute flex flex-col items-center'
+      style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
+    >
+      <div className='relative'>
+        <img
+          src={player.mainFishImage}
+          alt={`${player.userName}의 대표 물고기`}
+          style={{ width: fishSize, height: fishSize }}
+          className='object-contain scale-x-[-1]'
+        />
+        {(player.userName === userName
+  ? isTapping
+  : windEffects[player.userName]) && (
+  <img
+    src='/chat_images/wind_overlay.png'
+    alt='Wind effect'
+    style={{
+      width: fishSize * 0.4, // 기존 0.3 -> 0.4로 변경
+      height: fishSize * 0.4, // 기존 0.3 -> 0.4로 변경
+      position: 'absolute',
+      top: '50%',
+      left: `-${fishSize * 0.4}px`, // 크기에 맞게 위치도 변경
+      transform: 'translateY(-50%) scaleX(-1)',
+    }}
+    className='object-contain pointer-events-none'
+  />
+)}
+      </div>
+      <span className='mt-[-25px] text-xl font-medium text-gray-900'>
+        {player.userName}
+      </span>
+    </div>
+  );
+})}
 
       {/* 하단 고정 안내 메시지 */}
       <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>
