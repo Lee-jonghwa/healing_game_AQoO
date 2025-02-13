@@ -39,7 +39,7 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
         // userFishList에서 해당 fishName과 일치하는 물고기 찾기
         const userFish = userFishList.find((userFish) => userFish.fishTypeName === fish.fishName);
 
-        const imageSrc = userFish ? userFish.fishImage : API_BASE_URL + "images/bg1.png";
+        const imageSrc = userFish ? userFish.fishImage : `${API_BASE_URL}/images/미등록이미지.png`;
         const name = userFish ? userFish.fishTypeName : fish.fishName;
         const count = userFish ? userFish.cnt : 0;
 

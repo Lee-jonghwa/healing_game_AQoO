@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
+
 export default function CleanComponent({
   onClose,
   onCleanSuccess, // ✅ 어항 상태 업데이트를 위한 콜백
@@ -46,6 +47,9 @@ export default function CleanComponent({
       return;
     }
   };
+
+  // 청소 왔다갔다 횟수
+  const count = useRef<number>(0)
 
   // 손이 좌우로 움직였는지 추적
   const motionData = useRef<{ startX: number | null; movedLeft: boolean; movedRight: boolean }>({
@@ -150,7 +154,6 @@ export default function CleanComponent({
 
       const sensitivity = 0.5;
       const now = Date.now();
-
       if (motionData.current.startX === null) {
         motionData.current.startX = currentX;
         return; // 초기값 설정 후 바로 리턴
@@ -161,16 +164,24 @@ export default function CleanComponent({
       if (deltaX > sensitivity && !motionData.current.movedRight) {
         motionData.current.movedRight = true;
         motionData.current.startX = currentX;
+        
       }
       if (deltaX < -sensitivity && !motionData.current.movedLeft) {
         motionData.current.movedLeft = true;
         motionData.current.startX = currentX;
+        
       }
 
       if (motionData.current.movedLeft && motionData.current.movedRight) {
+        count.current += 1
+        motionData.current.startX = currentX;
+        
+      }
+
+      if (count.current === 3) {
         alert("청소에 성공했어요! 🐟");
         motionData.current = { startX: null, movedLeft: false, movedRight: false };
-
+        count.current = 0
         handleCleanSuccess();
       }
     };

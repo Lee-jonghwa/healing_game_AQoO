@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 
 // 공통으로 사용할 아이템 카드 컴포넌트
 // name: 아이템 이름 (예: '거북이 1')
@@ -50,10 +49,11 @@ export default function CollectionItemCard({
           flex flex-col items-center justify-start
           rounded-xl border border-black bg-white
           gap-1
+          overflow-hidden
         `}
       >
-        <div className="flex-1 flex items-center justify-center w-full h-auto">
-          <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full" />
+        <div className="flex-1 flex items-center justify-center w-full h-auto aspect-square overflow-hidden">
+          <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full w-full h-full" />
         </div>
         <div
           className="
@@ -61,7 +61,7 @@ export default function CollectionItemCard({
         "
         >
           <p>{name}</p>
-          {imageSrc !== "/images/배경샘플.png" && !isModal && count !== undefined && count !== null && count > 0 && (
+          {imageSrc !== "https://i12e203.p.ssafy.io/images/미등록이미지.png" && !isModal && count !== undefined && count !== null && count > 0 && (
             <p className="text-[10px] text-gray-500">x {count}</p>
           )}
         </div>
