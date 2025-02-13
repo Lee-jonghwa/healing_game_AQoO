@@ -139,7 +139,7 @@ public class FishController {
 
             String response = fishService.paintFish(userId, fishName, imageFile);
 
-            return ResponseEntity.ok("업로드 성공: " + response);
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             // 예외 발생 시, 상세 오류 메시지 포함하여 응답
