@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import MenuButton from "../main/MenuButton";
 import axios from "axios";
+import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
@@ -164,7 +165,14 @@ export default function CustomFishPages() {
     const { x, y } = getCanvasCoordinates(event); // 정확한 좌표 가져오기
     context.beginPath();
     context.moveTo(x, y);
-    context.strokeStyle = eraserMode ? "white" : penColor;
+
+    if (eraserMode) {
+      context.globalCompositeOperation = "destination-out";
+      context.strokeStyle = "rgba(0,0,0,1)"; // 색은 무시되지만 투명으로 칠해짐
+    } else {
+      context.globalCompositeOperation = "source-over"; // 일반 그리기 모드로 되돌림
+      context.strokeStyle = penColor;
+    }
   };
 
   const draw = (event: React.MouseEvent) => {
@@ -309,14 +317,22 @@ export default function CustomFishPages() {
 
       try {
         // ✅ 2. API 호출 (multipart/form-data)
-        const response = await axios.post("/api/v1/fish/painting", formData, {
+        const response = await axiosInstance.post(`/fish/painting`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        console.log("✅ 성공:", response.data);
+        console.log("✅ 응답 :", response.data);
+
+        // 서버에서 중복된 이름일 경우 "이미 존재하는 이름입니다."라는 문자열을 반환하는 경우
+        if (typeof response.data === "string" && response.data.includes("이미 존재하는 이름입니다")) {
+          alert("이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!");
+          setFishName(""); // 기존 입력값 초기화 (선택)
+          return;
+        }
+
         alert("그림이 저장되었습니다!");
-        router.push("/somewhere"); // ✅ 저장 후 리디렉션할 페이지
-      } catch (error) {
+        router.push("/mypage/fishtank");
+      } catch (error: any) {
         console.error("🚨 오류:", error);
         alert("저장 중 오류가 발생했습니다.");
       }
@@ -421,7 +437,7 @@ export default function CustomFishPages() {
               className={`${fillMode ? "bg-gray-300" : "bg-white"}  !w-14 !h-14`}
             />
             <MenuButton
-              icon="/icon/drawtool/clearIcon.png"
+              icon="/icon/drawtool/ClearIcon.png"
               label="Clear"
               onClick={clearCanvas}
               className={"!w-14 !h-14"}

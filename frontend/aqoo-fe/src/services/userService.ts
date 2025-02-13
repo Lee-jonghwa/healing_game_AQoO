@@ -32,3 +32,22 @@ export const getUsers = async (): Promise<User[]> => {
   const response = await axios.get(API_URL);
   return response.data;
 };
+
+/**
+ * 🔹 물고기 티켓 증가 함수
+ * @param userId 유저 ID
+ * @returns 증가된 물고기 티켓 수
+ */
+export const increaseFishTicket = async (userId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/fish/ticket/${userId}`, {
+      withCredentials: true,
+    });
+
+    console.log("✅ 물고기 티켓 증가 성공:", response.data);
+    return response.data.fishTicket; // ✅ 증가된 물고기 티켓 수 반환
+  } catch (error) {
+    console.error("❌ 물고기 티켓 증가 실패", error);
+    return null;
+  }
+};

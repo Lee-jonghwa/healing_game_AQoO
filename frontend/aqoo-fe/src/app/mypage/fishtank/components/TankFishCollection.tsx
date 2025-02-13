@@ -21,12 +21,12 @@ interface TankFishCollectionProps {
   aquariumId: number;
   refresh: number;
   onFishRemoved?: () => void;
-  onCountChange?: (count: number) => void; // 부모로 총 마릿수를 전달하는 prop
+  onCountChange?: (count: number) => void;
 }
 
 export default function TankFishCollection({ aquariumId, refresh, onFishRemoved, onCountChange }: TankFishCollectionProps) {
   const [aquariumDetails, setAquariumDetails] = useState<AquariumDetails | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
   const [selectedFish, setSelectedFish] = useState<AggregatedFishData | null>(null);
@@ -105,6 +105,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
   const handleModalConfirm = async () => {
     if (!selectedFish) return;
     const fishIdToDelete = selectedFish.fishIds[0];
+    // Optimistic update: 바로 로컬 상태 업데이트
     setAquariumDetails((prev) => {
       if (!prev) return prev;
       const updatedFishes = prev.fishes
@@ -135,16 +136,17 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
       if (onFishRemoved) onFishRemoved();
     } catch (error) {
       console.error("Error removing fish from aquarium:", error);
+      // Optionally, revert optimistic update if needed.
     }
   };
 
+  // 복구된 Enter 키 이벤트: 모달이 열렸을 때 Enter 키를 누르면 handleModalConfirm 실행
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isModalOpen && event.key === "Enter") {
         handleModalConfirm();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
@@ -157,7 +159,8 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
     return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    <div>
+    // 고정 높이를 400px로 설정하고 내용이 초과하면 세로 스크롤 적용
+    <div className="bg-white w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "300px" }}>
       <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (
           <div

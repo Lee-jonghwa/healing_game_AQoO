@@ -27,13 +27,13 @@ export default function RoomPage({ params }: RoomPageProps) {
   //       } else {
   //         setRoomExists(false);
   //         alert("해당 채팅방은 존재하지 않습니다.");
-  //         router.push("/");
+  //         router.replace("/main");
   //       }
   //     } catch (error) {
   //       console.error("방 존재 여부 확인 중 오류 발생:", error);
   //       setRoomExists(false);
   //       alert("채팅방 정보를 불러오는데 실패했습니다.");
-  //       router.push("/");
+  //       router.replace("/main");
   //     }
   //   }
   //   checkRoomExistence();

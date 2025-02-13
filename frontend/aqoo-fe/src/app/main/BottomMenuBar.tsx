@@ -1,10 +1,11 @@
 "use client";
 
 import { AquariumData, UserInfo } from "@/types";
+import axios, { AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
 
 import MenuButton from "./MenuButton";
-import axios from "axios";
+import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
@@ -16,6 +17,7 @@ export default function BottomMenuBar({
   refreshAquariumData, // ✅ 어항 상태 새로고침 함수
   onOpenFishModal,
   handleIncreaseExp, // ✅ 경험치 증가 함수 추가
+  newNotifications,
 }: {
   setActiveComponent: (value: string | null) => void;
   userInfo: UserInfo;
@@ -23,12 +25,25 @@ export default function BottomMenuBar({
   refreshAquariumData: () => void;
   handleIncreaseExp: (earnedExp: number) => void;
   onOpenFishModal: () => void;
+  newNotifications: boolean;
 }) {
   const router = useRouter();
+
+  // ✅ 버튼이 비활성화되는 상태 체크
+  const isWaterMaxed = aquariumData?.waterStatus === 5;
+  const isPollutionMaxed = aquariumData?.pollutionStatus === 5;
+  const isFeedMaxed = aquariumData?.feedStatus === 5;
 
   // ✅ Water & Feed 버튼 클릭 시 실행할 함수 (type에 따라 분기)
   const handleAquariumUpdate = async (type: "water" | "feed") => {
     if (!userInfo?.mainAquarium) return;
+
+    // ✅ 만약 상태가 최대(5)라면 실행 X, Alert 띄우기
+    if ((type === "water" && isWaterMaxed) || (type === "feed" && isFeedMaxed)) {
+      alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
+      return;
+    }
+
     try {
       // 1️⃣ 어항 상태 업데이트 API 호출
       await axios
@@ -62,6 +77,7 @@ export default function BottomMenuBar({
 
   // 🚀 경험치 바 최소 5% 보장
   const progressBarWidth = Math.max(0, Math.min(expProgress, 100));
+  const { auth } = useAuth(); // ✅ 로그인된 사용자 정보 가져오기
 
   return (
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[1400px] bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md">
@@ -74,7 +90,13 @@ export default function BottomMenuBar({
         <MenuButton icon="/icon/friendIcon.png" label="Friends" onClick={() => setActiveComponent("friends")} />
 
         {/* ✅ Push 알림 */}
-        <MenuButton icon="/icon/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
+        <div className="relative">
+          {/* 푸시 알람 버튼 */}
+          <MenuButton icon="/icon/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
+
+          {/* 알림 동그라미 애니메이션 */}
+          {newNotifications && <div className="notification-dot absolute top-2 right-2" />}
+        </div>
 
         {/* ✅ Game 히스토리 */}
         <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
@@ -133,7 +155,17 @@ export default function BottomMenuBar({
       {/* TODO 청소하는 거 미디어파이프 말고 버튼으로도 처리할 수 있도록 */}
       <div className="flex space-x-2 md:space-x-4">
         <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
-        <MenuButton icon="/icon/cleanIcon.png" label="Clean" onClick={() => setActiveComponent("clean")} />
+        <MenuButton
+          icon="/icon/cleanIcon.png"
+          label="Clean"
+          onClick={() => {
+            if (isPollutionMaxed) {
+              alert("👍👍 청결 상태가 이미 최고 상태입니다! 👍👍");
+              return;
+            }
+            setActiveComponent("clean");
+          }}
+        />
         <MenuButton icon="/icon/feedIcon.png" label="Feed" onClick={() => handleAquariumUpdate("feed")} />
       </div>
     </div>
