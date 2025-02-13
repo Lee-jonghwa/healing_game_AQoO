@@ -106,7 +106,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     );
   }, [users]);
 
-
+  // 버튼복구
   // ----------------------------
   // ready / start 관련 상태 계산
   // ----------------------------
