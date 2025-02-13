@@ -52,6 +52,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
       .then((response) => {
         const data = response.data;
         const filteredFish = data.filter((fish) => fish.fishImage !== currentMainFishImage);
+
         setFishList(filteredFish);
         setIsLoading(false);
       })
@@ -142,44 +143,3 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
     </Modal>
   );
 }
-
-// // 완료 버튼 클릭 시 대표 물고기 변경 API 호출
-// const handleConfirm = async () => {
-//   if (!selectedFishImage) {
-//     alert("대표 물고기를 선택해주세요.");
-//     return;
-//   }
-//   setIsLoading(true);
-//   try {
-//     const parsedImageName = selectedFishImage.split("/").pop();
-
-//     // const response = await axiosInstance.post("/users", {
-//     //   userId: userData.id,
-//     //   userNickName: userData.nickname,
-//     //   mainFishImage: selectedFishImage.startsWith("http")
-//     //     ? selectedFishImage
-//     //     : `https://i12e203.p.ssafy.io/images/${selectedFishImage}`, // 파일명만 전달
-//     // });
-//     await axiosInstance.post("/users", {
-//       userId: userData.id,
-//       userNickName: userData.nickname,
-//       mainFishImage: selectedFishImage.startsWith("http")
-//         ? selectedFishImage
-//         : `https://i12e203.p.ssafy.io/images/${selectedFishImage}`,
-//     });
-//     // console.log("응답:", response.data);
-//     console.log("선택한 이미지:", selectedFishImage);
-//     console.log("파싱된 이미지:", parsedImageName);
-//     console.log("현재 대표 이미지:", userData.mainFishImage);
-//     console.log("fishList:", fishList);
-//     alert("대표 물고기 변경 성공!");
-//     // 전역 유저 데이터를 새로 불러와 업데이트합니다.
-//     await fetchUser();
-//     onClose();
-//   } catch (error) {
-//     alert("대표 물고기 변경에 실패했습니다.");
-//     console.error(error);
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
