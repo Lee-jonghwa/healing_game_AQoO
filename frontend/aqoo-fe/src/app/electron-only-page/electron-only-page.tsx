@@ -8,12 +8,10 @@ export default function ElectronOnlyPage() {
 
   useEffect(() => {
     // Electron 환경 감지: preload 스크립트를 통해 전역 API가 노출되어 있다면
-    if (
-      window.electronAPI &&
-      typeof window.electronAPI.openOverlay === 'function'
-    ) {
+    const electronAPI = (window as any).electronAPI;
+    if (electronAPI && typeof electronAPI.openOverlay === 'function') {
       // Electron 환경이면 오버레이 창을 띄우도록 요청
-      window.electronAPI.openOverlay();
+      electronAPI.openOverlay();
     } else {
       console.warn('이 기능은 Electron 환경에서만 사용할 수 있습니다.');
     }
