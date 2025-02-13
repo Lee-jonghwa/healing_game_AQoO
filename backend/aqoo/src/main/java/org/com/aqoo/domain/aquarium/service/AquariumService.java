@@ -144,7 +144,7 @@ public class AquariumService {
         }
 
         // 해당 어항에 속한 물고기들의 어항 ID를 NULL로 설정
-        userFishRepository.removeAllByAquariumId(aquariumId);
+        aquariumRepository.setAquariumIdToNullByAquariumId(aquariumId);
 
         // 어항 삭제
         aquariumRepository.deleteById(aquariumId);
