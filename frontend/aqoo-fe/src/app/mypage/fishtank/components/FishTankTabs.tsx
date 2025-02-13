@@ -163,6 +163,8 @@ export default function FishTankTabs() {
           }
           setShowDeleteModal(false);
           setTabToDelete(null);
+          // 어항 삭제 후, MyFishCollection이 보여야 하므로 리프레시 트리거 업데이트
+          setRefreshMyFish((prev) => prev + 1);
         })
         .catch((error) => {
           console.error("Error deleting aquarium:", error);
