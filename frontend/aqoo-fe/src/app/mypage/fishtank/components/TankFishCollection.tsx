@@ -21,7 +21,7 @@ interface TankFishCollectionProps {
   aquariumId: number;
   refresh: number;
   onFishRemoved?: () => void;
-  onCountChange?: (count: number) => void; // 부모로 총 마릿수를 전달하는 prop
+  onCountChange?: (count: number) => void;
 }
 
 export default function TankFishCollection({ aquariumId, refresh, onFishRemoved, onCountChange }: TankFishCollectionProps) {
@@ -140,14 +140,27 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
     }
   };
 
+  // 복구된 Enter 키 이벤트: 모달이 열렸을 때 Enter 키를 누르면 handleModalConfirm 실행
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isModalOpen && event.key === "Enter") {
+        handleModalConfirm();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isModalOpen, selectedFish]);
+
   if (error) return <div>{error}</div>;
   if (!aquariumDetails && loading) return <div>로딩중...</div>;
   if (!aquariumDetails || aquariumDetails.fishes.length === 0)
     return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    // 고정 높이를 400px로 설정하고 내용이 초과하면 세로 스크롤이 생기도록 함.
-    <div className="bg-white w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "400px" }}>
+    // 고정 높이를 400px로 설정하고 내용이 초과하면 세로 스크롤 적용
+    <div className="bg-white w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "300px" }}>
       <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (
           <div

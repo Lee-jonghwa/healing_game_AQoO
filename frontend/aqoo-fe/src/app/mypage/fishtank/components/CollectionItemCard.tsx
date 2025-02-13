@@ -9,7 +9,7 @@ interface CollectionItemCardProps {
 export default function CollectionItemCard({ name, count, imageSrc }: CollectionItemCardProps) {
   return (
     <div className="relative bg-white rounded-xl shadow-lg overflow-hidden">
-      <img src={imageSrc} alt={name} className="w-full h-20 object-contain sm:h-24 md:h-27" />
+      <img src={imageSrc} alt={name} className="w-full h-20 object-contain sm:h-24 md:h-26" />
       <div className="p-2">
         <h3 className="text-lg font-semibold">{name}</h3>
       </div>
