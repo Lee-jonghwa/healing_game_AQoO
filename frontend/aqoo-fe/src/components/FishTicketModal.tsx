@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/services/axiosInstance";
 
 export default function FishTicketModal({
   onClose,
@@ -31,7 +32,7 @@ export default function FishTicketModal({
 
     setTimeout(async () => {
       try {
-        const response = await axios.get("https://i12e203.p.ssafy.io/api/v1/fish/gotcha", { withCredentials: true });
+        const response = await axiosInstance.get("https://i12e203.p.ssafy.io/api/v1/fish/gotcha", { withCredentials: true });
 
         if (response.data) {
           console.log("🎉 물고기 뽑기 성공:", response.data);
