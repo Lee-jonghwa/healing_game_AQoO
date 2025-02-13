@@ -61,6 +61,6 @@ public class User {
         this.level = (this.level == null) ? 1 : this.level;
         this.status = this.status == null || this.status;
         this.isFirstLogin = (this.isFirstLogin == null) ? 1 : this.isFirstLogin;
-        this.fishTicket = (this.fishTicket == null) ? 1 : this.fishTicket;
+        this.fishTicket = (this.fishTicket == null) ? 3: this.fishTicket;
     }
 }
