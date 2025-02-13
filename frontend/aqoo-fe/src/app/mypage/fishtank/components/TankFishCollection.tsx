@@ -26,7 +26,7 @@ interface TankFishCollectionProps {
 
 export default function TankFishCollection({ aquariumId, refresh, onFishRemoved, onCountChange }: TankFishCollectionProps) {
   const [aquariumDetails, setAquariumDetails] = useState<AquariumDetails | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
 
   const [selectedFish, setSelectedFish] = useState<AggregatedFishData | null>(null);
@@ -105,6 +105,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
   const handleModalConfirm = async () => {
     if (!selectedFish) return;
     const fishIdToDelete = selectedFish.fishIds[0];
+    // Optimistic update: 바로 로컬 상태 업데이트
     setAquariumDetails((prev) => {
       if (!prev) return prev;
       const updatedFishes = prev.fishes
@@ -135,21 +136,9 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
       if (onFishRemoved) onFishRemoved();
     } catch (error) {
       console.error("Error removing fish from aquarium:", error);
+      // Optionally, revert optimistic update if needed.
     }
   };
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (isModalOpen && event.key === "Enter") {
-        handleModalConfirm();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isModalOpen, selectedFish]);
 
   if (error) return <div>{error}</div>;
   if (!aquariumDetails && loading) return <div>로딩중...</div>;
@@ -157,7 +146,8 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
     return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    <div>
+    // 고정 높이를 400px로 설정하고 내용이 초과하면 세로 스크롤이 생기도록 함.
+    <div className="bg-white w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "400px" }}>
       <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (
           <div
