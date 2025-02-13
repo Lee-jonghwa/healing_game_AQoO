@@ -34,15 +34,14 @@ public class GameService {
     private final Map<String, List<String>> finishOrderMap = new ConcurrentHashMap<>();
 
     /**
-     * 게임 시작: 채팅방에 참여한 모든 사용자를 게임 참가자로 간주하고 초기 점수를 0으로 설정한 후,
-     * "GAME_STARTED" 메시지와 함께 플레이어 목록을 브로드캐스트합니다.
+     * 게임 시작: 채팅방 멤버의 점수를 0으로 초기화하고 "GAME_STARTED" 메시지를 브로드캐스트
      */
     @Transactional
     public void startGame(String roomId) {
         log.info("startGame() called for roomId: {}", roomId);
         ChatRoom chatRoom = chatRoomService.getRoom(roomId);
         if (chatRoom != null) {
-            System.out.println("채팅방 멤버: " + chatRoom.getMembers());
+            System.out.println("ChatRoom members: " + chatRoom.getMembers());
             Map<String, Integer> roomScore = new ConcurrentHashMap<>();
             chatRoom.getMembers().forEach(member -> roomScore.put(member, 0));
             scoreMap.put(roomId, roomScore);
@@ -51,33 +50,27 @@ public class GameService {
 
             List<Player> players = roomScore.entrySet().stream()
                     .map(e -> {
-                        String userNameKey = e.getKey();
+                        String userName = e.getKey();
                         int score = e.getValue();
-                        // UserService를 통해 해당 사용자의 정보를 조회하여 mainFishImage를 가져옴
-                        String mainFishImage = userService.getUserInfo(userNameKey).getMainFishImage();
-                        return new Player(userNameKey, score, mainFishImage);
+                        String mainFishImage = userService.getUserInfo(userName).getMainFishImage();
+                        return new Player(userName, score, mainFishImage);
                     })
                     .collect(Collectors.toList());
 
-            System.out.println("players:" + players);
-            // 게임 시작 시 승자와 finishOrder는 아직 없으므로 null로 전달
+            // 게임 시작 시 승자와 finishOrder는 아직 없음
             RoomResponse response = new RoomResponse(roomId, players, "GAME_STARTED", null, null);
             messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
             log.info("Broadcasted GAME_STARTED message for roomId: {}", roomId);
         } else {
-            System.out.println("게임 실행 실패");
             log.error("ChatRoom not found for roomId: {}", roomId);
         }
     }
 
     /**
-     * 스페이스바 연타 이벤트 처리: 받은 PressMessage를 기반으로 해당 플레이어의 점수를 업데이트한 후,
-     * 업데이트된 플레이어 목록을 생성하고, "PRESS_UPDATED" 또는 "GAME_ENDED" 메시지를 브로드캐스트합니다.
-     *
-     * 추가 요구사항:
-     * - 사용자가 100에 도달하면 그 이후 추가 탭은 무시합니다.
-     * - 100에 도달한 순서대로 finish order를 기록하여, 전체 순위를 표시합니다.
-     * - 게임 종료시 전체 순위 목록(finishOrder)을 프론트로 전달합니다.
+     * 스페이스바 탭 이벤트 처리
+     * - 100에 도달하면 해당 사용자는 추가 탭을 무시
+     * - 100 도달 시 finish order에 순서대로 기록
+     * - 모든 사용자가 100에 도달하면 GAME_ENDED 메시지를 브로드캐스트
      */
     @Transactional
     public void processPress(PressMessage pressMessage) {
@@ -89,18 +82,18 @@ public class GameService {
 
         Map<String, Integer> roomScore = scoreMap.get(roomId);
         if (roomScore != null) {
-            // 이미 100 이상이면 추가 탭을 무시
+            // 이미 100 이상이면 추가 탭 무시
             if (roomScore.getOrDefault(user, 0) >= 100) {
-                log.info("User {} has already reached 100, ignoring additional press", user);
+                log.info("User {} already reached 100, ignoring press", user);
                 return;
             }
 
-            // 점수를 업데이트하되, 100을 초과하지 않도록 클램핑
-            roomScore.merge(user, press, (oldValue, pressValue) -> Math.min(100, oldValue + pressValue));
+            // 점수를 업데이트하며 100 초과 방지
+            roomScore.merge(user, press, (oldVal, pressVal) -> Math.min(100, oldVal + pressVal));
             int currentScore = roomScore.get(user);
             log.info("Updated score for {}: {}", user, currentScore);
 
-            // finishOrder 처리: 해당 플레이어가 100에 도달하면 순서 기록
+            // finishOrder 처리: 100에 도달한 경우 순서대로 기록
             List<String> finishOrder = finishOrderMap.computeIfAbsent(roomId, k -> new ArrayList<>());
             if (currentScore == 100 && !finishOrder.contains(user)) {
                 finishOrder.add(user);
@@ -109,17 +102,16 @@ public class GameService {
 
             List<Player> players = roomScore.entrySet().stream()
                     .map(e -> {
-                        String userNameKey = e.getKey();
+                        String userName = e.getKey();
                         int score = e.getValue();
-                        String mainFishImage = userService.getUserInfo(userNameKey).getMainFishImage();
-                        return new Player(userNameKey, score, mainFishImage);
+                        String mainFishImage = userService.getUserInfo(userName).getMainFishImage();
+                        return new Player(userName, score, mainFishImage);
                     })
                     .collect(Collectors.toList());
 
-            // 모든 플레이어가 100에 도달했는지 체크
             boolean allReached100 = roomScore.values().stream().allMatch(score -> score >= 100);
             if (allReached100) {
-                // finishOrder의 첫 번째 사용자가 승자가 됨 (100에 도달한 순서대로)
+                // 모든 사용자가 100에 도달하면 finishOrder의 첫 번째 사용자를 승자로 설정
                 String winner = finishOrder.get(0);
                 RoomResponse response = new RoomResponse(roomId, players, "GAME_ENDED", winner, finishOrder);
                 messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
@@ -129,6 +121,38 @@ public class GameService {
                 messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
                 log.info("Broadcasted PRESS_UPDATED message for roomId: {}", roomId);
             }
+        } else {
+            log.error("No score map found for roomId: {}", roomId);
+        }
+    }
+
+    /**
+     * 타임아웃 등으로 게임 종료 시 처리
+     * - 아직 모든 참가자가 100에 도달하지 않았다 하더라도 최고 점수 기준으로 승자를 결정
+     * - finishOrder는 기록된 경우 그대로 전달 (없으면 빈 리스트)
+     */
+    @Transactional
+    public void endGame(String roomId) {
+        log.info("endGame() called for roomId: {}", roomId);
+        Map<String, Integer> roomScore = scoreMap.get(roomId);
+        if (roomScore != null) {
+            List<Player> players = roomScore.entrySet().stream()
+                    .map(e -> {
+                        String userName = e.getKey();
+                        int score = e.getValue();
+                        String mainFishImage = userService.getUserInfo(userName).getMainFishImage();
+                        return new Player(userName, score, mainFishImage);
+                    })
+                    .collect(Collectors.toList());
+            // 최고 점수를 가진 참가자를 승자로 결정
+            String computedWinner = players.stream()
+                    .max((p1, p2) -> Integer.compare(p1.getTotalPressCount(), p2.getTotalPressCount()))
+                    .map(Player::getUserName)
+                    .orElse(null);
+            List<String> finishOrder = finishOrderMap.getOrDefault(roomId, new ArrayList<>());
+            RoomResponse response = new RoomResponse(roomId, players, "GAME_ENDED", computedWinner, finishOrder);
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
+            log.info("Game ended via timeout for roomId: {}. Winner: {}. Finish order: {}", roomId, computedWinner, finishOrder);
         } else {
             log.error("No score map found for roomId: {}", roomId);
         }
