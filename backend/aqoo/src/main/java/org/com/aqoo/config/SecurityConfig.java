@@ -39,21 +39,8 @@ public class SecurityConfig {
                 }))
                 // CSRF 비활성화 (API 서버이므로)
                 .csrf(csrf -> csrf.disable())
-                // 특정 경로에 대한 접근 제어
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/v1/users/isActivate/*",
-                                "/api/v1/auth/register/*",
-                                "/api/v1/auth/login/*",
-                                "/api/v1/users/*",
-                                "/oauth2/*",
-                                "/api/v1/auth/validate-id",
-                                "/api/v1/auth/validate-email",
-                                "/api/v1/auth/find-id",
-                                "/api/v1/email/send",
-                                "/api/v1/email/verify",
-                                "/api/v1/auth/refresh").permitAll() // `/api/v1/users` 경로는 인증 없이 접근 허용
-                        .anyRequest().authenticated() // 그 외 모든 요청은 인증 필요
-                )
+                // 모든 요청에 대해 인증 없이 접근 허용 (필요시 개별 엔드포인트별 접근 정책 추가)
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
                 // JWT 인증 필터 추가 (UsernamePasswordAuthenticationFilter 앞에)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 // OAuth2 로그인 성공 시 커스텀 핸들러 적용
