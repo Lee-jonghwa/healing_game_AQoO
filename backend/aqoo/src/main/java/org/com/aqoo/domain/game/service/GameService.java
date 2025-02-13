@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -128,8 +130,9 @@ public class GameService {
 
     /**
      * 타임아웃 등으로 게임 종료 시 처리
-     * - 아직 모든 참가자가 100에 도달하지 않았다 하더라도 최고 점수 기준으로 승자를 결정
-     * - finishOrder는 기록된 경우 그대로 전달 (없으면 빈 리스트)
+     * - 100에 도달한 유저는 기존 finishOrderMap에 기록된 순서대로 유지
+     * - 100에 도달하지 않은 유저는 탭 수 내림차순으로 정렬하여 순위 뒤에 이어붙임
+     * - 최종 승자는 finishOrder의 첫 번째 유저로 결정
      */
     @Transactional
     public void endGame(String roomId) {
@@ -144,15 +147,26 @@ public class GameService {
                         return new Player(userName, score, mainFishImage);
                     })
                     .collect(Collectors.toList());
-            // 최고 점수를 가진 참가자를 승자로 결정
-            String computedWinner = players.stream()
-                    .max((p1, p2) -> Integer.compare(p1.getTotalPressCount(), p2.getTotalPressCount()))
-                    .map(Player::getUserName)
-                    .orElse(null);
-            List<String> finishOrder = finishOrderMap.getOrDefault(roomId, new ArrayList<>());
+
+            // 기존 finishOrder (100 도달 유저 순서)
+            List<String> finishOrder = new ArrayList<>(finishOrderMap.getOrDefault(roomId, new ArrayList<>()));
+            // finishOrder에 기록되지 않은 유저 (100 미달 유저)
+            Set<String> finishedUsers = new HashSet<>(finishOrder);
+            List<Map.Entry<String, Integer>> notFinishedList = roomScore.entrySet().stream()
+                    .filter(e -> !finishedUsers.contains(e.getKey()))
+                    .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())) // 내림차순 정렬
+                    .collect(Collectors.toList());
+            // 100 미달 유저들을 정렬된 순서대로 finishOrder 뒤에 추가
+            for (Map.Entry<String, Integer> entry : notFinishedList) {
+                finishOrder.add(entry.getKey());
+            }
+
+            // 최종 승자: finishOrder의 첫 번째 유저 (100에 도달한 유저가 있다면 그 중 가장 빠른 순서)
+            String computedWinner = finishOrder.isEmpty() ? null : finishOrder.get(0);
             RoomResponse response = new RoomResponse(roomId, players, "GAME_ENDED", computedWinner, finishOrder);
             messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
-            log.info("Game ended via timeout for roomId: {}. Winner: {}. Finish order: {}", roomId, computedWinner, finishOrder);
+            log.info("Game ended via timeout for roomId: {}. Winner: {}. Final finish order: {}",
+                    roomId, computedWinner, finishOrder);
         } else {
             log.error("No score map found for roomId: {}", roomId);
         }
