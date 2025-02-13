@@ -65,3 +65,18 @@ body {
   border-radius: 50%;
   animation: ping 1s infinite;
 }
+
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeInSlideUp {
+  animation: fadeInSlideUp 0.7s ease-out forwards;
+}
+
