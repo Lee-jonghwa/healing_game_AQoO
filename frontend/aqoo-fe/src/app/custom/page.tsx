@@ -7,6 +7,7 @@ import MenuButton from "../main/MenuButton";
 import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/services/axiosInstance";
 
 export default function CustomFishPages() {
   const router = useRouter();
@@ -27,8 +28,6 @@ export default function CustomFishPages() {
 
   const { auth } = useAuth();
   const userId = auth.user?.id;
-
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   useEffect(() => {
     const savedBg = localStorage.getItem("background");
@@ -318,7 +317,7 @@ export default function CustomFishPages() {
 
       try {
         // ✅ 2. API 호출 (multipart/form-data)
-        const response = await axios.post(`${API_BASE_URL}/fish/painting`, formData, {
+        const response = await axiosInstance.post(`/fish/painting`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
