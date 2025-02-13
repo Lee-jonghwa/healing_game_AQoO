@@ -52,6 +52,9 @@ export default function Game({
   // **추가**: 게임 시간 상태 (게임 시작 후 1초마다 증가)
   const [gameTime, setGameTime] = useState(0);
 
+  // 모달 창 닫힘 상태 (확인 버튼 클릭 시 true로 설정)
+  const [modalDismissed, setModalDismissed] = useState(false);
+
   // 이전 플레이어 상태 (비교용)
   const previousPlayersRef = useRef<Player[]>(initialPlayers);
 
@@ -108,6 +111,12 @@ export default function Game({
       if (!hasCountdownFinished || gameEnded || e.code !== 'Space') return;
       e.preventDefault();
 
+      // 현재 유저가 이미 결승점(100탭)에 도달한 경우 추가 입력 무시
+      const currentUserPlayer = players.find((p) => p.userName === userName);
+      if (currentUserPlayer && currentUserPlayer.totalPressCount >= 100) {
+        return;
+      }
+
       // 첫 스페이스바 입력 시 게임 시작 상태로 변경
       if (!hasStarted) {
         setHasStarted(true);
@@ -120,7 +129,7 @@ export default function Game({
       publishMessage('/app/game.press', { roomId, userName, pressCount: 1 });
       console.log('Press message sent:', { roomId, userName, pressCount: 1 });
     },
-    [hasCountdownFinished, gameEnded, roomId, userName, hasStarted]
+    [hasCountdownFinished, gameEnded, roomId, userName, hasStarted, players]
   );
 
   // Countdown 종료 후 keyup 이벤트 리스너 등록
@@ -143,6 +152,7 @@ export default function Game({
           setPlayers(data.players ?? []);
           if (data.message === 'GAME_ENDED') {
             setGameEnded(true);
+            console.log("winner:", data.winner);
             setWinner(data.winner || null);
             if (data.finishOrder) {
               setFinishOrder(data.finishOrder);
@@ -194,6 +204,8 @@ export default function Game({
         players[0]
       );
       setWinner(maxPlayer?.userName || null);
+      // 타임아웃 발생 시 GAME_ENDED 메시지를 백엔드에 전송
+      publishMessage('/app/game.end', { roomId });
     }
   }, [gameTime, players, hasStarted, gameEnded]);
 
@@ -203,55 +215,83 @@ export default function Game({
       setTimeout(() => {
         const syntheticEvent = new KeyboardEvent('keyup', { code: 'Space' });
         window.dispatchEvent(syntheticEvent);
-      }, 500);
+      }, 0);
     }
   }, [hasCountdownFinished, hasStarted]);
+
+  // 현재 유저의 플레이어 정보 확인
+  const currentUserPlayer = players.find((p) => p.userName === userName);
+  const hasArrived = currentUserPlayer ? currentUserPlayer.totalPressCount >= 100 : false;
 
   // 게임 종료 후 결과 확인 버튼 클릭 시
   const handleResultCheck = () => {
     onResultConfirmed();
   };
 
-  // 게임 종료 화면 렌더링 (finishOrder 목록도 표시)
+  // 결승 모달을 닫기 위한 버튼 클릭 핸들러
+  const handleModalClose = () => {
+    setModalDismissed(true);
+  }
+
+  // 게임 종료 화면
   if (gameEnded) {
     return (
-      <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
-        <div className='bg-white/80 shadow-lg rounded-xl p-10 text-center max-w-md w-full mx-4'>
-          <h1 className='text-4xl font-extrabold text-gray-800 mb-4'>Game Over</h1>
-          <p className='text-xl text-gray-600 mb-6'>
-            Winner:{' '}
-            <span className='font-bold text-gray-900'>{winner || 'No Winner'}</span>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br">
+        <div className="bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4">
+          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">Game Over</h1>
+          <p className="text-xl text-gray-600 mb-8">
+            Winner: <span className="font-bold text-gray-900">{winner || 'No Winner'}</span>
           </p>
           {finishOrder.length > 0 && (
-            <div className='mb-6'>
-              <h2 className='text-2xl font-bold mb-2'>전체 순위</h2>
-              <ol className='text-xl text-gray-700'>
-                {finishOrder.map((user, index) => (
-                  <li key={user}>
-                    {index + 1}. {user}
-                  </li>
-                ))}
-              </ol>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">전체 순위</h2>
+              <div className="bg-gray-100 rounded-lg shadow-md p-4">
+                <ol className="divide-y divide-gray-300">
+                  {finishOrder.map((user, index) => (
+                    <li key={user} className="py-2 flex justify-between items-center">
+                      <span className="font-semibold text-gray-700">{index + 1}.</span>
+                      <span className="text-gray-900">{user}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             </div>
           )}
           <button
             onClick={handleResultCheck}
-            className='w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300'
+            className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300"
           >
-            Check Result & Exit
+            채팅방으로 돌아가기
           </button>
         </div>
       </div>
     );
   }
+  
+  
 
-  // 게임 진행 화면
   return (
     <div
       className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
+      {/* 결승점 도착한 경우 모달 띄우기 (게임 종료 전) */}
+      {!gameEnded && hasArrived && !modalDismissed && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
+          <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-4">결승점 도착!</h2>
+            <p className="text-xl mb-4">다른 물고기들이 도착할 때까지 기다려주세요!</p>
+            <button
+              onClick={handleModalClose}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 시작 마커 - 레일 영역 내에 표시 */}
       {trackDims.height > 0 && (
         <div
