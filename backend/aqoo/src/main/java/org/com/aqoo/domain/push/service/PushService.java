@@ -59,7 +59,7 @@ public class PushService {
         //타입별로 알람 나누기 (FRIEND REQUEST, FRIEND ACCEPT, GAME INVITE, WATER, CLEAN, FEED)
         //title, body 구성
         String type = request.getType();
-        String title = getMessageTitle(type);
+        String title = getMessageTitle(type, request.getSenderId());
         String body = getMessageBody(type, request.getSenderId(), request.getData());
 
         // 알람 저장
@@ -89,6 +89,9 @@ public class PushService {
             return;
         }
 
+        if(request.getData().equals("5") || request.getData().equals("4")) return;
+
+
         for (UserToken userToken : userTokens) {
             Message message = Message.builder()
                     .setToken(userToken.getToken())  // 유저의 각 토큰에 대해 메시지 전송
@@ -105,14 +108,14 @@ public class PushService {
         }
     }
 
-    public static String getMessageTitle(String type) {
+    public static String getMessageTitle(String type, String aquariumName) {
         return switch (type) {
             case "FRIEND REQUEST" -> "\uD83C\uDF1F 친구 요청 \uD83C\uDF1F";
             case "FRIEND ACCEPT" -> "\uD83E\uDD1D 친구 수락 \uD83E\uDD1D";
             case "GAME INVITE" -> "\uD83C\uDFAE 게임 초대 \uD83C\uDFAE";
-            case "FEED" -> "\uD83C\uDF7D 어항 먹이 상태 \uD83C\uDF7D";
-            case "CLEAN" -> "\uD83E\uDDFD 어항 청소 상태 \uD83E\uDDFD";
-            case "WATER" -> "\uD83D\uDCA7 어항 물 상태 \uD83D\uDCA7";
+            case "FEED" -> "\uD83C\uDF7D 어항 먹이 상태 \uD83C\uDF7D : " + aquariumName;
+            case "CLEAN" -> "\uD83E\uDDFD 어항 청소 상태 \uD83E\uDDFD : " + aquariumName;
+            case "WATER" -> "\uD83D\uDCA7 어항 물 상태 \uD83D\uDCA7 : " + aquariumName;
             default -> "알림";
         };
     }

@@ -191,7 +191,7 @@ public class FishService {
         // 중복 검사 (이미 해당 이미지 URL이 존재하는 경우 예외 발생)
         String imageUrl = "/" + imagePath;
         if (fishRepository.existsByImageUrl(imageUrl)) {
-            throw new IllegalArgumentException("이미 있는 이름입니다.");
+            throw new IllegalArgumentException("이미 존재하는 이름입니다.");
         }
 
 

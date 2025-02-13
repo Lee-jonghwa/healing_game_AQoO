@@ -139,11 +139,11 @@ public class FishController {
 
             String response = fishService.paintFish(userId, fishName, imageFile);
 
-            return ResponseEntity.ok("Upload successful: " + response);
+            return ResponseEntity.ok("업로드 성공: " + response);
 
         } catch (Exception e) {
             // 예외 발생 시, 상세 오류 메시지 포함하여 응답
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("업로드 실패: " + e.getMessage());
         }
     }
 
