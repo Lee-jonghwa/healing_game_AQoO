@@ -52,6 +52,14 @@ export default function Game({
   const trackRef = useRef<HTMLDivElement>(null);
   const [trackDims, setTrackDims] = useState({ width: 0, height: 0 });
 
+  // 항상 총 6개 레인으로 고정
+  const totalLanes = 6;
+  // 레인 영역을 전체 화면의 70%로 제한하고 중앙에 배치
+  const laneAreaFactor = 0.7;
+  const laneAreaHeight = trackDims.height * laneAreaFactor;
+  const laneAreaTopOffset = (trackDims.height - laneAreaHeight) / 2;
+  const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
+
   // 컨테이너 크기 측정 (초기 렌더 및 리사이즈 시 업데이트)
   useEffect(() => {
     function updateDims() {
@@ -148,10 +156,7 @@ export default function Game({
         const prevPlayer = previousPlayersRef.current.find(
           (p) => p.userName === player.userName
         );
-        if (
-          !prevPlayer ||
-          player.totalPressCount > prevPlayer.totalPressCount
-        ) {
+        if (!prevPlayer || player.totalPressCount > prevPlayer.totalPressCount) {
           setWindEffects((prev) => ({ ...prev, [player.userName]: true }));
           setTimeout(() => {
             setWindEffects((prev) => ({ ...prev, [player.userName]: false }));
@@ -170,7 +175,6 @@ export default function Game({
   // 만약 countdown이 끝났는데 아직 게임이 시작되지 않았다면, 강제로 스페이스바 이벤트 발생!
   useEffect(() => {
     if (hasCountdownFinished && !hasStarted) {
-      // 잠시 딜레이 후에 합성 이벤트 발생 (딜레이를 줘서 이벤트 등록이 완료되도록)
       setTimeout(() => {
         const syntheticEvent = new KeyboardEvent('keyup', { code: 'Space' });
         window.dispatchEvent(syntheticEvent);
@@ -183,14 +187,10 @@ export default function Game({
     return (
       <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
         <div className='bg-white/80 shadow-lg rounded-xl p-10 text-center max-w-md w-full mx-4'>
-          <h1 className='text-4xl font-extrabold text-gray-800 mb-4'>
-            Game Over
-          </h1>
+          <h1 className='text-4xl font-extrabold text-gray-800 mb-4'>Game Over</h1>
           <p className='text-xl text-gray-600 mb-6'>
             Winner:{' '}
-            <span className='font-bold text-gray-900'>
-              {winner || 'No Winner'}
-            </span>
+            <span className='font-bold text-gray-900'>{winner || 'No Winner'}</span>
           </p>
           <button
             onClick={handleResultCheck}
@@ -203,7 +203,7 @@ export default function Game({
     );
   }
 
-  // 게임 진행 화면: 경주 트랙 영역은 항상 렌더링되고, countdown 전에는 오버레이로 설명을 보여줍니다.
+  // 게임 진행 화면
   return (
     <div
       className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
@@ -224,19 +224,46 @@ export default function Game({
         </div>
       </div>
 
-      {/* 경주 트랙 영역: 플레이어(대표 물고기)들을 렌더링 */}
-      {players.map((player, index) => {
-        // 레인 높이와 물고기 크기 계산
-        const laneHeight = trackDims.height ? trackDims.height / 6 : 120;
-        const fishSize = laneHeight * 0.8;
-        const topPos = index * laneHeight + (laneHeight - fishSize) / 2;
-        // 수평 위치 계산
-        // - 출발점: 화면 너비의 10% (startOffset)
-        // - 100번의 스페이스바(=50 이동 단위)로 도착점인 화면 너비의 90%에 도달하도록 moveFactor 계산
-        const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
-        const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25; // 0.016 * width * 50 = 0.8 * width
+      {/* 레인 구분선 (상단, 하단 경계 포함) */}
+      {trackDims.height && (
+        <>
+          {/* 상단 경계 */}
+          <div
+            className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+            style={{ top: `${laneAreaTopOffset}px`, zIndex: 2 }}
+          />
+          {/* 중간 경계 */}
+          {Array.from({ length: totalLanes - 1 }).map((_, i) => (
+            <div
+              key={i}
+              className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+              style={{
+                top: `${laneAreaTopOffset + (i + 1) * laneHeight}px`,
+                zIndex: 2,
+              }}
+            />
+          ))}
+          {/* 하단 경계 */}
+          <div
+            className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+            style={{ top: `${laneAreaTopOffset + laneAreaHeight}px`, zIndex: 2 }}
+          />
+        </>
+      )}
 
-        // **현재 사용자의 경우, 아직 게임이 시작되지 않았다면 항상 출발선 위치에 렌더링**
+      {/* 플레이어(물고기) 렌더링 */}
+      {players.map((player, index) => {
+        // 플레이어가 총 6마리 미만인 경우 중앙 정렬을 위한 오프셋 계산
+        const offset =
+          players.length < totalLanes
+            ? Math.floor((totalLanes - players.length) / 2)
+            : 0;
+        const laneIndex = index + offset;
+        const fishSize = laneHeight * 0.8;
+        const topPos =
+          laneAreaTopOffset + laneIndex * laneHeight + (laneHeight - fishSize) / 2;
+        const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
+        const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
         const leftPos =
           player.userName === userName && !hasStarted
             ? startOffset
