@@ -28,6 +28,8 @@ export default function CustomFishPages() {
   const { auth } = useAuth();
   const userId = auth.user?.id;
 
+  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+
   useEffect(() => {
     const savedBg = localStorage.getItem("background");
     if (savedBg) setBackground(savedBg);
@@ -164,7 +166,14 @@ export default function CustomFishPages() {
     const { x, y } = getCanvasCoordinates(event); // 정확한 좌표 가져오기
     context.beginPath();
     context.moveTo(x, y);
-    context.strokeStyle = eraserMode ? "white" : penColor;
+
+    if (eraserMode) {
+      context.globalCompositeOperation = "destination-out";
+      context.strokeStyle = "rgba(0,0,0,1)"; // 색은 무시되지만 투명으로 칠해짐
+    } else {
+      context.globalCompositeOperation = "source-over"; // 일반 그리기 모드로 되돌림
+      context.strokeStyle = penColor;
+    }
   };
 
   const draw = (event: React.MouseEvent) => {
@@ -309,13 +318,13 @@ export default function CustomFishPages() {
 
       try {
         // ✅ 2. API 호출 (multipart/form-data)
-        const response = await axios.post("/api/v1/fish/painting", formData, {
+        const response = await axios.post(`${API_BASE_URL}/fish/painting`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
         console.log("✅ 성공:", response.data);
         alert("그림이 저장되었습니다!");
-        router.push("/somewhere"); // ✅ 저장 후 리디렉션할 페이지
+        router.push("/mypage/fishtank"); // ✅ 저장 후 리디렉션할 페이지
       } catch (error) {
         console.error("🚨 오류:", error);
         alert("저장 중 오류가 발생했습니다.");
