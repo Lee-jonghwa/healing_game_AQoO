@@ -5,20 +5,20 @@ import "@/lib/firebase"; // Firebase 초기화
 import { AquariumData, UserInfo } from "@/types";
 import React, { useEffect, useRef, useState } from "react";
 import axios, { AxiosResponse } from "axios";
+import { increaseFishTicket, increaseUserExp } from "@/services/userService";
 
 import BottomMenuBar from "@/app/main/BottomMenuBar";
 import CleanComponent from "@/app/main/CleanComponent";
+import FirstLoginModal from "@/app/main/components/FirstLoginModal";
 import FishTicketModal from "@/components/FishTicketModal"; // 물고기 뽑기 모달
 import FriendsList from "@/app/main/FriendsList";
 import Image from "next/image";
+import KickedModal from "@/app/main/components/KickedModal";
 import LevelUpModal from "@/components/LevelUpModal"; // 레벨업 모달
 import Link from "next/link";
 import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import { gsap } from "gsap";
-import FirstLoginModal from "@/app/main/components/FirstLoginModal";
-
-import { increaseUserExp } from "@/services/userService";
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
 
 // 🔹 물고기 데이터 타입 정의
@@ -31,7 +31,6 @@ interface FishData {
 }
 
 // ✅ 추방 모달 컴포넌트 추가
-import KickedModal from "@/app/main/components/KickedModal";
 
 export default function MainPage() {
   const { auth } = useAuth(); // 로그인한 유저 정보 가져오기
@@ -115,7 +114,15 @@ export default function MainPage() {
       // 레벨업 확인
       if (updatedExpData.userLevel > prevLevel) {
         console.log("🎉 레벨업 발생! 새로운 레벨:", updatedExpData.userLevel);
-        setLevelUpInfo({ level: updatedExpData.userLevel, expProgress: updatedExpData.expProgress });
+        setLevelUpInfo({ level: updatedExpData.userLevel, expProgress: updatedExpData.expProgress }); // ✅ 물고기 티켓 증가 API 호출
+
+        const updatedFishTicket = await increaseFishTicket(auth.user.id);
+        if (updatedFishTicket !== null) {
+          setUserInfo((prevUserInfo) => ({
+            ...prevUserInfo!,
+            fishTicket: updatedFishTicket, // ✅ 물고기 티켓 업데이트
+          }));
+        }
       }
 
       await refreshUserInfo();
