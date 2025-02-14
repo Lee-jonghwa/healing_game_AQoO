@@ -87,7 +87,7 @@ export default function MyFishTank() {
         "
       >
         {/* 실제 탭 + 내용 */}
-        <FishTankTabs />
+        <FishTankTabs onBackgroundChange={setBackground} />
       </div>
     </div>
   );

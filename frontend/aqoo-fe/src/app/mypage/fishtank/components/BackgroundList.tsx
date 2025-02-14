@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "@/services/axiosInstance";
 import BackgroundItemCard from "./BackgroundItemCard";
+import { BADFLAGS } from "dns";
 
 interface Background {
   id: number;
@@ -11,9 +12,10 @@ interface Background {
 
 interface BackgroundListProps {
   aquariumId: number;
+  onBackgroundChange: (newBackground: string) => void;
 }
 
-export default function BackgroundList({ aquariumId }: BackgroundListProps) {
+export default function BackgroundList({ aquariumId, onBackgroundChange }: BackgroundListProps) {
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -39,7 +41,7 @@ export default function BackgroundList({ aquariumId }: BackgroundListProps) {
       });
   }, []);
 
-  const handleBackgroundSelect = (backgroundId: number) => {
+  const handleBackgroundSelect = (backgroundId: number, newBgUrl: string) => {
     setSelectedBackgroundId(backgroundId);
     axiosInstance
       .post("/aquariums/update", {
@@ -48,6 +50,7 @@ export default function BackgroundList({ aquariumId }: BackgroundListProps) {
         data: backgroundId,
       })
       .then(() => {
+        onBackgroundChange(newBgUrl);
         alert("배경화면이 변경되었습니다.");
       })
       .catch((error) => {
@@ -77,7 +80,7 @@ export default function BackgroundList({ aquariumId }: BackgroundListProps) {
               isHovered={isHovered}
               onMouseEnter={() => setHoveredIndex(idx)}
               onMouseLeave={() => setHoveredIndex(null)}
-              onClick={() => handleBackgroundSelect(bg.id)}
+              onClick={() => handleBackgroundSelect(bg.id, bg.imageUrl)}
             />
           );
         })}

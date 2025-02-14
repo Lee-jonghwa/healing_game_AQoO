@@ -12,7 +12,11 @@ interface AquariumTab {
   name: string;
 }
 
-export default function FishTankTabs() {
+interface FishTankTabsProps {
+  onBackgroundChange: (newbackground: string) => void;
+}
+
+export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) {
   const auth = useRecoilValue(authAtom);
 
   // 탭 배열 (어항 목록)
@@ -262,11 +266,10 @@ export default function FishTankTabs() {
             onFishAdded={handleFishAdded}
             onFishRemoved={handleFishRemoved}
             onSetMainAquarium={handleSetMainAquarium}
+            onBackgroundChange={onBackgroundChange}
           />
         ) : (
-          <div className="flex justify-center items-center h-full">
-            어항 정보가 없습니다.
-          </div>
+          <div className="flex justify-center items-center h-full">어항 정보가 없습니다.</div>
         )}
       </div>
 
