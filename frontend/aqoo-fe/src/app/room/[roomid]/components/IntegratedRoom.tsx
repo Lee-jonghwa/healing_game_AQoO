@@ -7,7 +7,6 @@ import ChatBox from './ChatBox';
 import Game from './Game';
 import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
-import { gsap } from "gsap";
 import Fish from "./Fish"
 
 // 플레이어 타입 정의
@@ -50,6 +49,9 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
   const hasSentJoinRef = useRef(false);
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
+
+  // 현재 참가자 수
+  const participantCount = users.length;
 
   // 사용자 목록 상태 및 displayUsers 선언
   const displayUsers =
@@ -120,29 +122,14 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     return () => clearInterval(intervalId);
   }, [roomId, userName, router]);
 
-  // 현재 사용자의 방장 여부 갱신
-  useEffect(() => {
-    const me = users.find((u) => u.userName === userName);
-    setCurrentIsHost(me ? me.isHost : false);
-  }, [users, userName]);
 
-  // 디버깅
-  useEffect(() => {
-    console.log('Updated users:', users);
-    users.forEach((user) =>
-      console.log(`User ${user.userName}: isHost = ${user.isHost}, ready = ${user.ready}`)
-    );
-  }, [users]);
-
-  // ready / start 관련 상태 계산
-  const myReady = users.find((u) => u.userName === userName)?.ready;
-  const nonHostUsers = currentIsHost
-    ? users.filter((u) => u.userName !== userName)
-    : users.filter((u) => !u.isHost);
-  const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
-
-  // 친구 초대 함수
+  // 친구 초대 함수 (참가자가 6명 이상이면 초대 불가)
   const inviteFriend = async (friendUserId: string) => {
+    if (participantCount >= 6) {
+      alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+      return;
+    }
+    
     try {
       const response = await fetch("https://i12e203.p.ssafy.io/api/v1/chatrooms/invite", {
         method: "POST",
@@ -168,6 +155,28 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     }
   };
 
+  // 현재 사용자의 방장 여부 갱신
+  useEffect(() => {
+    const me = users.find((u) => u.userName === userName);
+    setCurrentIsHost(me ? me.isHost : false);
+  }, [users, userName]);
+
+  // 디버깅
+  useEffect(() => {
+    console.log('Updated users:', users);
+    users.forEach((user) =>
+      console.log(`User ${user.userName}: isHost = ${user.isHost}, ready = ${user.ready}`)
+    );
+  }, [users]);
+
+  // ready / start 관련 상태 계산
+  const myReady = users.find((u) => u.userName === userName)?.ready;
+  const nonHostUsers = currentIsHost
+    ? users.filter((u) => u.userName !== userName)
+    : users.filter((u) => !u.isHost);
+  const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
+
+
   return (
     <>
       {!isConnected ? (
@@ -190,144 +199,148 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
               {fishes.map((fish) => (
                 <Fish key={fish.fishId} fish={fish} />
               ))}
-
+  
               <div className="absolute inset-0 bg-white opacity-20"></div>
-
-{/* 시작 */}
-              {/* <div className='absolute top-0 right-2 bottom-2'> */}
-                {/* 오른쪽 패널 (참가자 리스트 + 친구 초대 + 나가기 버튼) */}
-                <div className="absolute top-16 right-[110px] w-[250px]">
-                  <div className="relative inline-block">
-                    <div className="flex space-x-2 mb-2">
+  
+              {/* 오른쪽 패널 (참가자 리스트 + 친구 초대 + 나가기 버튼) */}
+              <div className="absolute top-16 right-[110px] w-[250px]">
+                <div className="relative inline-block">
+                  <div className="flex space-x-2 mb-2">
+                    <button
+                      onClick={() => setShowFriendList((prev) => !prev)}
+                      className="w-40 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors whitespace-nowrap text-center"
+                    >
+                      친구 초대
+                    </button>
+                    <button
+                      onClick={() => {
+                        const client = getStompClient();
+                        if (client && client.connected) {
+                          client.publish({
+                            destination: '/app/chat.leaveRoom',
+                            body: JSON.stringify({ roomId, sender: userName }),
+                          });
+                          console.log('Leave room message sent');
+                          router.push('/room');
+                        } else {
+                          console.error('STOMP client is not connected yet.');
+                        }
+                      }}
+                      className="w-40 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors whitespace-nowrap text-center"
+                    >
+                      나가기
+                    </button>
+                  </div>
+  
+                  {showFriendList && (
+                    <div className="absolute top-0 right-full mr-2 w-[300px] bg-white shadow-md p-4 rounded-lg">
                       <button
-                        onClick={() => setShowFriendList((prev) => !prev)}
-                        className="w-40 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors whitespace-nowrap text-center"
+                        onClick={() => setShowFriendList(false)}
+                        className="absolute top-2 right-2 text-gray-600 hover:text-black"
                       >
-                        친구 초대
+                        ❌
                       </button>
-                      <button
-                        onClick={() => {
-                          const client = getStompClient();
-                          if (client && client.connected) {
+                      <FriendList
+                        userName={userName}
+                        roomId={roomId}
+                        isHost={currentIsHost}
+                        participantCount={users.length} // 현재 참가자 수 전달
+                        onInvite={(friendId) => {
+                          if (users.length >= 6) {
+                            alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+                            return;
+                          }
+                          inviteFriend(friendId);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+  
+                <ParticipantList
+                  users={displayUsers}
+                  currentUser={userName}
+                  currentIsHost={currentIsHost}
+                  onKickUser={(target) => {
+                    const client = getStompClient();
+                    if (client && client.connected) {
+                      client.publish({
+                        destination: '/app/chat.kickUser',
+                        body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
+                      });
+                      console.log('Kick user message sent for:', target);
+                    } else {
+                      console.error('STOMP client is not connected yet.');
+                    }
+                  }}
+                />
+              </div>
+  
+              {/* 채팅창 + 입력 필드 */}
+              <div className="absolute top-[240px] right-8 w-[330px] p-3 bg-white rounded shadow-md">
+                <ChatBox roomId={roomId} userName={userName} />
+              </div>
+  
+              {/* Ready / Start 버튼 영역 */}
+              <div className="absolute top-[620px] right-8 w-[330px]">
+                <div className="mt-6 flex flex-col items-center space-y-4">
+                  {currentIsHost ? (
+                    <button
+                      onClick={() => {
+                        if (!allNonHostReady) {
+                          console.warn("Not all non-host users are ready yet.");
+                          return;
+                        }
+                        const client = getStompClient();
+                        if (client && client.connected) {
+                          client.publish({
+                            destination: '/app/game.start',
+                            body: JSON.stringify({ roomId }),
+                          });
+                          console.log('Game start message sent');
+                        } else {
+                          console.error('STOMP client is not connected yet.');
+                        }
+                      }}
+                      className={`w-full px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors ${
+                        allNonHostReady ? '' : 'opacity-50 cursor-not-allowed'
+                      }`}
+                      disabled={!allNonHostReady}
+                    >
+                      Start Game
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const client = getStompClient();
+                        if (client && client.connected) {
+                          if (myReady) {
                             client.publish({
-                              destination: '/app/chat.leaveRoom',
+                              destination: '/app/chat.unready',
                               body: JSON.stringify({ roomId, sender: userName }),
                             });
-                            console.log('Leave room message sent');
-                            router.push('/room');
+                            console.log('Unready message sent');
                           } else {
-                            console.error('STOMP client is not connected yet.');
+                            client.publish({
+                              destination: '/app/chat.ready',
+                              body: JSON.stringify({ roomId, sender: userName }),
+                            });
+                            console.log('Ready message sent');
                           }
-                        }}
-                        className="w-40 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors whitespace-nowrap text-center"
-                      >
-                        나가기
-                      </button>
-                    </div>
-                    {showFriendList && (
-                      <div className="absolute top-0 right-full mr-2 w-[300px] bg-white shadow-md p-4 rounded-lg">
-                        <button
-                          onClick={() => setShowFriendList(false)}
-                          className="absolute top-2 right-2 text-gray-600 hover:text-black"
-                        >
-                          ❌
-                        </button>
-                        <FriendList
-                          userName={userName}
-                          roomId={roomId}
-                          isHost={currentIsHost}
-                          onInvite={inviteFriend}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <ParticipantList
-                    users={displayUsers}
-                    currentUser={userName}
-                    currentIsHost={currentIsHost}
-                    onKickUser={(target) => {
-                      const client = getStompClient();
-                      if (client && client.connected) {
-                        client.publish({
-                          destination: '/app/chat.kickUser',
-                          body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
-                        });
-                        console.log('Kick user message sent for:', target);
-                      } else {
-                        console.error('STOMP client is not connected yet.');
-                      }
-                    }}
-                  />
+                        } else {
+                          console.error('STOMP client is not connected yet.');
+                        }
+                      }}
+                      className="w-full px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      {myReady ? 'Unready' : 'Ready'}
+                    </button>
+                  )}
                 </div>
-
-                  {/* 채팅창 + 입력 필드 */}
-                  <div className="absolute top-[240px] right-8 w-[330px] p-3 bg-white rounded shadow-md">
-                    <ChatBox roomId={roomId} userName={userName} />
-                  </div>
-
-                  {/* Ready / Start 버튼 영역 */}
-                  <div className="absolute top-[620px] right-8 w-[330px]">
-                    <div className="mt-6 flex flex-col items-center space-y-4">
-                      {currentIsHost ? (
-                        <button
-                          onClick={() => {
-                            if (!allNonHostReady) {
-                              console.warn("Not all non-host users are ready yet.");
-                              return;
-                            }
-                            const client = getStompClient();
-                            if (client && client.connected) {
-                              client.publish({
-                                destination: '/app/game.start',
-                                body: JSON.stringify({ roomId }),
-                              });
-                              console.log('Game start message sent');
-                            } else {
-                              console.error('STOMP client is not connected yet.');
-                            }
-                          }}
-                          className={`w-full px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition-colors ${
-                            allNonHostReady ? '' : 'opacity-50 cursor-not-allowed'
-                          }`}
-                          disabled={!allNonHostReady}
-                        >
-                          Start Game
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            const client = getStompClient();
-                            if (client && client.connected) {
-                              if (myReady) {
-                                client.publish({
-                                  destination: '/app/chat.unready',
-                                  body: JSON.stringify({ roomId, sender: userName }),
-                                });
-                                console.log('Unready message sent');
-                              } else {
-                                client.publish({
-                                  destination: '/app/chat.ready',
-                                  body: JSON.stringify({ roomId, sender: userName }),
-                                });
-                                console.log('Ready message sent');
-                              }
-                            } else {
-                              console.error('STOMP client is not connected yet.');
-                            }
-                          }}
-                          className="w-full px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                        >
-                          {myReady ? 'Unready' : 'Ready'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                {/* </div> */}
-{/* 끝 */}
-          
+              </div>
             </div>
           )}
+          
           {screen === 'game' && (
             <div className="w-full h-screen bg-cover bg-center">
               <Game
