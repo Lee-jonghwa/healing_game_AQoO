@@ -38,14 +38,14 @@ interface UserInfo {
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 export default function FriendFishPage() {
-  // 모든 Hook은 컴포넌트 최상위에서 호출합니다.
+  // 항상 Hook은 최상위에서 호출: friendId가 없으면 기본값 ""를 사용합니다.
   const searchParams = useSearchParams();
   const router = useRouter();
-  const friendId = searchParams.get("friendId");
+  const friendId = searchParams.get("friendId") || "";
 
-  // friendId가 없으면 즉시 리다이렉트 (렌더링 이전에 실행)
+  // friendId가 없으면 useEffect에서 /main으로 리다이렉트
   useEffect(() => {
-    if (!friendId) {
+    if (friendId === "") {
       router.push("/main");
     }
   }, [friendId, router]);
@@ -57,27 +57,20 @@ export default function FriendFishPage() {
   const [loading, setLoading] = useState(true);
   const [showFishList, setShowFishList] = useState(false);
 
-  // friendId가 없더라도 Hook은 이미 호출되었으므로, 여기서 단순히 null을 리턴합니다.
-  if (!friendId) return null;
-
-  // 1. 친구 유저 정보 불러오기
+  // friendId는 항상 문자열("")이므로, 아래 Hook들은 조건부 없이 항상 호출됩니다.
   useEffect(() => {
-    // friendId가 유효한 경우에만 API 호출 (조건은 effect 내부에서 처리)
-    if (friendId) {
-      axios
-        .get(`${API_BASE_URL}/users/${friendId}`)
-        .then((res: AxiosResponse<UserInfo>) => {
-          console.log("친구 유저 정보:", res.data);
-          setFriendUserInfo(res.data);
-        })
-        .catch((err) => {
-          console.error("친구 유저 정보 불러오기 실패:", err);
-          setLoading(false);
-        });
-    }
+    axios
+      .get(`${API_BASE_URL}/users/${friendId}`)
+      .then((res: AxiosResponse<UserInfo>) => {
+        console.log("친구 유저 정보:", res.data);
+        setFriendUserInfo(res.data);
+      })
+      .catch((err) => {
+        console.error("친구 유저 정보 불러오기 실패:", err);
+        setLoading(false);
+      });
   }, [friendId]);
 
-  // 2. 어항 상세 정보 불러오기 (친구의 mainAquarium 사용)
   useEffect(() => {
     if (friendUserInfo?.mainAquarium) {
       axios
@@ -85,8 +78,7 @@ export default function FriendFishPage() {
         .then((res: AxiosResponse<AquariumData>) => {
           console.log("어항 상세 정보:", res.data);
           setAquariumData(res.data);
-          const bgUrl =
-            "https://i12e203.p.ssafy.io/images" + res.data.aquariumBackground;
+          const bgUrl = "https://i12e203.p.ssafy.io/images" + res.data.aquariumBackground;
           console.log("배경 이미지 URL:", bgUrl);
           setBackground(bgUrl);
         })
@@ -95,6 +87,8 @@ export default function FriendFishPage() {
     }
   }, [friendUserInfo]);
 
+  // friendId가 ""일 경우 이미 useEffect에서 리다이렉트하므로 여기서는 간단히 렌더링합니다.
+  if (friendId === "") return <div>Redirecting...</div>;
   if (loading) return <div>로딩 중...</div>;
   if (!friendUserInfo || !aquariumData)
     return <div>데이터를 불러오는데 실패했습니다.</div>;
@@ -171,7 +165,6 @@ export default function FriendFishPage() {
                   />
                   <button
                     onClick={() => {
-                      // 물고기 가져오기 동작 구현 (예시: alert)
                       alert(`${fishInfo.fish}를 가져왔습니다!`);
                     }}
                     className="mt-1 bg-green-500 text-white px-2 py-1 rounded text-xs"
@@ -190,9 +183,7 @@ export default function FriendFishPage() {
 
 // 헬퍼 함수: 물고기 이름을 기반으로 이미지 URL 생성 (실제 경로에 맞게 수정)
 function getFishImageUrl(fishName: string): string {
-  return `https://i12e203.p.ssafy.io/images/${encodeURIComponent(
-    fishName
-  )}.png`;
+  return `https://i12e203.p.ssafy.io/images/${encodeURIComponent(fishName)}.png`;
 }
 
 // 물고기 컴포넌트 (GSAP 애니메이션 포함)
@@ -218,10 +209,8 @@ function Fish({ fishInfo }: { fishInfo: FishInfo }) {
     const safeMargin = 80;
     const bottomMargin = 100;
     const upperLimit = windowHeight * 0.2;
-    const randomStartX =
-      Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
-    const randomStartY =
-      Math.random() * (windowHeight - bottomMargin - 50) + 50;
+    const randomStartX = Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
+    const randomStartY = Math.random() * (windowHeight - bottomMargin - 50) + 50;
 
     gsap.set(fishRef.current, {
       x: randomStartX,
@@ -243,8 +232,7 @@ function Fish({ fishInfo }: { fishInfo: FishInfo }) {
       }
 
       let newX =
-        parseFloat(gsap.getProperty(fishRef.current, "x") as string) +
-        moveDistanceX;
+        parseFloat(gsap.getProperty(fishRef.current, "x") as string) + moveDistanceX;
       let newY = currentY + moveDistanceY;
 
       if (newX < safeMargin) {
@@ -268,9 +256,7 @@ function Fish({ fishInfo }: { fishInfo: FishInfo }) {
         duration: randomSpeed,
         ease: "power2.inOut",
         onUpdate: () => {
-          const prevX = parseFloat(
-            gsap.getProperty(fishRef.current, "x") as string
-          );
+          const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
           directionRef.current = newX > prevX ? -1 : 1;
           gsap.set(fishRef.current, { scaleX: directionRef.current });
         },
