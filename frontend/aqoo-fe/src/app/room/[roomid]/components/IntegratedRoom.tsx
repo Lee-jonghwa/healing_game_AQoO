@@ -7,7 +7,6 @@ import ChatBox from './ChatBox';
 import Game from './Game';
 import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
-import { gsap } from "gsap";
 import Fish from "./Fish"
 
 // 플레이어 타입 정의
@@ -50,6 +49,9 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
   const hasSentJoinRef = useRef(false);
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
+
+  // 현재 참가자 수
+  const participantCount = users.length;
 
   // 사용자 목록 상태 및 displayUsers 선언
   const displayUsers =
@@ -120,29 +122,14 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     return () => clearInterval(intervalId);
   }, [roomId, userName, router]);
 
-  // 현재 사용자의 방장 여부 갱신
-  useEffect(() => {
-    const me = users.find((u) => u.userName === userName);
-    setCurrentIsHost(me ? me.isHost : false);
-  }, [users, userName]);
 
-  // 디버깅
-  useEffect(() => {
-    console.log('Updated users:', users);
-    users.forEach((user) =>
-      console.log(`User ${user.userName}: isHost = ${user.isHost}, ready = ${user.ready}`)
-    );
-  }, [users]);
-
-  // ready / start 관련 상태 계산
-  const myReady = users.find((u) => u.userName === userName)?.ready;
-  const nonHostUsers = currentIsHost
-    ? users.filter((u) => u.userName !== userName)
-    : users.filter((u) => !u.isHost);
-  const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
-
-  // 친구 초대 함수
+  // 친구 초대 함수 (참가자가 6명 이상이면 초대 불가)
   const inviteFriend = async (friendUserId: string) => {
+    if (participantCount >= 6) {
+      alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+      return;
+    }
+    
     try {
       const response = await fetch("https://i12e203.p.ssafy.io/api/v1/chatrooms/invite", {
         method: "POST",
@@ -168,6 +155,28 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
     }
   };
 
+  // 현재 사용자의 방장 여부 갱신
+  useEffect(() => {
+    const me = users.find((u) => u.userName === userName);
+    setCurrentIsHost(me ? me.isHost : false);
+  }, [users, userName]);
+
+  // 디버깅
+  useEffect(() => {
+    console.log('Updated users:', users);
+    users.forEach((user) =>
+      console.log(`User ${user.userName}: isHost = ${user.isHost}, ready = ${user.ready}`)
+    );
+  }, [users]);
+
+  // ready / start 관련 상태 계산
+  const myReady = users.find((u) => u.userName === userName)?.ready;
+  const nonHostUsers = currentIsHost
+    ? users.filter((u) => u.userName !== userName)
+    : users.filter((u) => !u.isHost);
+  const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
+
+
   return (
     <>
       {!isConnected ? (
@@ -186,15 +195,15 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                 backgroundPosition: "center"
               }}
             >
-              {/* 물고기 렌더링: 화면 전체를 기준으로 떠다님 */}
+              {/* 물고기 렌더링 */}
               {fishes.map((fish) => (
                 <Fish key={fish.fishId} fish={fish} />
               ))}
-
+  
               <div className="absolute inset-0 bg-white opacity-20"></div>
-
-              {/* 나가기 버튼 + 친구 초대 버튼 + 참가자 리스트 (오른쪽 상단) */}
-              <div className="absolute top-20 right-[110px] w-[250px]">
+  
+              {/* 오른쪽 패널 (참가자 리스트 + 친구 초대 + 나가기 버튼) */}
+              <div className="absolute top-16 right-[110px] w-[250px]">
                 <div className="relative inline-block">
                   <div className="flex space-x-2 mb-2">
                     <button
@@ -222,6 +231,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                       나가기
                     </button>
                   </div>
+  
                   {showFriendList && (
                     <div className="absolute top-0 right-full mr-2 w-[300px] bg-white shadow-md p-4 rounded-lg">
                       <button
@@ -234,12 +244,19 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                         userName={userName}
                         roomId={roomId}
                         isHost={currentIsHost}
-                        onInvite={inviteFriend}
+                        participantCount={users.length} // 현재 참가자 수 전달
+                        onInvite={(friendId) => {
+                          if (users.length >= 6) {
+                            alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+                            return;
+                          }
+                          inviteFriend(friendId);
+                        }}
                       />
                     </div>
                   )}
                 </div>
-
+  
                 <ParticipantList
                   users={displayUsers}
                   currentUser={userName}
@@ -258,14 +275,14 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                   }}
                 />
               </div>
-
+  
               {/* 채팅창 + 입력 필드 */}
-              <div className="absolute top-[300px] right-8 w-[330px] p-3 bg-white rounded shadow-md">
+              <div className="absolute top-[240px] right-8 w-[330px] p-3 bg-white rounded shadow-md">
                 <ChatBox roomId={roomId} userName={userName} />
               </div>
-
+  
               {/* Ready / Start 버튼 영역 */}
-              <div className="absolute bottom-2 right-8 w-[330px]">
+              <div className="absolute top-[620px] right-8 w-[330px]">
                 <div className="mt-6 flex flex-col items-center space-y-4">
                   {currentIsHost ? (
                     <button
@@ -323,6 +340,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
               </div>
             </div>
           )}
+          
           {screen === 'game' && (
             <div className="w-full h-screen bg-cover bg-center">
               <Game

@@ -83,7 +83,7 @@ export default function Fish({ fish }: { fish: FishData }) {
   return (
     <div
       ref={containerRef}
-      className="absolute w-[1400px] h-[730px] top-[20px] left-[20px] border border-black border-transparent"
+      className="absolute w-[1265px] h-[650px] top-[20px] left-[20px] border border-black border-transparent"
       style={{ pointerEvents: 'none' }} // 클릭 이벤트가 컨테이너에 영향을 주지 않도록 설정
     >
       <img
