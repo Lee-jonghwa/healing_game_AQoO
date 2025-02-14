@@ -563,42 +563,45 @@ export default function Game({
             ? startOffset
             : startOffset + Math.floor(player.totalPressCount / 2) * moveFactor;
 
-        return (
-          <div
-            key={player.userName}
-            className="absolute flex flex-col items-center"
-            style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
-          >
-            <div className="relative">
-              <img
-                src={player.mainFishImage}
-                alt={`${player.userName}의 대표 물고기`}
-                style={{ width: fishSize, height: fishSize }}
-                className="object-contain scale-x-[-1]"
-              />
-              {(player.userName === userName
-                ? isTapping
-                : windEffects[player.userName]) && (
-                <img
-                  src="/chat_images/wind_overlay.png"
-                  alt="Wind effect"
-                  style={{
-                    width: fishSize * 0.4,
-                    height: fishSize * 0.4,
-                    position: 'absolute',
-                    top: '50%',
-                    left: `-${fishSize * 0.4}px`,
-                    transform: 'translateY(-50%) scaleX(-1)',
-                  }}
-                  className="object-contain pointer-events-none"
-                />
-              )}
-            </div>
-            <span className="mt-[-25px] text-xl font-medium text-gray-900">
-              {player.userName}
-            </span>
-          </div>
-        );
+            return (
+              <div
+                key={player.userName}
+                className="absolute"
+                style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
+              >
+                <div className="relative" style={{ width: `${fishSize}px`, height: `${fishSize}px` }}>
+                  <img
+                    src={player.mainFishImage}
+                    alt={`${player.userName}의 대표 물고기`}
+                    style={{ width: fishSize, height: fishSize }}
+                    className="object-contain scale-x-[-1]"
+                  />
+                  {(player.userName === userName ? isTapping : windEffects[player.userName]) && (
+                    <img
+                      src="/chat_images/wind_overlay.png"
+                      alt="Wind effect"
+                      style={{
+                        width: fishSize * 0.4,
+                        height: fishSize * 0.4,
+                        position: 'absolute',
+                        top: '50%',
+                        left: `-${fishSize * 0.4}px`,
+                        transform: 'translateY(-50%) scaleX(-1)',
+                      }}
+                      className="object-contain pointer-events-none"
+                    />
+                  )}
+                </div>
+                {/* 텍스트의 top 값을 줄여서 물고기 바로 아래에 위치시킴 */}
+                <span
+                  className="absolute text-xl font-medium text-gray-900"
+                  style={{ top: `${fishSize - 16}px`, left: '50%', transform: 'translateX(-50%)' }}
+                >
+                  {player.userName}
+                </span>
+              </div>
+            );
+            
       })}
 
       {/* 하단 안내 */}
