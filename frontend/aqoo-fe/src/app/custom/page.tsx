@@ -391,7 +391,7 @@ export default function CustomFishPages() {
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
-            className="border-[3px] border-black bg-white w-full max-w-[600px] h-[300px] sm:h-[400px]"
+            className="border-[3px] border-black bg-gray-100 w-full max-w-[600px] h-[300px] sm:h-[400px]"
           />
 
           {/* 🎨 도구 메뉴 */}
