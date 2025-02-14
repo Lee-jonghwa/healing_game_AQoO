@@ -32,17 +32,17 @@ public class WebSocketEventListener {
      */
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        logger.info("연결 끊어짐 이벤트 리스너 실행");
+        //logger.info("연결 끊어짐 이벤트 리스너 실행");
 
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         if (headerAccessor.getSessionAttributes() == null) {
-            logger.warn("세션 속성이 없어 disconnect 처리를 건너뜁니다.");
+            //logger.warn("세션 속성이 없어 disconnect 처리를 건너뜁니다.");
             return;
         }
 
         Boolean processed = (Boolean) headerAccessor.getSessionAttributes().get("disconnectProcessed");
         if (processed != null && processed) {
-            logger.debug("이미 disconnect 처리가 완료되었습니다.");
+//            logger.debug("이미 disconnect 처리가 완료되었습니다.");
             return;
         }
         headerAccessor.getSessionAttributes().put("disconnectProcessed", true);
@@ -51,14 +51,14 @@ public class WebSocketEventListener {
         String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
 
         if (userId != null && roomId != null) {
-            logger.info("사용자 {}의 WebSocket 연결이 끊겼습니다.", userId);
+//            logger.info("사용자 {}의 WebSocket 연결이 끊겼습니다.", userId);
 
             // 그레이스 기간(10초) 후 재연결 여부 확인 후 최종 제거
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             scheduler.schedule(() -> {
                 if (!chatRoomService.isUserReconnected(roomId, userId)) { // isUserReconnected 메서드 구현 필요
                     chatRoomService.removeMember(roomId, userId);
-                    logger.info("사용자 {}가 최종적으로 제거되었습니다.", userId);
+//                    logger.info("사용자 {}가 최종적으로 제거되었습니다.", userId);
 
                     if (chatRoomService.isRoomEmpty(roomId)) {
                         chatRoomService.deleteRoom(roomId);
@@ -82,7 +82,7 @@ public class WebSocketEventListener {
             String[] parts = destination.split("/");
             if (parts.length >= 3) {
                 String roomId = parts[parts.length - 1];  // 마지막 부분이 roomId
-                logger.info("새 구독자가 생겼습니다. Destination: {}. 방 {}의 최신 사용자 목록을 브로드캐스트합니다.", destination, roomId);
+//                logger.info("새 구독자가 생겼습니다. Destination: {}. 방 {}의 최신 사용자 목록을 브로드캐스트합니다.", destination, roomId);
                 RoomUpdate update = chatRoomService.createUserListUpdate(roomId);
                 if (update != null) {
                     // 모든 클라이언트가 해당 채널을 구독 중이므로, convertAndSend를 사용하여 브로드캐스트합니다.
