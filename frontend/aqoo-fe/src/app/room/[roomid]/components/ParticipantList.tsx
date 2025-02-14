@@ -12,7 +12,7 @@ interface Participant {
 interface ParticipantListProps {
   users: Participant[];
   currentUser: string;
-  currentIsHost: boolean;
+  currentIsHost: boolean; 
   onKickUser: (userName: string) => void;
 }
 
