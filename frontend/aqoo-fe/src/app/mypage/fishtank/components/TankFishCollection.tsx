@@ -159,7 +159,6 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
     return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    // 고정 높이를 400px로 설정하고 내용이 초과하면 세로 스크롤 적용
     <div className="w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "300px" }}>
       <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (

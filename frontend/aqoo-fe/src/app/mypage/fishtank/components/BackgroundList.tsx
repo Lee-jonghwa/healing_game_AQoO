@@ -63,7 +63,6 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
   if (backgrounds.length === 0) return <div>배경화면이 없습니다.</div>;
 
   return (
-    // 고정 높이(h-64)를 적용하고 내용이 초과하면 세로 스크롤이 생기도록 overflow-y-auto 적용
     <div className="h-64 overflow-y-auto">
       <div className="flex flex-wrap gap-4 justify-center">
         {backgrounds.map((bg, idx) => {

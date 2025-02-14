@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-// 친구 목록 타입
 interface Friend {
   id: number;
   friendId: string;
@@ -15,14 +14,14 @@ interface FriendListProps {
   userName: string;
   roomId: string;
   isHost: boolean;
+  participantCount: number; // 현재 참가자 수
   onInvite: (friendId: string) => void;
 }
 
-export default function FriendList({ userName, roomId, isHost, onInvite }: FriendListProps) {
+export default function FriendList({ userName, roomId, isHost, participantCount, onInvite }: FriendListProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [inviteCooldowns, setInviteCooldowns] = useState<{ [key: string]: number }>({});
 
-  // 친구 목록 불러오기 (방장일 때만 실행)
   useEffect(() => {
     if (isHost) {
       fetch(`https://i12e203.p.ssafy.io/api/v1/friends/${encodeURIComponent(userName)}`)
@@ -41,13 +40,16 @@ export default function FriendList({ userName, roomId, isHost, onInvite }: Frien
     }
   }, [isHost, userName]);
 
-  // 초대 버튼 클릭 시
   const handleInvite = async (friendId: string) => {
+    if (participantCount >= 6) {
+      alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+      return;
+    }
+
     onInvite(friendId);
-    setInviteCooldowns((prev) => ({ ...prev, [friendId]: 10 })); // 초대 후 10초 동안 비활성화
+    setInviteCooldowns((prev) => ({ ...prev, [friendId]: 10 }));
   };
 
-  // 초대 후 남은 시간을 매초 업데이트하는 타이머
   useEffect(() => {
     if (Object.keys(inviteCooldowns).length === 0) return;
 
@@ -55,7 +57,7 @@ export default function FriendList({ userName, roomId, isHost, onInvite }: Frien
       setInviteCooldowns((prevCooldowns) => {
         const newCooldowns = { ...prevCooldowns };
         Object.keys(newCooldowns).forEach((key) => {
-          newCooldowns[key] = newCooldowns[key] - 1;
+          newCooldowns[key] -= 1;
           if (newCooldowns[key] <= 0) {
             delete newCooldowns[key];
           }
@@ -83,7 +85,7 @@ export default function FriendList({ userName, roomId, isHost, onInvite }: Frien
                 {friend.nickname} (@{friend.friendId})
               </span>
               <button
-                disabled={!!inviteCooldowns[friend.friendId]}
+                disabled={!!inviteCooldowns[friend.friendId] || participantCount >= 6}
                 onClick={() => handleInvite(friend.friendId)}
                 className="ml-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
