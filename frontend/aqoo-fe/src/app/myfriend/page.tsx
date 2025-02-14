@@ -40,43 +40,42 @@ const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 function FriendFishContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  // friendId가 없으면 빈 문자열로 초기화 (조건은 내부에서 체크)
+  // friendId를 항상 문자열로 처리 (없으면 빈 문자열)
   const friendId = searchParams.get("friendId") || "";
 
-  // friendId가 없으면 리다이렉트 (이 useEffect는 항상 호출됨)
+  // friendId가 없으면 /main으로 리다이렉트
   useEffect(() => {
     if (!friendId) {
       router.push("/main");
     }
   }, [friendId, router]);
 
-  // 상태 변수들은 최상위에서 선언
+  // 상태 변수들은 항상 최상위에서 선언
   const [friendUserInfo, setFriendUserInfo] = useState<UserInfo | null>(null);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
   const [background, setBackground] = useState("/background-1.png");
   const [loading, setLoading] = useState(true);
   const [showFishList, setShowFishList] = useState(false);
 
-  // friendId가 빈 문자열이면 렌더링하지 않음
-  if (!friendId) return null;
-
   // 1. 친구 유저 정보 불러오기
   useEffect(() => {
-    axios
-      .get(`${API_BASE_URL}/users/${friendId}`)
-      .then((res: AxiosResponse<UserInfo>) => {
-        console.log("친구 유저 정보:", res.data);
-        setFriendUserInfo(res.data);
-      })
-      .catch((err) => {
-        console.error("친구 유저 정보 불러오기 실패:", err);
-        setLoading(false);
-      });
+    if (friendId) {
+      axios
+        .get(`${API_BASE_URL}/users/${friendId}`)
+        .then((res: AxiosResponse<UserInfo>) => {
+          console.log("친구 유저 정보:", res.data);
+          setFriendUserInfo(res.data);
+        })
+        .catch((err) => {
+          console.error("친구 유저 정보 불러오기 실패:", err);
+          setLoading(false);
+        });
+    }
   }, [friendId]);
 
-  // 2. 어항 상세 정보 불러오기 (friendUserInfo의 mainAquarium 값이 있을 때)
+  // 2. 어항 상세 정보 불러오기 (친구의 mainAquarium 사용)
   useEffect(() => {
-    if (friendUserInfo && friendUserInfo.mainAquarium) {
+    if (friendUserInfo?.mainAquarium) {
       axios
         .get(`${API_BASE_URL}/aquariums/${friendUserInfo.mainAquarium}`)
         .then((res: AxiosResponse<AquariumData>) => {
@@ -90,7 +89,6 @@ function FriendFishContent() {
         .catch((err) => console.error("어항 정보 불러오기 실패:", err))
         .finally(() => setLoading(false));
     } else {
-      // friendUserInfo가 없거나 mainAquarium이 없으면 로딩 종료
       setLoading(false);
     }
   }, [friendUserInfo]);
@@ -166,7 +164,7 @@ function FriendFishContent() {
                 <div key={index} className="flex flex-col items-center">
                   <CollectionItemCard
                     name={fishInfo.fish}
-                    count={1} // 개수 표시 없이 처리
+                    count={1}
                     imageSrc={getFishImageUrl(fishInfo.fish)}
                   />
                   <button
@@ -189,7 +187,7 @@ function FriendFishContent() {
 
 // 헬퍼 함수: 물고기 이름 기반 이미지 URL 생성 (실제 경로에 맞게 수정)
 function getFishImageUrl(fishName: string): string {
-  return `https://i12e203.p.ssafy.io/images/${(
+  return `https://i12e203.p.ssafy.io/images/${encodeURIComponent(
     fishName
   )}.png`;
 }
