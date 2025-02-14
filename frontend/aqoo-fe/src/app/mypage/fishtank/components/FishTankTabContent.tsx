@@ -14,6 +14,7 @@ interface FishTankTabContentProps {
   onFishAdded: () => void;
   onFishRemoved: () => void;
   onSetMainAquarium: () => void;
+  onBackgroundChange: (newBackground: string) => void;
 }
 
 export default function FishTankTabContent({
@@ -24,6 +25,7 @@ export default function FishTankTabContent({
   onFishAdded,
   onFishRemoved,
   onSetMainAquarium,
+  onBackgroundChange,
 }: FishTankTabContentProps) {
   // 상태로 현재 내 물고기 수와 어항의 물고기 수를 저장합니다.
   const [myFishCount, setMyFishCount] = useState(0);
@@ -33,9 +35,7 @@ export default function FishTankTabContent({
     <div className="w-full h-full flex flex-col m-0 p-0">
       <div className="flex flex-col md:flex-row gap-4 p-4 overflow-hidden">
         <div className="flex-1 bg-gray-50 rounded-xl shadow p-4">
-          <p className="text-xl font-[NeoDunggeunmo_Pro] text-[#070707] mb-2">
-            내 물고기
-          </p>
+          <p className="text-xl font-[NeoDunggeunmo_Pro] text-[#070707] mb-2">내 물고기</p>
           <MyFishCollection
             aquariumId={aquariumId}
             aquariumName={aquariumName}
@@ -65,11 +65,9 @@ export default function FishTankTabContent({
       </div>
 
       <div className="mt-6 bg-gray-50 rounded-xl shadow p-4">
-        <p className="mb-4 text-xl font-[NeoDunggeunmo_Pro] text-[#070707]">
-          어항 배경 선택
-        </p>
+        <p className="mb-4 text-xl font-[NeoDunggeunmo_Pro] text-[#070707]">어항 배경 선택</p>
         <Suspense fallback={<div>Loading Backgrounds...</div>}>
-          <BackgroundList aquariumId={aquariumId} />
+          <BackgroundList aquariumId={aquariumId} onBackgroundChange={onBackgroundChange} />
         </Suspense>
       </div>
     </div>
