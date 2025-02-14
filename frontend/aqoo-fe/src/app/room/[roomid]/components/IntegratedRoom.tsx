@@ -8,6 +8,7 @@ import Game from './Game';
 import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
 import Fish from "./Fish"
+import { User } from '@/store/authAtom';
 
 // 플레이어 타입 정의
 interface Player {
@@ -29,6 +30,7 @@ interface RoomUpdate {
 interface IntegratedRoomProps {
   roomId: string;
   userName: string;
+  user: User;
 }
 
 interface FishData {
@@ -39,7 +41,7 @@ interface FishData {
   fishImage: string;
 }
 
-export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps) {
+export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
   const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
@@ -50,6 +52,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
 
+  console.log("IntegratedRoom currentUser:", user);
   // 현재 참가자 수
   const participantCount = users.length;
 
@@ -221,7 +224,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                             body: JSON.stringify({ roomId, sender: userName }),
                           });
                           console.log('Leave room message sent');
-                          router.push('/room');
+                          router.replace('/main');
                         } else {
                           console.error('STOMP client is not connected yet.');
                         }
@@ -348,6 +351,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                 userName={userName}
                 initialPlayers={gamePlayers}
                 onResultConfirmed={() => setScreen('chat')}
+                user={user}
               />
             </div>
           )}
