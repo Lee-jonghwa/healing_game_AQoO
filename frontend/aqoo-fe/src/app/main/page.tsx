@@ -20,7 +20,7 @@ import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import axiosInstance from "@/services/axiosInstance";
 import { gsap } from "gsap";
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
 
 // 🔹 물고기 데이터 타입 정의
