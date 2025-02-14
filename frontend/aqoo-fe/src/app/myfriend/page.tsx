@@ -239,8 +239,7 @@ function Fish({ fishInfo }: { fishInfo: FishInfo }) {
       }
 
       let newX =
-        parseFloat(gsap.getProperty(fishRef.current, "x") as string) +
-        moveDistanceX;
+        parseFloat(gsap.getProperty(fishRef.current, "x") as string) + moveDistanceX;
       let newY = currentY + moveDistanceY;
 
       if (newX < safeMargin) {
@@ -290,11 +289,11 @@ function Fish({ fishInfo }: { fishInfo: FishInfo }) {
   );
 }
 
-// FriendFishPage를 Suspense로 감싸서 searchParams 사용부분을 기다림
+// FriendFishPageWithSuspense: FriendFishContent를 Suspense로 감싼 최상위 컴포넌트
 export default function FriendFishPageWithSuspense() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <FriendFishPage />
+      <FriendFishContent />
     </Suspense>
   );
 }
