@@ -9,6 +9,7 @@ import org.com.aqoo.domain.fish.entity.Fish;
 import org.com.aqoo.repository.*;
 import org.com.aqoo.domain.fish.entity.UserFish;
 import org.com.aqoo.util.ImageUrlUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,15 @@ public class AquariumService {
     private final UserRepository userRepository;
     private final ImageUrlUtils imageUtils;
 
+    // 각 상태 시간 주기
+    @Value("${game.feed-interval}")
+    private int feedInterval;
+
+    @Value("${game.clean-interval}")
+    private int cleanInterval;
+
+    @Value("${game.water-interval}")
+    private int waterInterval;
 
 
     /**
@@ -88,9 +98,9 @@ public class AquariumService {
         String imageUrl = aquariumBackgroundRepository.findById(aquarium.getAquariumBackgroundId()).get().getImageUrl();
 
         dto.setAquariumBackground(imageUrl);
-        dto.setWaterStatus(getElapsedTimeScore(aquarium.getLastWaterChangeTime(), 7));
-        dto.setPollutionStatus(getElapsedTimeScore(aquarium.getLastCleanedTime(), 4));
-        dto.setFeedStatus(getElapsedTimeScore(aquarium.getLastFedTime(), 1));
+        dto.setWaterStatus(getElapsedTimeScore(aquarium.getLastWaterChangeTime(), waterInterval));
+        dto.setPollutionStatus(getElapsedTimeScore(aquarium.getLastCleanedTime(), cleanInterval));
+        dto.setFeedStatus(getElapsedTimeScore(aquarium.getLastFedTime(), feedInterval));
         dto.setFishes(fishList);
 
         return dto;
@@ -127,9 +137,9 @@ public class AquariumService {
         aquarium.setAquariumBackgroundId(requestDto.getAquariumBack());
 
         // 기본값 설정
-        aquarium.setLastFedTime(LocalDateTime.now().minusHours(5));
-        aquarium.setLastWaterChangeTime(LocalDateTime.now().minusHours(25));
-        aquarium.setLastCleanedTime(LocalDateTime.now().minusHours(13));
+        aquarium.setLastFedTime(LocalDateTime.now().minusHours(feedInterval+1));
+        aquarium.setLastWaterChangeTime(LocalDateTime.now().minusHours(waterInterval+1));
+        aquarium.setLastCleanedTime(LocalDateTime.now().minusHours(cleanInterval+1));
 
         return aquariumRepository.save(aquarium);
     }

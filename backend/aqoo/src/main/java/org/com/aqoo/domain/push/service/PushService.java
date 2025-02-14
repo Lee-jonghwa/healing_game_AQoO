@@ -31,22 +31,34 @@ public class PushService {
         Optional<UserToken> existingToken = userTokenRepository.findByToken(token);
         Optional<UserToken> existingUser = userTokenRepository.findByUserId(userId);
 
-        // 기존 토큰이 있으면 삭제
-        existingToken.ifPresent(userTokenRepository::delete);
-
-        // 기존 유저 데이터가 있지만, 기존 토큰과 다르면 삭제
-        if (existingUser.isPresent() && !existingUser.get().getToken().equals(token)) {
-            userTokenRepository.delete(existingUser.get());
+        // 기존의 같은 유저, 같은 토큰이 있는 경우 → 삭제하지 않고 그대로 유지
+        if (existingUser.isPresent() && existingUser.get().getToken().equals(token)) {
+            System.out.println("이미 존재하는 유저와 토큰: " + userId + ", " + token);
+            return existingUser.get();
         }
 
-        // 새롭게 저장
+        // 기존 토큰이 있지만 해당 유저와 다르면 → 기존 토큰 삭제 후, 해당 유저의 데이터만 유지
+        if (existingToken.isPresent() && !existingToken.get().getUserId().equals(userId)) {
+            userTokenRepository.delete(existingToken.get()); // 기존 토큰 삭제
+        }
+
+        // 기존 유저가 있지만, 기존 토큰과 다르면 → 토큰 값 업데이트
+        if (existingUser.isPresent()) {
+            UserToken updatedUserToken = existingUser.get();
+            updatedUserToken.setToken(token);
+            System.out.println("기존 유저의 토큰 업데이트: " + userId + " → " + token);
+            return userTokenRepository.save(updatedUserToken);
+        }
+
+        // 기존의 없는 유저, 없는 토큰일 때만 새로 추가
         UserToken newUserToken = new UserToken();
         newUserToken.setUserId(userId);
         newUserToken.setToken(token);
 
-        System.out.println("새로운 토큰 저장: " + userId + ", " + token);
+        System.out.println("새로운 유저 토큰 추가: " + userId + ", " + token);
         return userTokenRepository.save(newUserToken);
     }
+
 
 
 

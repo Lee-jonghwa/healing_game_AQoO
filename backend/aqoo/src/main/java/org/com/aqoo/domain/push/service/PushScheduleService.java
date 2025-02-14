@@ -4,6 +4,7 @@ import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.push.dto.PushRequest;
 import org.com.aqoo.repository.AquariumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +22,15 @@ public class PushScheduleService {
     private PushService pushService;
 
     // 각 상태 시간 주기
-    private static final int FEED_INTERVAL = 1;
-    private static final int CLEAN_INTERVAL = 4;
-    private static final int WATER_INTERVAL = 7;
+    @Value("${game.feed-interval}")
+    private int feedInterval;
+
+    @Value("${game.clean-interval}")
+    private int cleanInterval;
+
+    @Value("${game.water-interval}")
+    private int waterInterval;
+
 
     // 먹이 상태 알람 (2시간마다 실행)
     @Scheduled(fixedRate = 2 * 60 * 60 * 1000)
@@ -52,9 +59,9 @@ public class PushScheduleService {
 
         for (Aquarium aquarium : aquariums) {
             int level = switch (type) {
-                case "FEED" -> getLastPassedInterval(aquarium.getLastFedTime(), FEED_INTERVAL);
-                case "CLEAN" -> getLastPassedInterval(aquarium.getLastCleanedTime(), CLEAN_INTERVAL);
-                case "WATER" -> getLastPassedInterval(aquarium.getLastWaterChangeTime(), WATER_INTERVAL);
+                case "FEED" -> getLastPassedInterval(aquarium.getLastFedTime(), feedInterval);
+                case "CLEAN" -> getLastPassedInterval(aquarium.getLastCleanedTime(), cleanInterval);
+                case "WATER" -> getLastPassedInterval(aquarium.getLastWaterChangeTime(), waterInterval);
                 default -> -1;
             };
 
