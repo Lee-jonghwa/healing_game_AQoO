@@ -37,11 +37,11 @@ export default function BackgroundItemCard({
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      
       <Image 
-      loader={customLoader} // ✅ 커스텀 로더 추가
-      unoptimized
-      src={imageSrc} alt={name} fill className="rounded-xl" />
+        loader={customLoader} // ✅ 커스텀 로더 추가
+        unoptimized
+        src={imageSrc} alt={name} fill className="rounded-xl" 
+      />
       <div
         className={`
           absolute inset-0 rounded-xl border-[6px] transition-all duration-300 pointer-events-none
