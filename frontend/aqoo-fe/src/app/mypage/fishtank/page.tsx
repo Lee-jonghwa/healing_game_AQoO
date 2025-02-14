@@ -1,3 +1,4 @@
+// Updated: page.tsx
 "use client";
 
 import { UserInfo, AquariumData } from "@/types";
@@ -44,7 +45,7 @@ export default function MyFishTank() {
         if (!bgUrl) return;
 
         if (!bgUrl.startsWith("http")) {
-          bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
+          bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/g, "")}`;
         }
         setBackground(bgUrl);
       })
@@ -69,8 +70,7 @@ export default function MyFishTank() {
             rounded-xl border border-[#040303] bg-white
             shadow-inner
             flex items-center justify-center
-            text-[#040303] text-center font-normal text-xl leading-none
-            font-[NeoDunggeunmo_Pro]
+            text-[#040303] text-center font-normal text-sm leading-none
             sm:min-w-[80px] sm:h-10
             md:min-w-[100px] md:h-12
           "
@@ -84,6 +84,7 @@ export default function MyFishTank() {
           flex flex-col items-center justify-center
           flex-1 overflow-hidden
           p-4 sm:p-6 md:p-8
+          w-full
         "
       >
         {/* 실제 탭 + 내용 */}
