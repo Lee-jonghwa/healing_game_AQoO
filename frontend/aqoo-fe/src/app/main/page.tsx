@@ -54,6 +54,11 @@ export default function MainPage() {
 
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
+  // Electron 환경 감지: navigator.userAgent에 "electron" 문자열이 포함되어 있으면 Electron으로 판단
+  const isElectron =
+  typeof navigator !== 'undefined' &&
+  navigator.userAgent.toLowerCase().includes('electron');
+
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
@@ -330,6 +335,15 @@ export default function MainPage() {
           isFirstLogin={firstLoginStatus ?? false} // ✅ 첫 로그인 여부 전달
         />
       )}
+
+      {/* Electron 환경일 때만 "Electron 전용 페이지 이동" 버튼 표시 */}
+      {isElectron && (
+          <Link href='/electron-only-page'>
+            <button className='mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
+              Electron 전용 페이지 이동
+            </button>
+          </Link>
+        )}
     </div>
   );
 }
