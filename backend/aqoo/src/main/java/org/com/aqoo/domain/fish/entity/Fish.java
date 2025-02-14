@@ -21,4 +21,6 @@ public class Fish {
     private String imageUrl;  // 물고기 이미지 URL
     @Column(name = "rarity")
     private String rarity;  // 물고기의 희귀도 (예: Common, Rare, Epic, Legendary)
+    @Column(name = "size")
+    private String size;  // 물고기의 희귀도 (예: XL, L, M, S, XS)
 }

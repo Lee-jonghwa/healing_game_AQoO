@@ -9,5 +9,6 @@ public class CollectionFishResponse {
     private Integer fishTypeId;
     private String fishTypeName;
     private String fishImage;
+    private String rarity;
     private int cnt;
 }

@@ -238,7 +238,8 @@ public class AquariumService {
                         (Integer) row[0], // fishId
                         (Integer) row[1], // fishTypeId
                         fishTypeMap.get((Integer) row[1]).getFishName(), // fishTypeName
-                        imageUtils.toAbsoluteUrl(fishTypeMap.get((Integer) row[1]).getImageUrl()) // fishImage
+                        imageUtils.toAbsoluteUrl(fishTypeMap.get((Integer) row[1]).getImageUrl()), // fishImage
+                        fishTypeMap.get((Integer) row[1]).getSize()
                 ))
                 .sorted(Comparator.comparing(AquariumFishResponse::getFishTypeId)) // fishTypeId 기준 정렬
                 .toList();

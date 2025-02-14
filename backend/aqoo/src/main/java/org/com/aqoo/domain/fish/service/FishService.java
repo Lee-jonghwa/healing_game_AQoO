@@ -33,7 +33,7 @@ public class FishService {
     public List<FishTypeResponseDto> getAllFishTypes() {
         List<Fish> fishTypes = fishRepository.findByRarityInIgnoreCase();
         return fishTypes.stream()
-                .map(fish -> new FishTypeResponseDto(fish.getId(), fish.getFishName(), imageUtils.toAbsoluteUrl(fish.getImageUrl()), fish.getRarity()))
+                .map(fish -> new FishTypeResponseDto(fish.getId(), fish.getFishName(), imageUtils.toAbsoluteUrl(fish.getImageUrl()), fish.getRarity(), fish.getSize()))
                 .collect(Collectors.toList());
     }
 
@@ -99,6 +99,7 @@ public class FishService {
                         fishType.getId(),        // fishTypeId
                         fishType.getFishName(),  // 물고기 이름
                         imageUtils.toAbsoluteUrl(fishType.getImageUrl()),  // 물고기 이미지
+                        fishType.getRarity(),
                         fishCountMap.getOrDefault(fishType.getId(), 0) // 해당 타입의 물고기 개수
                 ))
                 .toList();
@@ -173,6 +174,7 @@ public class FishService {
         fishType.setFishName(request.getFishName());
         fishType.setImageUrl(request.getImageUrl());
         fishType.setRarity(request.getRarity());
+        fishType.setSize(request.getSize());
 
         // EC2 이미지 저장 로직
         // 예: "/var/www/fish-images" 경로로 파일 복사
@@ -181,7 +183,7 @@ public class FishService {
         return fishType;
     }
 
-    public String paintFish(String userId, String fishName, MultipartFile imageFile) throws Exception {
+    public String paintFish(String userId, String fishName, String size, MultipartFile imageFile) throws Exception {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
@@ -216,7 +218,7 @@ public class FishService {
         //물고기 타입에 추가
         FishTypeRequest request = new FishTypeRequest(fishName,
                 "/" + imagePath,
-                userId);
+                userId, size);
         Fish newType = saveFishType(request);
 
         //유저 물고기에 추가

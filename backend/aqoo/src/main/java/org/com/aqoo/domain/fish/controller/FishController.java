@@ -92,16 +92,6 @@ public class FishController {
         }
     }
 
-    // 쿠키에서 refreshToken 값을 추출하는 유틸리티 함수
-    private String extractRefreshToken(String cookieHeader) {
-        for (String cookie : cookieHeader.split("; ")) {
-            if (cookie.startsWith("refreshToken=")) {
-                return cookie.substring("refreshToken=".length());
-            }
-        }
-        return null;
-    }
-
 
     @PostMapping("/newtype")
     public ResponseEntity<?> addFishType(@RequestBody FishTypeRequest request) {
@@ -136,8 +126,9 @@ public class FishController {
             FishPaintingRequest fishData = objectMapper.readValue(fishDataJson, FishPaintingRequest.class);
             String fishName = fishData.getFishName();
             String userId = fishData.getUserId();
+            String size = fishData.getSize();
 
-            String response = fishService.paintFish(userId, fishName, imageFile);
+            String response = fishService.paintFish(userId, fishName, size, imageFile);
 
             return ResponseEntity.ok(response);
 

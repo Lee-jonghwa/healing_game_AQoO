@@ -6,4 +6,5 @@ import lombok.Data;
 public class FishPaintingRequest {
     private String userId;
     private String fishName;
+    private String size;
 }

@@ -12,4 +12,5 @@ public class FishTypeResponseDto {
     private String fishName;
     private String imageUrl;
     private String rarity;
+    private String size;
 }

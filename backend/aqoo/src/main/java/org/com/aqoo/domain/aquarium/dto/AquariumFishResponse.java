@@ -15,4 +15,5 @@ public class AquariumFishResponse {
     private int fishTypeId;
     private String fishName;
     private String fishImage;
+    private String size;
 }
