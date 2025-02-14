@@ -176,16 +176,17 @@ public class FriendRelationshipService {
 
             Optional<FriendRelationship> existingRelationship = checkFriendship(userId, user.getId());
 
-            boolean isFriend = false;
+            int isFriend = 0;
 
             if(existingRelationship.isPresent()
                     && "ACCEPTED".equals(existingRelationship.get().getStatus())
-            ) isFriend = true;
+            ) isFriend = 2;
+            else if(existingRelationship.isPresent()) isFriend = 1;
 
             FindResponse response = new FindResponse(
                     userId,
                     user.getId(),
-                    isFriend ? 1 : 0,
+                    isFriend,
                     user.getNickname(),
                     user.getLevel(),
                     imageUtils.toAbsoluteUrl(user.getMainFishImage())
