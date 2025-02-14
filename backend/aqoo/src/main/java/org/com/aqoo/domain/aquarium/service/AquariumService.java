@@ -88,9 +88,9 @@ public class AquariumService {
         String imageUrl = aquariumBackgroundRepository.findById(aquarium.getAquariumBackgroundId()).get().getImageUrl();
 
         dto.setAquariumBackground(imageUrl);
-        dto.setWaterStatus(getElapsedTimeScore(aquarium.getLastWaterChangeTime(), 24));
-        dto.setPollutionStatus(getElapsedTimeScore(aquarium.getLastCleanedTime(), 12));
-        dto.setFeedStatus(getElapsedTimeScore(aquarium.getLastFedTime(), 4));
+        dto.setWaterStatus(getElapsedTimeScore(aquarium.getLastWaterChangeTime(), 7));
+        dto.setPollutionStatus(getElapsedTimeScore(aquarium.getLastCleanedTime(), 4));
+        dto.setFeedStatus(getElapsedTimeScore(aquarium.getLastFedTime(), 1));
         dto.setFishes(fishList);
 
         return dto;
