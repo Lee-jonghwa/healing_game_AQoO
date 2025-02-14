@@ -24,6 +24,14 @@ interface RoomResponse {
   finishOrder?: string[];
 }
 
+interface ExpResponse {
+  curExp: number;
+  expToNextLevel: number;
+  expProgress: number;
+  userLevel: number;
+  message: string;
+}
+
 export default function Game({
   roomId,
   userName,
@@ -49,11 +57,14 @@ export default function Game({
   // **추가**: 게임 시작 여부를 판단하는 상태
   const [hasStarted, setHasStarted] = useState(false);
 
-  // **변경**: 게임 시간을 30초에서 시작 → 1초마다 1씩 감소
+  // 게임 시간 (30초 카운트다운)
   const [gameTime, setGameTime] = useState(30);
 
   // 모달 창 닫힘 상태 (확인 버튼 클릭 시 true로 설정)
   const [modalDismissed, setModalDismissed] = useState(false);
+
+  // **추가**: 1등 경험치 지급 결과를 저장할 상태
+  const [winnerExpInfo, setWinnerExpInfo] = useState<ExpResponse | null>(null);
 
   // 이전 플레이어 상태 (비교용)
   const previousPlayersRef = useRef<Player[]>(initialPlayers);
@@ -171,10 +182,7 @@ export default function Game({
         const prevPlayer = previousPlayersRef.current.find(
           (p) => p.userName === player.userName
         );
-        if (
-          !prevPlayer ||
-          player.totalPressCount > prevPlayer.totalPressCount
-        ) {
+        if (!prevPlayer || player.totalPressCount > prevPlayer.totalPressCount) {
           setWindEffects((prev) => ({ ...prev, [player.userName]: true }));
           setTimeout(() => {
             setWindEffects((prev) => ({ ...prev, [player.userName]: false }));
@@ -185,7 +193,7 @@ export default function Game({
     previousPlayersRef.current = players;
   }, [players, userName]);
 
-  // **변경**: 게임 시작 후 1초마다 gameTime 상태 감소
+  // 게임 시작 후 1초마다 gameTime 상태 감소
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     const timer = setInterval(() => {
@@ -194,18 +202,16 @@ export default function Game({
     return () => clearInterval(timer);
   }, [hasStarted, gameEnded]);
 
-  // **변경**: gameTime이 0이 되거나 모든 플레이어가 100 탭 이상 시 게임 종료
+  // gameTime이 0이 되거나 모든 플레이어가 100 탭 이상 시 게임 종료
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     if (
       gameTime <= 0 ||
-      (players.length > 0 &&
-        players.every((player) => player.totalPressCount >= 100))
+      (players.length > 0 && players.every((player) => player.totalPressCount >= 100))
     ) {
       setGameEnded(true);
-      const maxPlayer = players.reduce(
-        (prev, cur) =>
-          cur.totalPressCount > prev.totalPressCount ? cur : prev,
+      const maxPlayer = players.reduce((prev, cur) =>
+        cur.totalPressCount > prev.totalPressCount ? cur : prev,
         players[0]
       );
       setWinner(maxPlayer?.userName || null);
@@ -214,7 +220,7 @@ export default function Game({
     }
   }, [gameTime, players, hasStarted, gameEnded]);
 
-  // 만약 countdown이 끝났는데 아직 게임이 시작되지 않았다면, 강제로 스페이스바 이벤트 발생!
+  // 만약 countdown이 끝났는데 아직 게임이 시작되지 않았다면, 강제로 스페이스바 이벤트 발생
   useEffect(() => {
     if (hasCountdownFinished && !hasStarted) {
       setTimeout(() => {
@@ -223,6 +229,32 @@ export default function Game({
       }, 0);
     }
   }, [hasCountdownFinished, hasStarted]);
+
+  // **추가**: 게임이 종료되고 winner가 있을 때, API 호출로 경험치 지급
+  useEffect(() => {
+    if (gameEnded && winner) {
+      (async () => {
+        try {
+          const response = await fetch('/api/v1/users/exp-up', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: winner,   // winner의 userName을 userId로 전송
+              earnedExp: 20,   // 고정 값: 20
+            }),
+          });
+          if (!response.ok) {
+            throw new Error('Failed to update winner exp');
+          }
+          const data: ExpResponse = await response.json();
+          setWinnerExpInfo(data);
+          console.log('경험치 지급 성공:', data);
+        } catch (error) {
+          console.error('경험치 지급 에러:', error);
+        }
+      })();
+    }
+  }, [gameEnded, winner]);
 
   // 현재 유저의 플레이어 정보 확인
   const currentUserPlayer = players.find((p) => p.userName === userName);
@@ -243,42 +275,53 @@ export default function Game({
   // 게임 종료 화면
   if (gameEnded) {
     return (
-      <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
-        <div className='bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4'>
-          <h1 className='text-4xl font-extrabold text-gray-800 mb-6'>
-            Game Over
-          </h1>
-          <p className='text-xl text-gray-600 mb-8'>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br">
+        <div className="bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4">
+          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">Game Over</h1>
+
+          {/* 1등 표시 */}
+          <p className="text-xl text-gray-600 mb-6">
             Winner:{' '}
-            <span className='font-bold text-gray-900'>
-              {winner || 'No Winner'}
-            </span>
+            <span className="font-bold text-gray-900">{winner || 'No Winner'}</span>
           </p>
-          {finishOrder.length > 0 && (
-            <div className='mb-8'>
-              <h2 className='text-3xl font-bold text-gray-800 mb-4'>
-                전체 순위
+
+          {/* 1등에게만 경험치 정보 표시 */}
+          {winner && winnerExpInfo && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 text-left">
+              <h2 className="text-lg font-semibold text-blue-700 mb-2">
+                🎉 {winnerExpInfo.message} 
               </h2>
-              <div className='bg-gray-100 rounded-lg shadow-md p-4'>
-                <ol className='divide-y divide-gray-300'>
+              <p className="text-sm text-gray-700 mb-1">획득 경험치: <strong>+20</strong></p>
+              <p className="text-sm text-gray-700 mb-1">현재 레벨: <strong>{winnerExpInfo.userLevel}</strong></p>
+              <p className="text-sm text-gray-700 mb-1">현재 경험치: <strong>{winnerExpInfo.curExp}</strong></p>
+              <p className="text-sm text-gray-700">
+                다음 레벨까지 남은 경험치: <strong>{winnerExpInfo.expToNextLevel}</strong> ({winnerExpInfo.expProgress}%)
+              </p>
+            </div>
+          )}
+
+          {/* 전체 순위 표시 */}
+          {finishOrder.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">전체 순위</h2>
+              <div className="bg-gray-100 rounded-lg shadow-md p-4">
+                <ol className="divide-y divide-gray-300">
                   {finishOrder.map((user, index) => (
-                    <li
-                      key={user}
-                      className='py-2 flex justify-between items-center'
-                    >
-                      <span className='font-semibold text-gray-700'>
+                    <li key={user} className="py-2 flex justify-between items-center">
+                      <span className="font-semibold text-gray-700">
                         {index + 1}.
                       </span>
-                      <span className='text-gray-900'>{user}</span>
+                      <span className="text-gray-900">{user}</span>
                     </li>
                   ))}
                 </ol>
               </div>
             </div>
           )}
+
           <button
             onClick={handleResultCheck}
-            className='w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300'
+            className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300"
           >
             채팅방으로 돌아가기
           </button>
@@ -289,21 +332,19 @@ export default function Game({
 
   return (
     <div
-      className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
+      className="w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden"
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
       {/* 결승점 도착한 경우 모달 띄우기 (게임 종료 전) */}
       {!gameEnded && hasArrived && !modalDismissed && (
-        <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30'>
-          <div className='bg-white p-8 rounded-lg shadow-lg text-center'>
-            <h2 className='text-2xl font-bold mb-4'>결승점 도착!</h2>
-            <p className='text-xl mb-4'>
-              다른 물고기들이 도착할 때까지 기다려주세요!
-            </p>
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
+          <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-4">결승점 도착!</h2>
+            <p className="text-xl mb-4">다른 물고기들이 도착할 때까지 기다려주세요!</p>
             <button
               onClick={handleModalClose}
-              className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded'
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded"
             >
               확인
             </button>
@@ -311,64 +352,64 @@ export default function Game({
         </div>
       )}
 
-      {/* 시작 마커 - 레일 영역 내에 표시 */}
+      {/* 시작 마커 */}
       {trackDims.height > 0 && (
         <div
-          className='absolute pointer-events-none'
+          className="absolute pointer-events-none"
           style={{
             left: trackDims.width ? trackDims.width * 0.1 : 95,
             top: laneAreaTopOffset,
             height: laneAreaHeight,
           }}
         >
-          <div className='h-full border-l-4 border-green-500'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <span className='text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+          <div className="h-full border-l-4 border-green-500"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">
               Start
             </span>
           </div>
         </div>
       )}
 
-      {/* Finish 마커 - 레일 영역 내에 표시 */}
+      {/* Finish 마커 */}
       {trackDims.width > 0 && (
         <div
-          className='absolute pointer-events-none'
+          className="absolute pointer-events-none"
           style={{
             left: trackDims.width ? trackDims.width * 0.9 : 0,
             top: laneAreaTopOffset,
             height: laneAreaHeight,
           }}
         >
-          <div className='h-full border-l-4 border-red-500'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <span className='text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+          <div className="h-full border-l-4 border-red-500"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">
               Goal
             </span>
           </div>
         </div>
       )}
 
-      {/* **변경**: 게임 진행 중 상단 중앙에 남은 시간 표시 (gameTime) */}
+      {/* 남은 시간 표시 */}
       {hasCountdownFinished && !gameEnded && (
-        <div className='absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800">
           Time: {gameTime}s
         </div>
       )}
 
-      {/* 레인 구분선 (상단, 하단 경계 포함) */}
+      {/* 레인 구분선 */}
       {trackDims.height > 0 && (
         <>
           {/* 상단 경계 */}
           <div
-            className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+            className="absolute left-0 w-full border-t border-gray-300 pointer-events-none"
             style={{ top: `${laneAreaTopOffset}px`, zIndex: 2 }}
           />
           {/* 중간 경계 */}
           {Array.from({ length: totalLanes - 1 }).map((_, i) => (
             <div
               key={i}
-              className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+              className="absolute left-0 w-full border-t border-gray-300 pointer-events-none"
               style={{
                 top: `${laneAreaTopOffset + (i + 1) * laneHeight}px`,
                 zIndex: 2,
@@ -377,7 +418,7 @@ export default function Game({
           ))}
           {/* 하단 경계 */}
           <div
-            className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+            className="absolute left-0 w-full border-t border-gray-300 pointer-events-none"
             style={{
               top: `${laneAreaTopOffset + laneAreaHeight}px`,
               zIndex: 2,
@@ -396,9 +437,7 @@ export default function Game({
         const laneIndex = index + offset;
         const fishSize = laneHeight * 0.8;
         const topPos =
-          laneAreaTopOffset +
-          laneIndex * laneHeight +
-          (laneHeight - fishSize) / 2;
+          laneAreaTopOffset + laneIndex * laneHeight + (laneHeight - fishSize) / 2;
         const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
         const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
         const leftPos =
@@ -409,22 +448,22 @@ export default function Game({
         return (
           <div
             key={player.userName}
-            className='absolute flex flex-col items-center'
+            className="absolute flex flex-col items-center"
             style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
           >
-            <div className='relative'>
+            <div className="relative">
               <img
                 src={player.mainFishImage}
                 alt={`${player.userName}의 대표 물고기`}
                 style={{ width: fishSize, height: fishSize }}
-                className='object-contain scale-x-[-1]'
+                className="object-contain scale-x-[-1]"
               />
               {(player.userName === userName
                 ? isTapping
                 : windEffects[player.userName]) && (
                 <img
-                  src='/chat_images/wind_overlay.png'
-                  alt='Wind effect'
+                  src="/chat_images/wind_overlay.png"
+                  alt="Wind effect"
                   style={{
                     width: fishSize * 0.4,
                     height: fishSize * 0.4,
@@ -433,11 +472,11 @@ export default function Game({
                     left: `-${fishSize * 0.4}px`,
                     transform: 'translateY(-50%) scaleX(-1)',
                   }}
-                  className='object-contain pointer-events-none'
+                  className="object-contain pointer-events-none"
                 />
               )}
             </div>
-            <span className='mt-[-25px] text-xl font-medium text-gray-900'>
+            <span className="mt-[-25px] text-xl font-medium text-gray-900">
               {player.userName}
             </span>
           </div>
@@ -445,45 +484,45 @@ export default function Game({
       })}
 
       {/* 하단 고정 안내 메시지 */}
-      <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>
-        Press the <span className='font-bold'>Spacebar</span> to tap!
+      <p className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900">
+        Press the <span className="font-bold">Spacebar</span> to tap!
       </p>
 
       {/* 카운트다운 & 게임 설명 오버레이 (게임 시작 전) */}
       {!hasCountdownFinished && (
-        <div className='absolute inset-0 flex flex-col justify-center items-center bg-white/80 z-20 p-4'>
-          <div className='max-w-6xl w-full text-center bg-white/90 border-2 border-gray-600 rounded-lg shadow-lg p-6'>
-            <h3 className='mb-4 text-lg sm:text-lg md:text-2xl lg:text-3xl font-bold flex items-center justify-center'>
+        <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/80 z-20 p-4">
+          <div className="max-w-6xl w-full text-center bg-white/90 border-2 border-gray-600 rounded-lg shadow-lg p-6">
+            <h3 className="mb-4 text-lg sm:text-lg md:text-2xl lg:text-3xl font-bold flex items-center justify-center">
               <img
-                src='/chat_images/game_stick.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                src="/chat_images/game_stick.png"
+                alt="스페이스바"
+                className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
               />
               게임 설명
               <img
-                src='/chat_images/game_stick.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                src="/chat_images/game_stick.png"
+                alt="스페이스바"
+                className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
               />
             </h3>
-            <p className='text-lg md:text-xl lg:text-5xl font-medium text-gray-800 mt-4'>
+            <p className="text-lg md:text-xl lg:text-5xl font-medium text-gray-800 mt-4">
               물고기 경주에 오신 걸 환영합니다!
             </p>
-            <p className='text-md md:text-lg lg:text-4xl text-gray-700 mt-4'>
+            <p className="text-md md:text-lg lg:text-4xl text-gray-700 mt-4">
               물고기 경주는 친구들과 함께
               <br />
               누가 먼저 Goal에 도착하는지 대결하는 게임입니다.
             </p>
-            <p className='text-md md:text-lg lg:text-4xl text-gray-700 mt-4 flex items-center justify-center'>
+            <p className="text-md md:text-lg lg:text-4xl text-gray-700 mt-4 flex items-center justify-center">
               친구보다
               <img
-                src='/chat_images/spacebar.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                src="/chat_images/spacebar.png"
+                alt="스페이스바"
+                className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
               />
               스페이스바를 빨리 눌러 1등을 쟁취해보세요!
             </p>
-            <p className='mt-8 text-2xl text-gray-800'>
+            <p className="mt-8 text-2xl text-gray-800">
               {countdown} 초 후 게임 시작
             </p>
           </div>
