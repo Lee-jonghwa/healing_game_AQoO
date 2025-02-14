@@ -6,6 +6,7 @@ import { useRecoilValue } from "recoil";
 import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { fetchUser } from "@/services/authService";
+import { useRouter } from "next/navigation";
 
 interface AquariumTab {
   id: number;
@@ -14,6 +15,7 @@ interface AquariumTab {
 
 export default function FishTankTabs() {
   const auth = useRecoilValue(authAtom);
+  const router = useRouter();
 
   // 탭 배열 (어항 목록)
   const [tabs, setTabs] = useState<AquariumTab[]>([]);
@@ -92,6 +94,10 @@ export default function FishTankTabs() {
           alert("어항 생성 실패");
         });
     }
+  };
+
+  const handleGoBack = () => {
+    router.back();
   };
 
   const handleTabClick = (idx: number) => {
@@ -248,6 +254,15 @@ export default function FishTankTabs() {
           title="어항 생성하기"
         >
           어항 생성하기
+        </button>
+
+        {/* 스타일 변경된 뒤로가기 버튼 */}
+        <button
+          onClick={handleGoBack}
+          className="cursor-pointer inline-flex items-center justify-center w-48 h-10 px-4 py-2 mr-2 rounded-t-xl border-t border-r border-l border-red-700 bg-red-500 shadow-inner text-white text-xl font-[NeoDunggeunmo_Pro] hover:bg-red-600"
+          title="뒤로가기"
+        >
+          뒤로가기
         </button>
       </div>
 
