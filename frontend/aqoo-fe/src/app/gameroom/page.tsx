@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import FriendList from "@/app/gameroom/FriendList";
 import ParticipantList from "@/app/gameroom/ParticipantList";
 import { useRecoilState } from "recoil";
@@ -60,7 +59,7 @@ export default function GameRoomPage() {
       const data = await response.json();
       const roomId = data.roomId;
       console.log("Created roomId:", roomId);
-      console.log("paritipants:", participants);
+      console.log("participants:", participants);
 
       // 참가자 목록을 순회하며 초대 API 호출 (호스트 제외)
       for (const participant of participants) {
@@ -107,30 +106,31 @@ export default function GameRoomPage() {
     >
       {/* 배경 */}
       <div className="absolute inset-0 bg-white opacity-20"></div>
-
+  
       {/* 전체 컨테이너 */}
       <div className="relative z-10 flex flex-col items-center">
-        {/* 친구 리스트 + 참가자 리스트 감싸는 네모 박스 */}
-        <div className="relative flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px]">
-          <FriendList />
-          <ParticipantList />
-
-          {/* 방 만들기 */}
-          <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 px-6 py-2 bg-white border border-black rounded-lg shadow-lg">
-            <h1 className="text-3xl font-bold text-black text-center">🎮 방 만들기 🕹️</h1>
+        {/* '방 만들기' 박스를 감싸는 컨테이너 */}
+        <div className="relative">
+          {/* 친구 리스트 + 참가자 리스트 감싸는 네모 박스 */}
+          <div className="relative flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px]">
+            <FriendList />
+            <ParticipantList />
+            {/* 방 만들기 제목 */}
+            <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 px-6 py-2 bg-white border border-black rounded-lg shadow-lg">
+              <h1 className="text-3xl font-bold text-black text-center">🎮 방 만들기 🕹️</h1>
+            </div>
           </div>
+          {/* '만들기' 버튼 - 방 만들기 박스의 바깥쪽 우측 하단 */}
+          <button
+  onClick={handleCreateRoom}
+  className="absolute bottom-[-50px] right-0 px-5 py-2 rounded border border-black bg-white text-xl hover:bg-blue-500 hover:text-white transition duration-300"
+>
+  방 만들기
+</button>
+
         </div>
       </div>
-
-      {/* 만들기 버튼 */}
-      <button
-        className="absolute bottom-5 right-5 px-5 py-2 rounded border border-black bg-white text-xl"
-        onClick={handleCreateRoom}
-      >
-        만들기
-      </button>
-      {/* 뒤로가기 버튼 */}
-      <button className="absolute bottom-5 left-5 px-5 py-2 rounded border border-black bg-white text-xl">BACK</button>
     </div>
   );
+  
 }

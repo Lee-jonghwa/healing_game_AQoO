@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import Image from "next/image";
 import axios from "axios";
+import axiosInstance from "@/services/axiosInstance";
 import { useRouter } from "next/navigation";
 
 export default function FishTicketModal({
@@ -31,7 +32,9 @@ export default function FishTicketModal({
 
     setTimeout(async () => {
       try {
-        const response = await axios.get("https://i12e203.p.ssafy.io/api/v1/fish/gotcha", { withCredentials: true });
+        const response = await axiosInstance.get("https://i12e203.p.ssafy.io/api/v1/fish/gotcha", {
+          withCredentials: true,
+        });
 
         if (response.data) {
           console.log("🎉 물고기 뽑기 성공:", response.data);
@@ -44,6 +47,8 @@ export default function FishTicketModal({
           console.log("이미지 경로 : ", fish?.image);
 
           setAnimationStep("reveal"); // ✅ 물고기 공개 애니메이션 실행
+
+          await refreshUserInfo();
 
           // ✅ 첫 로그인일 경우, API 호출 (상태 변경 X)
           if (isFirstLogin) {

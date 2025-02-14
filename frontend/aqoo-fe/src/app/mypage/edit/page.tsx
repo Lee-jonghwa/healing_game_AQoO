@@ -222,9 +222,9 @@ function EditProfilePage() {
               {userData?.mainFishImage ? (
                 <img
                   src={
-                    userData.mainFishImage.startsWith("http")
+                    userData.mainFishImage !== `${API_BASE_URL}/images/fish.png`
                       ? userData.mainFishImage
-                      : `images/${userData.mainFishImage}`
+                      : `${API_BASE_URL}/images/미등록이미지.png`
                   }
                   alt="대표 물고기"
                   className="max-w-full max-h-full object-cover object-contain"

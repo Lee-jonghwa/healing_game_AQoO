@@ -6,10 +6,16 @@ const { persistAtom } = recoilPersist();
 export interface User {
   id: string;
   nickName: string;
-  // 필요에 따라 name, email, 기타 필드를 추가할 수 있습니다.
-  // 물고기 이미지
+  email?: string;
   mainFishImage?: string;
+  exp?: number;
+  level?: number;
+  status?: boolean;
+  mainAquarium?: number; // mainAquarium 속성 추가
+  fishTicket?: number;
+  isFirstLogin?: number;
 }
+
 
 export interface AuthState {
   isAuthenticated: boolean;

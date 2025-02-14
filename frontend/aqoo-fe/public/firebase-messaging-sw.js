@@ -18,7 +18,6 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log("📢 백그라운드 메시지 수신:", payload);
 
-  const type = payload.data.type;
   const title = payload.data.title;
   const body = payload.data.body; // 상태 값 (0~3)
   const icon = payload.data.icon || "/icon/icon-fishTank.png"; // 기본 아이콘 경로

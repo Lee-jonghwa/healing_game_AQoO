@@ -71,23 +71,26 @@ function fetchUserData(userId: string): Promise<any> {
  * 실제 UI를 렌더링하는 컴포넌트
  */
 function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal: number }) {
+  const API_BASE_URL = "https://i12e203.p.ssafy.io";
   return (
     <div
       className="
-        m-2
-        w-[1300px] h-[200px]
-        rounded-[30px] bg-[#fffdfd]
-        border-2 border-[#1c5e8d]
+        m-2 w-full max-w-[90%] md:max-w-[1100px] lg:max-w-[1300px] 
+        border-2 border-[#1c5e8d] rounded-[30px] bg-[#fffdfd]
         [box-shadow:-2px_-2px_0px_2px_rgba(0,0,0,0.25)_inset]
         flex justify-between items-center
+        scale-90 sm:scale-95 md:scale-100
+        transition-transform duration-300
       "
+      style={{ aspectRatio: "6.5 / 1" }}
     >
       {/* 좌측: 초상화 + 레벨/닉네임/정보 */}
       <div className="flex gap-2 justify-center ml-2 p-3">
         {/* 초상화 컨테이너 */}
         <div
           className="
-            w-[170px] h-[170px] flex-shrink-0
+            max-w-[160px] md:max-w-[150px] lg:max-w-[170px]
+            aspect-square flex-shrink-0
             flex items-center justify-center
             rounded-xl border border-black bg-white
             [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
@@ -96,23 +99,35 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
           {/* 실제 초상화 */}
           <div
             className="
-              w-[150px] h-[150px] flex-shrink-0
+              w-5/6 aspect-square flex-shrink-0
               flex items-center justify-center
               border border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]
             "
           >
-            <img src={userData.mainFishImage} alt="대표 이미지" className="object-contain max-w-full max-h-full" />
+            <img
+              src={
+                userData.mainFishImage !== `${API_BASE_URL}/images/fish.png`
+                  ? userData.mainFishImage
+                  : `${API_BASE_URL}/images/미등록이미지.png`
+              }
+              alt="대표 이미지"
+              className="object-contain w-full h-full"
+            />
           </div>
         </div>
 
         {/* 레벨/닉네임/총 물고기 등 텍스트 */}
-        <div className="flex flex-col justify-center">
+        <div className="mx-3 flex flex-col justify-center w-full">
           <p
             className="
-              min-w-[200px] h-10 flex-shrink-0 mt-2 mb-2 px-2
-              flex items-center
-              text-[#070707] text-center text-2xl font-[400] leading-normal
+              px-4 flex items-center
+              min-w-[300px] md:min-w-[280px] lg:min-w-[330px]
+              h-10 md:h-9 lg:h-11
+              flex-shrink-0 mt-2 mb-2 
+              text-[#070707] text-center
+              font-[400] leading-normal
+              text-2xl sm:text-xl md:text-2xl
               rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
@@ -121,9 +136,9 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
           </p>
           <p
             className="
-              min-w-[200px] h-10 flex-shrink-0 mb-2 px-2
-              flex items-center
-              text-[#070707] text-center text-2xl font-[400] leading-normal
+              min-w-[300px] md:min-w-[280px] lg:min-w-[330px] h-10 md:h-9 lg:h-11
+              flex-shrink-0 mb-2 px-4 flex items-center
+              text-[#070707] text-center text-2xl sm:text-xl md:text-2xl font-[400] leading-normal
               rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
@@ -132,9 +147,10 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
           </p>
           <p
             className="
-              min-w-[200px] h-10 flex-shrink-0 mb-2 px-2
+              min-w-[300px] md:min-w-[280px] lg:min-w-[330px] h-10 md:h-9 lg:h-11
+              flex-shrink-0 mb-2 px-4
               flex items-center
-              text-[#070707] text-center text-2xl font-[400] leading-normal
+              text-[#070707] text-center text-2xl sm:text-xl md:text-2xl font-[400] leading-normal
               rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
@@ -153,7 +169,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
             rounded-xl border border-[#040303] bg-white 
             [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
             flex items-center justify-center
-            text-[#070707] text-center font-[400] text-2xl
+            text-[#070707] text-center font-[400] text-2xl sm:text-xl md:text-2xl
           "
         >
           회원정보수정

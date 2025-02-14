@@ -12,8 +12,8 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
 
   // 원본 배열을 변경하지 않으려면 slice()로 복사 후 정렬
   const sortedFishList = allFishList.slice().sort((a, b) => {
-    const aOwned = userFishList.some(userFish => userFish.fishTypeName === a.fishName);
-    const bOwned = userFishList.some(userFish => userFish.fishTypeName === b.fishName);
+    const aOwned = userFishList.some((userFish) => userFish.fishTypeName === a.fishName);
+    const bOwned = userFishList.some((userFish) => userFish.fishTypeName === b.fishName);
 
     if (aOwned && !bOwned) return -1;
     if (!aOwned && bOwned) return 1;
@@ -21,12 +21,25 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
   });
 
   return (
-    <div id="one-panel" className="flex flex-wrap">
+    <div
+      id="one-panel"
+      className="
+      w-full gird gap-4
+      grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
+      flex flex-wrap
+      overflow-y-scroll max-h-[500px]
+      scrollbar-none
+      "
+      style={{
+        msOverflowStyle: "none", // IE, Edge에서 스크롤바 숨기기
+        scrollbarWidth: "none", // Firefox에서 스크롤바 숨기기
+      }}
+    >
       {sortedFishList.map((fish) => {
         // userFishList에서 해당 fishName과 일치하는 물고기 찾기
         const userFish = userFishList.find((userFish) => userFish.fishTypeName === fish.fishName);
 
-        const imageSrc = userFish ? userFish.fishImage : API_BASE_URL + "images/bg1.png";
+        const imageSrc = userFish ? userFish.fishImage : `${API_BASE_URL}/images/미등록이미지.png`;
         const name = userFish ? userFish.fishTypeName : fish.fishName;
         const count = userFish ? userFish.cnt : 0;
 

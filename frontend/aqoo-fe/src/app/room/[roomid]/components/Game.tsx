@@ -20,6 +20,8 @@ interface RoomResponse {
   roomId: string;
   players: Player[];
   message: string;
+  winner?: string;
+  finishOrder?: string[];
 }
 
 export default function Game({
@@ -36,6 +38,8 @@ export default function Game({
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [gameEnded, setGameEnded] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
+  // **추가**: 전체 순위(finishOrder)를 저장할 상태
+  const [finishOrder, setFinishOrder] = useState<string[]>([]);
 
   // 본인 tap 효과 상태
   const [isTapping, setIsTapping] = useState(false);
@@ -44,6 +48,12 @@ export default function Game({
 
   // **추가**: 게임 시작 여부를 판단하는 상태
   const [hasStarted, setHasStarted] = useState(false);
+
+  // **변경**: 게임 시간을 30초에서 시작 → 1초마다 1씩 감소
+  const [gameTime, setGameTime] = useState(30);
+
+  // 모달 창 닫힘 상태 (확인 버튼 클릭 시 true로 설정)
+  const [modalDismissed, setModalDismissed] = useState(false);
 
   // 이전 플레이어 상태 (비교용)
   const previousPlayersRef = useRef<Player[]>(initialPlayers);
@@ -101,6 +111,12 @@ export default function Game({
       if (!hasCountdownFinished || gameEnded || e.code !== 'Space') return;
       e.preventDefault();
 
+      // 현재 유저가 이미 결승점(100탭)에 도달한 경우 추가 입력 무시
+      const currentUserPlayer = players.find((p) => p.userName === userName);
+      if (currentUserPlayer && currentUserPlayer.totalPressCount >= 100) {
+        return;
+      }
+
       // 첫 스페이스바 입력 시 게임 시작 상태로 변경
       if (!hasStarted) {
         setHasStarted(true);
@@ -113,7 +129,7 @@ export default function Game({
       publishMessage('/app/game.press', { roomId, userName, pressCount: 1 });
       console.log('Press message sent:', { roomId, userName, pressCount: 1 });
     },
-    [hasCountdownFinished, gameEnded, roomId, userName, hasStarted]
+    [hasCountdownFinished, gameEnded, roomId, userName, hasStarted, players]
   );
 
   // Countdown 종료 후 keyup 이벤트 리스너 등록
@@ -135,12 +151,11 @@ export default function Game({
           console.log('Room update received:', data);
           setPlayers(data.players ?? []);
           if (data.message === 'GAME_ENDED') {
-            const winningPlayer = (data.players ?? []).find(
-              (player) => player.totalPressCount >= 100
-            );
-            if (winningPlayer) {
-              setGameEnded(true);
-              setWinner(winningPlayer.userName);
+            setGameEnded(true);
+            console.log('winner:', data.winner);
+            setWinner(data.winner || null);
+            if (data.finishOrder) {
+              setFinishOrder(data.finishOrder);
             }
           }
         }
@@ -156,7 +171,10 @@ export default function Game({
         const prevPlayer = previousPlayersRef.current.find(
           (p) => p.userName === player.userName
         );
-        if (!prevPlayer || player.totalPressCount > prevPlayer.totalPressCount) {
+        if (
+          !prevPlayer ||
+          player.totalPressCount > prevPlayer.totalPressCount
+        ) {
           setWindEffects((prev) => ({ ...prev, [player.userName]: true }));
           setTimeout(() => {
             setWindEffects((prev) => ({ ...prev, [player.userName]: false }));
@@ -167,10 +185,34 @@ export default function Game({
     previousPlayersRef.current = players;
   }, [players, userName]);
 
-  // 게임 종료 후 결과 확인 버튼 클릭 시
-  const handleResultCheck = () => {
-    onResultConfirmed();
-  };
+  // **변경**: 게임 시작 후 1초마다 gameTime 상태 감소
+  useEffect(() => {
+    if (!hasStarted || gameEnded) return;
+    const timer = setInterval(() => {
+      setGameTime((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [hasStarted, gameEnded]);
+
+  // **변경**: gameTime이 0이 되거나 모든 플레이어가 100 탭 이상 시 게임 종료
+  useEffect(() => {
+    if (!hasStarted || gameEnded) return;
+    if (
+      gameTime <= 0 ||
+      (players.length > 0 &&
+        players.every((player) => player.totalPressCount >= 100))
+    ) {
+      setGameEnded(true);
+      const maxPlayer = players.reduce(
+        (prev, cur) =>
+          cur.totalPressCount > prev.totalPressCount ? cur : prev,
+        players[0]
+      );
+      setWinner(maxPlayer?.userName || null);
+      // 타임아웃 발생 시 GAME_ENDED 메시지를 백엔드에 전송
+      publishMessage('/app/game.end', { roomId });
+    }
+  }, [gameTime, players, hasStarted, gameEnded]);
 
   // 만약 countdown이 끝났는데 아직 게임이 시작되지 않았다면, 강제로 스페이스바 이벤트 발생!
   useEffect(() => {
@@ -178,38 +220,97 @@ export default function Game({
       setTimeout(() => {
         const syntheticEvent = new KeyboardEvent('keyup', { code: 'Space' });
         window.dispatchEvent(syntheticEvent);
-      }, 500);
+      }, 0);
     }
   }, [hasCountdownFinished, hasStarted]);
 
-  // 게임 종료 화면은 그대로 별도 렌더링
+  // 현재 유저의 플레이어 정보 확인
+  const currentUserPlayer = players.find((p) => p.userName === userName);
+  const hasArrived = currentUserPlayer
+    ? currentUserPlayer.totalPressCount >= 100
+    : false;
+
+  // 게임 종료 후 결과 확인 버튼 클릭 시
+  const handleResultCheck = () => {
+    onResultConfirmed();
+  };
+
+  // 결승 모달을 닫기 위한 버튼 클릭 핸들러
+  const handleModalClose = () => {
+    setModalDismissed(true);
+  };
+
+  // 게임 종료 화면
   if (gameEnded) {
     return (
       <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
-        <div className='bg-white/80 shadow-lg rounded-xl p-10 text-center max-w-md w-full mx-4'>
-          <h1 className='text-4xl font-extrabold text-gray-800 mb-4'>Game Over</h1>
-          <p className='text-xl text-gray-600 mb-6'>
+        <div className='bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4'>
+          <h1 className='text-4xl font-extrabold text-gray-800 mb-6'>
+            Game Over
+          </h1>
+          <p className='text-xl text-gray-600 mb-8'>
             Winner:{' '}
-            <span className='font-bold text-gray-900'>{winner || 'No Winner'}</span>
+            <span className='font-bold text-gray-900'>
+              {winner || 'No Winner'}
+            </span>
           </p>
+          {finishOrder.length > 0 && (
+            <div className='mb-8'>
+              <h2 className='text-3xl font-bold text-gray-800 mb-4'>
+                전체 순위
+              </h2>
+              <div className='bg-gray-100 rounded-lg shadow-md p-4'>
+                <ol className='divide-y divide-gray-300'>
+                  {finishOrder.map((user, index) => (
+                    <li
+                      key={user}
+                      className='py-2 flex justify-between items-center'
+                    >
+                      <span className='font-semibold text-gray-700'>
+                        {index + 1}.
+                      </span>
+                      <span className='text-gray-900'>{user}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          )}
           <button
             onClick={handleResultCheck}
             className='w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300'
           >
-            Check Result & Exit
+            채팅방으로 돌아가기
           </button>
         </div>
       </div>
     );
   }
 
-  // 게임 진행 화면
   return (
     <div
       className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
+      {/* 결승점 도착한 경우 모달 띄우기 (게임 종료 전) */}
+      {!gameEnded && hasArrived && !modalDismissed && (
+        <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30'>
+          <div className='bg-white p-8 rounded-lg shadow-lg text-center'>
+            <h2 className='text-2xl font-bold mb-4'>결승점 도착!</h2>
+            <p className='text-xl mb-4'>
+              다른 물고기들이 도착할 때까지 기다려주세요!
+            </p>
+            <button
+              onClick={handleModalClose}
+              className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded'
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 시작 마커 - 레일 영역 내에 표시 */}
       {trackDims.height > 0 && (
         <div
@@ -248,6 +349,13 @@ export default function Game({
         </div>
       )}
 
+      {/* **변경**: 게임 진행 중 상단 중앙에 남은 시간 표시 (gameTime) */}
+      {hasCountdownFinished && !gameEnded && (
+        <div className='absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
+          Time: {gameTime}s
+        </div>
+      )}
+
       {/* 레인 구분선 (상단, 하단 경계 포함) */}
       {trackDims.height > 0 && (
         <>
@@ -270,67 +378,71 @@ export default function Game({
           {/* 하단 경계 */}
           <div
             className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
-            style={{ top: `${laneAreaTopOffset + laneAreaHeight}px`, zIndex: 2 }}
+            style={{
+              top: `${laneAreaTopOffset + laneAreaHeight}px`,
+              zIndex: 2,
+            }}
           />
         </>
       )}
 
       {/* 플레이어(물고기) 렌더링 */}
-{/* 플레이어(물고기) 렌더링 */}
-{players.map((player, index) => {
-  // 플레이어가 총 6마리 미만인 경우 중앙 정렬을 위한 오프셋 계산
-  const offset =
-    players.length < totalLanes
-      ? Math.floor((totalLanes - players.length) / 2)
-      : 0;
-  const laneIndex = index + offset;
-  const fishSize = laneHeight * 0.8;
-  const topPos =
-    laneAreaTopOffset + laneIndex * laneHeight + (laneHeight - fishSize) / 2;
-  const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
-  const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
-  const leftPos =
-    player.userName === userName && !hasStarted
-      ? startOffset
-      : startOffset + Math.floor(player.totalPressCount / 2) * moveFactor;
+      {players.map((player, index) => {
+        // 플레이어가 총 6마리 미만인 경우 중앙 정렬을 위한 오프셋 계산
+        const offset =
+          players.length < totalLanes
+            ? Math.floor((totalLanes - players.length) / 2)
+            : 0;
+        const laneIndex = index + offset;
+        const fishSize = laneHeight * 0.8;
+        const topPos =
+          laneAreaTopOffset +
+          laneIndex * laneHeight +
+          (laneHeight - fishSize) / 2;
+        const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
+        const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
+        const leftPos =
+          player.userName === userName && !hasStarted
+            ? startOffset
+            : startOffset + Math.floor(player.totalPressCount / 2) * moveFactor;
 
-  return (
-    <div
-      key={player.userName}
-      className='absolute flex flex-col items-center'
-      style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
-    >
-      <div className='relative'>
-        <img
-          src={player.mainFishImage}
-          alt={`${player.userName}의 대표 물고기`}
-          style={{ width: fishSize, height: fishSize }}
-          className='object-contain scale-x-[-1]'
-        />
-        {(player.userName === userName
-  ? isTapping
-  : windEffects[player.userName]) && (
-  <img
-    src='/chat_images/wind_overlay.png'
-    alt='Wind effect'
-    style={{
-      width: fishSize * 0.4, // 기존 0.3 -> 0.4로 변경
-      height: fishSize * 0.4, // 기존 0.3 -> 0.4로 변경
-      position: 'absolute',
-      top: '50%',
-      left: `-${fishSize * 0.4}px`, // 크기에 맞게 위치도 변경
-      transform: 'translateY(-50%) scaleX(-1)',
-    }}
-    className='object-contain pointer-events-none'
-  />
-)}
-      </div>
-      <span className='mt-[-25px] text-xl font-medium text-gray-900'>
-        {player.userName}
-      </span>
-    </div>
-  );
-})}
+        return (
+          <div
+            key={player.userName}
+            className='absolute flex flex-col items-center'
+            style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
+          >
+            <div className='relative'>
+              <img
+                src={player.mainFishImage}
+                alt={`${player.userName}의 대표 물고기`}
+                style={{ width: fishSize, height: fishSize }}
+                className='object-contain scale-x-[-1]'
+              />
+              {(player.userName === userName
+                ? isTapping
+                : windEffects[player.userName]) && (
+                <img
+                  src='/chat_images/wind_overlay.png'
+                  alt='Wind effect'
+                  style={{
+                    width: fishSize * 0.4,
+                    height: fishSize * 0.4,
+                    position: 'absolute',
+                    top: '50%',
+                    left: `-${fishSize * 0.4}px`,
+                    transform: 'translateY(-50%) scaleX(-1)',
+                  }}
+                  className='object-contain pointer-events-none'
+                />
+              )}
+            </div>
+            <span className='mt-[-25px] text-xl font-medium text-gray-900'>
+              {player.userName}
+            </span>
+          </div>
+        );
+      })}
 
       {/* 하단 고정 안내 메시지 */}
       <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>

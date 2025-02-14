@@ -46,29 +46,45 @@ export default function MyPage() {
       {/* 왼쪽 상단 Home 버튼 */}
       <Link
         href="/main"
-        className="absolute top-2 left-2 min-w-[80px] h-10 px-2 rounded-xl border border-[#040303] bg-white
-          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] flex items-center justify-center text-[#070707] text-center
-          font-[400] text-2xl leading-none font-[NeoDunggeunmo_Pro]"
+        className="
+          absolute top-2 left-2 z-50
+          flex items-center justify-center
+          min-w-[80px] h-10 px-2
+          border border-[#040303] rounded-xl
+          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+          bg-white
+          text-[#070707] text-center font-medium text-2xl leading-none
+          sm:h-12 sm:text-lg
+          md:min-w-[60px] md:h-8 md:text-xl
+          lg:min-w-[80px] lg:h-10 lg:text-2xl
+        "
       >
         Home
       </Link>
       <button
         onClick={handleLogout}
         className="
-          absolute bottom-2 left-2
-          min-w-[80px] h-10 px-2 mt-2
-          rounded-xl border border-[#040303] bg-white
-          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+          absolute bottom-2 left-2 z-50
           flex items-center justify-center
-          text-[#070707] text-center font-[400] text-2xl leading-none
-          font-[NeoDunggeunmo_Pro]
+          min-w-[80px] h-10 px-2
+          border border-[#040303] rounded-xl
+          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+          bg-white
+          text-[#070707] text-center font-medium text-2xl leading-none
+          sm:h-12 sm:text-lg
+          md:min-w-[60px] md:h-8 md:text-xl
+          lg:min-w-[80px] lg:h-10 lg:text-2xl
         "
       >
         Logout
       </button>
 
       {/* 메인 컨테이너 (내 정보 & 도감) */}
-      <div className="flex flex-col items-center flex-1 h-full overflow-hidden">
+      <div
+        className="
+        relative z-10 min-h-screen w-full max-w-8xl mx-auto
+        flex flex-col items-center overflow-hidden"
+      >
         <Profile fishTotal={totalFishCount} />
         <MyCollection allFishList={allFishList} userFishList={userFishList} customFishList={customFishList} />
       </div>

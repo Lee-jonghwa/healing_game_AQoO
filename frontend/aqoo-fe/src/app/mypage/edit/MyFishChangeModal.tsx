@@ -51,8 +51,14 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
       .get<FishData[]>(`/fish/my-fish/${userData.id}`)
       .then((response) => {
         const data = response.data;
-        const filteredFish = data.filter((fish) => fish.fishImage !== currentMainFishImage);
-        setFishList(filteredFish);
+        // const filteredFish = data.filter((fish) => fish.fishImage !== currentMainFishImage);
+        const sortedFishList = data.slice().sort((a, b) => {
+          const aIsCurrentMain = a.fishImage === currentMainFishImage ? 1 : 0;
+          const bIsCurrentMain = b.fishImage === currentMainFishImage ? 1 : 0;
+          return aIsCurrentMain - bIsCurrentMain; // false(0)가 앞으로, true(1)가 뒤로
+        });
+
+        setFishList(sortedFishList);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -103,20 +109,28 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
   };
 
   return (
-    <Modal onClose={onClose} className="overflow-y-auto w-[1000px] h-[550px] p-6">
+    <Modal onClose={onClose} className="flex flex-col items-center overflow-y-auto w-[1000px] h-[550px] p-6">
       <h3 className="text-3xl font-semibold mb-4">대표 물고기 수정</h3>
-      <div className="flex mb-4">
-        <button className="px-4 py-2 bg-gray-300 rounded mr-2" onClick={onClose} disabled={isLoading}>
+      <div className="self-end flex mb-4">
+        {/* <button className="px-4 py-2 bg-gray-300 rounded mr-2" onClick={onClose} disabled={isLoading}>
           취소
-        </button>
+        </button> */}
         <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleConfirm} disabled={isLoading}>
-          변경완료
+          변경하기
         </button>
       </div>
       {isLoading && <p>로딩 중...</p>}
       {!isLoading && (
         <div className="flex justify-end mt-6">
-          <div id="one-panel" className="flex flex-wrap">
+          <div
+            id="one-panel"
+            className="
+              flex flex-wrap
+              grid gap-4 w-full
+              grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
+              overflow-y-auto max-h-[450px] scrollbar-none
+            "
+            >
             {fishList.length > 0 ? (
               fishList.map((fish) => (
                 <CollectionItemCard
@@ -142,44 +156,3 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
     </Modal>
   );
 }
-
-// // 완료 버튼 클릭 시 대표 물고기 변경 API 호출
-// const handleConfirm = async () => {
-//   if (!selectedFishImage) {
-//     alert("대표 물고기를 선택해주세요.");
-//     return;
-//   }
-//   setIsLoading(true);
-//   try {
-//     const parsedImageName = selectedFishImage.split("/").pop();
-
-//     // const response = await axiosInstance.post("/users", {
-//     //   userId: userData.id,
-//     //   userNickName: userData.nickname,
-//     //   mainFishImage: selectedFishImage.startsWith("http")
-//     //     ? selectedFishImage
-//     //     : `https://i12e203.p.ssafy.io/images/${selectedFishImage}`, // 파일명만 전달
-//     // });
-//     await axiosInstance.post("/users", {
-//       userId: userData.id,
-//       userNickName: userData.nickname,
-//       mainFishImage: selectedFishImage.startsWith("http")
-//         ? selectedFishImage
-//         : `https://i12e203.p.ssafy.io/images/${selectedFishImage}`,
-//     });
-//     // console.log("응답:", response.data);
-//     console.log("선택한 이미지:", selectedFishImage);
-//     console.log("파싱된 이미지:", parsedImageName);
-//     console.log("현재 대표 이미지:", userData.mainFishImage);
-//     console.log("fishList:", fishList);
-//     alert("대표 물고기 변경 성공!");
-//     // 전역 유저 데이터를 새로 불러와 업데이트합니다.
-//     await fetchUser();
-//     onClose();
-//   } catch (error) {
-//     alert("대표 물고기 변경에 실패했습니다.");
-//     console.error(error);
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };

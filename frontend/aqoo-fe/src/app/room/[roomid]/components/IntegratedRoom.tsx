@@ -4,7 +4,7 @@ import { connectStompClient, getStompClient } from '@/lib/stompclient';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import ChatBox from './ChatBox';
-import Game from './game';
+import Game from './Game';
 import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
 import { gsap } from "gsap";
