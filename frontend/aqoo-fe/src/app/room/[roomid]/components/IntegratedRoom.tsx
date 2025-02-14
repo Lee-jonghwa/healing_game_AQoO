@@ -9,6 +9,7 @@ import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
 import { gsap } from "gsap";
 import Fish from "./Fish"
+import { User } from '@/store/authAtom';
 
 // 플레이어 타입 정의
 interface Player {
@@ -30,6 +31,7 @@ interface RoomUpdate {
 interface IntegratedRoomProps {
   roomId: string;
   userName: string;
+  user: User;
 }
 
 interface FishData {
@@ -40,7 +42,7 @@ interface FishData {
   fishImage: string;
 }
 
-export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps) {
+export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
   const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
@@ -50,6 +52,8 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
   const hasSentJoinRef = useRef(false);
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
+
+  console.log("IntegratedRoom currentUser:", user);
 
   // 사용자 목록 상태 및 displayUsers 선언
   const displayUsers =
@@ -212,7 +216,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                             body: JSON.stringify({ roomId, sender: userName }),
                           });
                           console.log('Leave room message sent');
-                          router.push('/room');
+                          router.replace('/main');
                         } else {
                           console.error('STOMP client is not connected yet.');
                         }
@@ -330,6 +334,7 @@ export default function IntegratedRoom({ roomId, userName }: IntegratedRoomProps
                 userName={userName}
                 initialPlayers={gamePlayers}
                 onResultConfirmed={() => setScreen('chat')}
+                user={user}
               />
             </div>
           )}
