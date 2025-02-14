@@ -8,6 +8,20 @@ import axiosInstance from "@/services/axiosInstance"; // ✅ axiosInstance 사�
 import { useAuth } from "@/hooks/useAuth"; // ✅ useAuth 훅 사용
 import { useInput } from "@/hooks/useInput"; // useInput 훅을 사용
 
+const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+
+// ✅ 친구 목록을 가져오는 함수 (외부에서도 사용할 수 있도록 분리)
+export const fetchFriends = async (userId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/friends/${userId}`);
+    console.log("✅ 친구 목록 조회 성공:", response.data);
+    return response.data.friends;
+  } catch (error) {
+    console.error("❌ 친구 목록 불러오기 실패", error);
+    return null;
+  }
+};
+
 export default function FriendsList({ onClose, userId }: { onClose: () => void; userId: string }) {
   const { auth, fetchUser } = useAuth();
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
@@ -18,27 +32,26 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
-
   // ✅ 친구 목록 API 호출
   useEffect(() => {
     if (!auth.accessToken) {
       console.warn("🔄 토큰 만료 감지 - 사용자 정보 재요청...");
       fetchUser(); // ✅ 토큰 갱신 시도
     }
-
-    axios
-      .get(`${API_BASE_URL}/friends/${userId}`)
-      .then((response: AxiosResponse<{ count: number; friends: Friend[] }>) => {
-        console.log("친구 목록 조회:", response.data);
-        setMyFriends(response.data.friends);
-      })
-      .catch((error) => {
+    const fetchAndSetFriends = async () => {
+      try {
+        const response = await fetchFriends(userId); // 비동기 데이터 가져오기
+        setMyFriends(response); // 상태 업데이트
+      } catch (error) {
         console.error("친구 목록 불러오기 실패", error);
-        setError("친구 목록을 불러오는데 실패했습니다.");
-      })
-      .finally(() => setLoading(false));
+      }
+
+    };
+    fetchAndSetFriends();
+    
   }, []);
+
+  
 
   // 친구 추가 함수
   const handleAddFriend = (friendId: string) => {
