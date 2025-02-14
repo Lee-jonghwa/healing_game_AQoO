@@ -33,7 +33,7 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
                 <img
                   src={user.mainFishImage}
                   alt={`${user.userName}의 대표 물고기`}
-                  className="w-10 h-10 rounded-full object-cover mr-2"
+                  className="w-18 h-12 object-cover mr-2"
                 />
                 <span className="text-gray-900 font-medium">
                   {user.userName}{' '}
