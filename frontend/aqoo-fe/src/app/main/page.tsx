@@ -2,7 +2,7 @@
 
 import "@/lib/firebase"; // Firebase 초기화
 
-import { AquariumData, UserInfo,  Notification } from "@/types";
+import { AquariumData, UserInfo, Notification } from "@/types";
 import React, { useEffect, useRef, useState } from "react";
 import axios, { AxiosResponse } from "axios";
 import { increaseFishTicket, increaseUserExp } from "@/services/userService";
@@ -42,7 +42,6 @@ export default function MainPage() {
   const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
   const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(null);
   const [firstLoginModal, setFirstLoginModal] = useState<{ status: boolean } | null>(null);
-
 
   //알람 처리
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -148,8 +147,6 @@ export default function MainPage() {
   };
 
   useEffect(() => {
-    
-
     if (!auth.user?.id) return; // 로그인한 유저 ID가 없으면 API 호출 안 함
 
     axios
@@ -194,48 +191,48 @@ export default function MainPage() {
         console.log("✅ 어항 상세 정보:", res.data);
         setAquariumData(res.data);
 
-        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images"
-    // TODO  배경화면 제대로 불러오기 로직 추가
-    // const savedBg = localStorage.getItem("background");
-    
-    const savedBg = BACKGROUND_BASE_URL + res.data.aquariumBackground;
+        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
+        // TODO  배경화면 제대로 불러오기 로직 추가
+        // const savedBg = localStorage.getItem("background");
 
-    if (savedBg) {
-      setBackground(savedBg);
-    }
+        const savedBg = BACKGROUND_BASE_URL + res.data.aquariumBackground;
+
+        if (savedBg) {
+          setBackground(savedBg);
+        }
       })
       .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
   }, [userInfo]);
 
   useEffect(() => {
     const checkUnreadNotifications = async () => {
-    if (!auth.user?.id) return; // ✅ 로그인되지 않은 경우 API 호출 안함
+      if (!auth.user?.id) return; // ✅ 로그인되지 않은 경우 API 호출 안함
 
-    // ✅ 현재 로그인된 유저의 ID로 알림 가져오기
-    axios
-      .get(`${API_BASE_URL}/notification/${auth.user.id}`)
-      .then((response: AxiosResponse<Notification[]>) => {
-        console.log("🔔 알림 데이터:", response.data);
-        setNotifications(response.data);
+      // ✅ 현재 로그인된 유저의 ID로 알림 가져오기
+      axios
+        .get(`${API_BASE_URL}/notification/${auth.user.id}`)
+        .then((response: AxiosResponse<Notification[]>) => {
+          console.log("🔔 알림 데이터:", response.data);
+          setNotifications(response.data);
 
-        // ✅ 안 읽은 알림들만 읽음 처리 API 호출
-        const unreadNotifications = response.data.filter((notif) => notif.status === false);
+          // ✅ 안 읽은 알림들만 읽음 처리 API 호출
+          const unreadNotifications = response.data.filter((notif) => notif.status === false);
 
-        if (unreadNotifications.length > 0) {
-          console.log("안 읽은 알람 있음");
-          setNewNotifications(true);
-        } else {
-          console.log("안 읽은 알람 없음");
-          setNewNotifications(false);
-        }
-      })
-      .catch((error) => {
-        console.error("❌ 알림 불러오기 실패", error);
-        setError("알림을 불러오는데 실패했습니다.");
-      })
-      .finally(() => setLoading(false));
+          if (unreadNotifications.length > 0) {
+            console.log("안 읽은 알람 있음");
+            setNewNotifications(true);
+          } else {
+            console.log("안 읽은 알람 없음");
+            setNewNotifications(false);
+          }
+        })
+        .catch((error) => {
+          console.error("❌ 알림 불러오기 실패", error);
+          setError("알림을 불러오는데 실패했습니다.");
+        })
+        .finally(() => setLoading(false));
     };
-      checkUnreadNotifications();
+    checkUnreadNotifications();
   }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
 
   if (!userInfo) return <div>유저 정보 불러오는 중...</div>;
@@ -292,13 +289,11 @@ export default function MainPage() {
       {/* ✅ PushNotifications도 같은 방식 적용 */}
       {activeComponent === "push" && (
         <div className="absolute bottom-[130px] left-[100px] z-50">
-          <PushNotifications 
-          onClose={() => setActiveComponent(null)} 
-          setNewNotifications={setNewNotifications} />
+          <PushNotifications onClose={() => setActiveComponent(null)} setNewNotifications={setNewNotifications} />
         </div>
       )}
-      <NotificationComponent 
-        refreshAquariumData={refreshAquariumData} 
+      <NotificationComponent
+        refreshAquariumData={refreshAquariumData}
         setNewNotifications={setNewNotifications} // 이 부분 추가
       />
 
@@ -335,7 +330,6 @@ export default function MainPage() {
         />
       )}
     </div>
-    
   );
 }
 

@@ -45,7 +45,7 @@ export default function Fish({ fish }: { fish: FishData }) {
 
       // 🎯 이동 범위를 조정하여 자연스러운 움직임 구현
       const moveDistanceX = containerWidth * (Math.random() - 0.5); // -50% ~ +50%
-      let moveDistanceY = containerHeight * (0.05 + Math.random() * 0.15); // 5% ~ 20%
+      const moveDistanceY = containerHeight * (0.05 + Math.random() * 0.15); // 5% ~ 20%
 
       let newX = parseFloat(gsap.getProperty(fishRef.current, 'x') as string) + moveDistanceX;
       let newY = parseFloat(gsap.getProperty(fishRef.current, 'y') as string) + moveDistanceY;
