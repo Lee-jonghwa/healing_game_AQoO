@@ -339,7 +339,7 @@ export default function MainPage() {
       {/* Electron 환경일 때만 "Electron 전용 페이지 이동" 버튼 표시 */}
       {isElectron && (
           <Link href='/electron-only-page'>
-            <button className='mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
+            <button className='absolute top-30 left-50 mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
               Electron 전용 페이지 이동
             </button>
           </Link>
