@@ -61,23 +61,7 @@ export default function MyFishTank() {
       "
     >
       {/* 상단 내비게이션 버튼 */}
-      <div className="absolute top-0 left-0 m-2">
-        <Link
-          href="/mypage"
-          className="
-            block
-            min-w-[80px] h-10 px-2
-            rounded-xl border border-[#040303] bg-white
-            shadow-inner
-            flex items-center justify-center
-            text-[#040303] text-center font-normal text-sm leading-none
-            sm:min-w-[80px] sm:h-10
-            md:min-w-[100px] md:h-12
-          "
-        >
-          BACK
-        </Link>
-      </div>
+      
       {/* 메인 컨테이너 */}
       <div
         className="
