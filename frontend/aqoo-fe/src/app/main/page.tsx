@@ -2,12 +2,11 @@
 
 import "@/lib/firebase"; // Firebase 초기화
 
-import { AquariumData, UserInfo, Notification } from "@/types";
+import { AquariumData, Notification, UserInfo } from "@/types";
 import React, { useEffect, useRef, useState } from "react";
 import axios, { AxiosResponse } from "axios";
 import { increaseFishTicket, increaseUserExp } from "@/services/userService";
 
-import NotificationComponent from "@/components/NotificationComponent";
 import BottomMenuBar from "@/app/main/BottomMenuBar";
 import CleanComponent from "@/app/main/CleanComponent";
 import FirstLoginModal from "@/app/main/components/FirstLoginModal";
@@ -17,10 +16,11 @@ import Image from "next/image";
 import KickedModal from "@/app/main/components/KickedModal";
 import LevelUpModal from "@/components/LevelUpModal"; // 레벨업 모달
 import Link from "next/link";
+import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
+import axiosInstance from "@/services/axiosInstance";
 import { gsap } from "gsap";
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
-import axiosInstance from "@/services/axiosInstance";
 
 // 🔹 물고기 데이터 타입 정의
 interface FishData {
@@ -259,6 +259,7 @@ export default function MainPage() {
       {/* 📌 하단 메뉴 바 */}
       <BottomMenuBar
         setActiveComponent={setActiveComponent}
+        activeComponent={activeComponent} // 현재 활성화된 컴포넌트 전달
         userInfo={userInfo}
         aquariumData={aquariumData}
         refreshAquariumData={refreshAquariumData}
