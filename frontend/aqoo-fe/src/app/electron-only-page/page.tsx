@@ -1,33 +1,40 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { fetchUser } from '@/services/authService';
 
 export default function ElectronOnlyPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Electron 환경 감지: preload 스크립트를 통해 전역 API가 노출되어 있다면
-    const electronAPI = (window as any).electronAPI;
-    if (electronAPI && typeof electronAPI.openOverlay === 'function') {
-      console.log('openOverlay 호출 시작');
-      // Electron 환경이면 오버레이 창을 띄우도록 요청
-      electronAPI.openOverlay();
-    } else {
-      console.warn('Electron API를 찾을 수 없습니다.');
-    }
-  }, []);
+    const checkFishAndOpenOverlay = async () => {
+      const electronAPI = (window as any)?.electronAPI;
+      if (!electronAPI) {
+        console.warn('Electron API가 없습니다. 웹 환경이거나 preload 미설정일 수 있음');
+        return;
+      }
 
-  return (
-    <div className='p-4'>
-      <h1 className='text-2xl font-bold mb-4'>Electron 전용 페이지</h1>
-      <p>이 페이지에서는 Electron 고유 기능을 사용합니다.</p>
-      <button
-        onClick={() => router.push('/')}
-        className='mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
-      >
-        홈으로 돌아가기
-      </button>
-    </div>
-  );
+      // (1) 유저 정보 가져오기
+      const user = await fetchUser(); 
+      if (!user) {
+        console.warn('유저 정보가 없습니다');
+        return;
+      }
+      const fishPath = user.mainFishImage; // 예: "/fishName.png"
+
+      // (2) fishPath 콘솔로 확인
+      console.log('[ElectronOnlyPage] fishPath:', fishPath);
+
+      // (3) openOverlay에 fishPath 인자를 넣어 호출
+      electronAPI.openOverlay(fishPath);
+
+      // (선택) 라우트 이동
+      // router.replace('/main');
+    };
+
+    checkFishAndOpenOverlay();
+  }, [router]);
+
+  return <div>Electron 전용 페이지</div>;
 }
