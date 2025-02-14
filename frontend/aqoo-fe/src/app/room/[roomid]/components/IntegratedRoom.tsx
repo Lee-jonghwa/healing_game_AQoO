@@ -179,6 +179,21 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     : users.filter((u) => !u.isHost);
   const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
 
+  // 게임 종료 후 대기 화면으로 복귀 시 호출될 콜백
+  const handleResultConfirmed = () => {
+    setScreen('chat');
+    const client = getStompClient();
+    if (client && client.connected) {
+      client.publish({
+        destination: '/app/chat.clearReady',
+        body: JSON.stringify({ roomId, sender: userName }),
+      });
+      console.log('Clear ready status message sent');
+    } else {
+      console.error('STOMP client is not connected yet.');
+    }
+  };
+  
 
   return (
     <>
@@ -350,7 +365,9 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                 roomId={roomId}
                 userName={userName}
                 initialPlayers={gamePlayers}
-                onResultConfirmed={() => setScreen('chat')}
+                onResultConfirmed={() => {
+                  setScreen('chat')}
+                }
                 user={user}
               />
             </div>
