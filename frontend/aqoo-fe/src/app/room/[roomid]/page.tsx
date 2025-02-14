@@ -48,29 +48,29 @@ export default function RoomPage({ params }: RoomPageProps) {
     loadUserInfo();
   }, [router]);
 
-  // (3) (선택) 채팅방 존재 여부 체크 로직
-  useEffect(() => {
-    async function checkRoomExistence() {
-      try {
-        const res = await fetch(`/api/v1/chatrooms/${roomid}`);
-        if (res.ok) {
-          setRoomExists(true);
-        } else {
-          setRoomExists(false);
-          alert("해당 채팅방은 존재하지 않습니다.");
-          router.replace("/main");
-        }
-      } catch (error) {
-        console.error("방 존재 여부 확인 중 오류:", error);
-        setRoomExists(false);
-        alert("채팅방 정보를 불러오는데 실패했습니다.");
-        router.replace("/main");
-      } finally {
-        setLoading(false);
-      }
-    }
-    checkRoomExistence();
-  }, [roomid, router]);
+  // // (3) (선택) 채팅방 존재 여부 체크 로직
+  // useEffect(() => {
+  //   async function checkRoomExistence() {
+  //     try {
+  //       const res = await fetch(`/api/v1/chatrooms/${roomid}`);
+  //       if (res.ok) {
+  //         setRoomExists(true);
+  //       } else {
+  //         setRoomExists(false);
+  //         alert("해당 채팅방은 존재하지 않습니다.");
+  //         router.replace("/main");
+  //       }
+  //     } catch (error) {
+  //       console.error("방 존재 여부 확인 중 오류:", error);
+  //       setRoomExists(false);
+  //       alert("채팅방 정보를 불러오는데 실패했습니다.");
+  //       router.replace("/main");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  //   checkRoomExistence();
+  // }, [roomid, router]);
 
   // (4) 로딩 중 화면
   if (loading) {
