@@ -101,7 +101,7 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
   };
 
   const handleGoBack = () => {
-    router.back();
+    router.push("/mypage");
   };
 
   const handleTabClick = (idx: number) => {

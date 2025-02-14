@@ -10,15 +10,23 @@ interface Friend {
   mainFishImage: string | null;
 }
 
+interface Participant {
+  userName: string;
+  ready: boolean;
+  isHost: boolean;
+  mainFishImage: string;
+}
+
 interface FriendListProps {
   userName: string;
   roomId: string;
   isHost: boolean;
   participantCount: number; // 현재 참가자 수
   onInvite: (friendId: string) => void;
+  participants: Participant[]; // ✅ 참가자 목록 추가됨
 }
 
-export default function FriendList({ userName, roomId, isHost, participantCount, onInvite }: FriendListProps) {
+export default function FriendList({ userName, roomId, isHost, participantCount, onInvite, participants }: FriendListProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [inviteCooldowns, setInviteCooldowns] = useState<{ [key: string]: number }>({});
 
@@ -39,6 +47,17 @@ export default function FriendList({ userName, roomId, isHost, participantCount,
         });
     }
   }, [isHost, userName]);
+
+  // ✅ 참가자 목록과 비교하여, 참가자가 아닌 친구만 필터링
+  const filteredFriends = friends.filter(
+    (friend) => !participants.some((participant) => participant.userName === friend.friendId)
+  );
+
+  // 참가자 제외된 친구리스트 데이터
+  useEffect(() => {
+    console.log("🚀 [FriendList] participants:", participants);
+    console.log("✅ [FriendList] filteredFriends:", filteredFriends);
+  }, [participants, filteredFriends]);
 
   const handleInvite = async (friendId: string) => {
     if (participantCount >= 6) {
@@ -72,11 +91,11 @@ export default function FriendList({ userName, roomId, isHost, participantCount,
   return (
     <div className="mt-6">
       <h3 className="text-xl font-semibold mb-2">친구 목록 (초대 가능)</h3>
-      {friends.length === 0 ? (
+      {filteredFriends.length === 0 ? (
         <p>초대 가능한 친구가 없습니다.</p>
       ) : (
         <ul className="space-y-2">
-          {friends.map((friend) => (
+          {filteredFriends.map((friend) => (
             <li
               key={friend.id}
               className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50"

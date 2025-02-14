@@ -27,9 +27,15 @@ COPY --from=builder /app/node_modules /app/node_modules
 # 8. NGINX 설정 파일 복사
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# 9. 환경 변수 및 포트 설정
+# 9. 서버시간 한국시간 설정
+RUN apk add --no-cache tzdata && \
+    ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
+    echo "Asia/Seoul" > /etc/timezone && \
+    apk del tzdata
+
+# 10. 환경 변수 및 포트 설정
 ENV PORT 3000
 EXPOSE 3000
 
-# 10. Next.js 앱 실행
+# 11. Next.js 앱 실행
 CMD ["npm", "start"]
