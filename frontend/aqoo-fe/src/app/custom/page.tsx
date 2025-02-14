@@ -26,7 +26,7 @@ export default function CustomFishPages() {
   const [background, setBackground] = useState("/background-1.png");
 
   const [fishName, setFishName] = useState(""); // 🎨 물고기 이름
-  const [fishSize, setFishSize] = useState("M"); // 기본값을 'M'으로 설정
+  const [fishSize, setFishSize] = useState("S"); // 기본값을 'M'으로 설정
 
   const { auth } = useAuth();
   const userId = auth.user?.id;
@@ -477,7 +477,7 @@ export default function CustomFishPages() {
               className="px-4 py-2 border border-gray-300 rounded-md text-xl w-56 h-12 text-center"
             >
               <option value="XS">XS</option>
-              <option value="S">S</option>
+              <option value="S">기본</option>
               <option value="M">M</option>
               <option value="L">L</option>
               <option value="XL">XL</option>
