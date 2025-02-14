@@ -29,21 +29,25 @@ public class PushService {
 
     public UserToken createUserToken(String userId, String token) {
         Optional<UserToken> existingToken = userTokenRepository.findByToken(token);
+        Optional<UserToken> existingUser = userTokenRepository.findByUserId(userId);
 
+        // 이미 존재하는 토큰인지 확인
         if (existingToken.isPresent()) {
             UserToken userToken = existingToken.get();
 
-            if (userToken.getUserId().equals(userId)) {
-                // 이미 존재하는 토큰이고 유저 아이디도 동일 -> 기존 토큰 반환
-                return userToken;
+            if (!userToken.getUserId().equals(userId)) {
+                // 기존 토큰의 유저가 다르면 기존 데이터를 삭제 후 새로운 데이터 저장
+                userTokenRepository.delete(userToken);
             } else {
-                // 이미 존재하는 토큰이지만 다른 유저 아이디 -> 유저 아이디 업데이트
-                userToken.setUserId(userId);
-                return userTokenRepository.save(userToken);
+                // 같은 유저라면 기존 데이터를 반환
+                return userToken;
             }
         }
 
-        // 존재하지 않는 토큰 -> 새로 등록
+        // 기존 유저 데이터가 있는 경우 삭제
+        existingUser.ifPresent(userTokenRepository::delete);
+
+        // 새롭게 저장
         UserToken newUserToken = new UserToken();
         newUserToken.setUserId(userId);
         newUserToken.setToken(token);
@@ -75,9 +79,9 @@ public class PushService {
 
         // push 알람 보내기
         // userId로 모든 FCM 토큰 조회
-        List<UserToken> userTokens = userTokenRepository.findByUserId(request.getRecipientId());
+        Optional<UserToken> data = userTokenRepository.findByUserId(request.getRecipientId());
 
-        if (userTokens.isEmpty()) {
+        if (!data.isPresent()) {
             System.out.println(request.getRecipientId() + " 유저의 등록된 FCM 토큰이 없습니다.");
             return;
         }
@@ -91,8 +95,7 @@ public class PushService {
 
         if(request.getData().equals("5") || request.getData().equals("4")) return;
 
-
-        for (UserToken userToken : userTokens) {
+        UserToken userToken = data.get();
             Message message = Message.builder()
                     .setToken(userToken.getToken())  // 유저의 각 토큰에 대해 메시지 전송
                     .putData("type", type)
@@ -105,7 +108,6 @@ public class PushService {
             // FCM으로 메시지 전송
             String response = FirebaseMessaging.getInstance().send(message);
             System.out.println("FCM 메시지 전송 성공 (토큰: " + userToken.getToken() + "): " + response);
-        }
     }
 
     public static String getMessageTitle(String type, String aquariumName) {

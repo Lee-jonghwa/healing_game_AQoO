@@ -12,5 +12,5 @@ public interface UserTokenRepository extends JpaRepository<UserToken, Long> {
     Optional<UserToken> findByToken(String token);
     boolean existsByToken(String token);
 
-    List<UserToken> findByUserId(String userId);  // 특정 유저의 모든 FCM 토큰 조회
+    Optional<UserToken> findByUserId(String userId);  // 특정 유저의 모든 FCM 토큰 조회
 }
