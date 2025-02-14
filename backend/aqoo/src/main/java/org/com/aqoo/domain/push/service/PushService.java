@@ -31,29 +31,23 @@ public class PushService {
         Optional<UserToken> existingToken = userTokenRepository.findByToken(token);
         Optional<UserToken> existingUser = userTokenRepository.findByUserId(userId);
 
-        // 이미 존재하는 토큰인지 확인
-        if (existingToken.isPresent()) {
-            UserToken userToken = existingToken.get();
+        // 기존 토큰이 있으면 삭제
+        existingToken.ifPresent(userTokenRepository::delete);
 
-            if (!userToken.getUserId().equals(userId)) {
-                // 기존 토큰의 유저가 다르면 기존 데이터를 삭제 후 새로운 데이터 저장
-                userTokenRepository.delete(userToken);
-            } else {
-                // 같은 유저라면 기존 데이터를 반환
-                return userToken;
-            }
+        // 기존 유저 데이터가 있지만, 기존 토큰과 다르면 삭제
+        if (existingUser.isPresent() && !existingUser.get().getToken().equals(token)) {
+            userTokenRepository.delete(existingUser.get());
         }
-
-        // 기존 유저 데이터가 있는 경우 삭제
-        existingUser.ifPresent(userTokenRepository::delete);
 
         // 새롭게 저장
         UserToken newUserToken = new UserToken();
         newUserToken.setUserId(userId);
         newUserToken.setToken(token);
 
+        System.out.println("새로운 토큰 저장: " + userId + ", " + token);
         return userTokenRepository.save(newUserToken);
     }
+
 
 
 

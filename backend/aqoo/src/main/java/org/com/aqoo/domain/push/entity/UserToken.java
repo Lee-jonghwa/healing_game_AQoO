@@ -18,7 +18,7 @@ public class UserToken {
     @Column(name = "token_id")
     private Long tokenId;  // 토큰 ID (자동 증가)
 
-    @Column(name = "user_id", nullable = false, length = 50)
+    @Column(name = "user_id", nullable = false, unique = true, length = 50)
     private String userId;  // 유저 ID (VARCHAR)
 
     @Column(name = "token", nullable = false, unique = true, length = 255)
