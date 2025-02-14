@@ -12,6 +12,7 @@ const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 export default function BottomMenuBar({
   setActiveComponent,
+  activeComponent, // 현재 활성화된 컴포넌트 상태 추가
   userInfo,
   aquariumData,
   refreshAquariumData, // ✅ 어항 상태 새로고침 함수
@@ -20,6 +21,7 @@ export default function BottomMenuBar({
   newNotifications,
 }: {
   setActiveComponent: (value: string | null) => void;
+  activeComponent: string | null; // 현재 활성화된 컴포넌트 상태 추가
   userInfo: UserInfo;
   aquariumData?: AquariumData;
   refreshAquariumData: () => void;
@@ -33,6 +35,15 @@ export default function BottomMenuBar({
   const isWaterMaxed = aquariumData?.waterStatus === 5;
   const isPollutionMaxed = aquariumData?.pollutionStatus === 5;
   const isFeedMaxed = aquariumData?.feedStatus === 5;
+
+  // 버튼 클릭 핸들러
+  const handleButtonClick = (component: string) => {
+    if (activeComponent === component) {
+      setActiveComponent(null);
+    } else {
+      setActiveComponent(component);
+    }
+  };
 
   // ✅ Water & Feed 버튼 클릭 시 실행할 함수 (type에 따라 분기)
   const handleAquariumUpdate = async (type: "water" | "feed") => {
@@ -87,12 +98,22 @@ export default function BottomMenuBar({
         <MenuButton icon="/icon/icon-fishTank.png" label="MyPage" onClick={() => router.push("/mypage")} />
 
         {/* ✅ 친구 목록 */}
-        <MenuButton icon="/icon/friendIcon.png" label="Friends" onClick={() => setActiveComponent("friends")} />
+        <MenuButton
+          icon="/icon/friendIcon.png"
+          label="Friends"
+          onClick={() => handleButtonClick("friends")}
+          isActive={activeComponent === "friends"}
+        />
 
         {/* ✅ Push 알림 */}
         <div className="relative">
           {/* 푸시 알람 버튼 */}
-          <MenuButton icon="/icon/alertIcon.png" label="Push" onClick={() => setActiveComponent("push")} />
+          <MenuButton
+            icon="/icon/alertIcon.png"
+            label="Push"
+            onClick={() => handleButtonClick("push")}
+            isActive={activeComponent === "push"}
+          />
 
           {/* 알림 동그라미 애니메이션 */}
           {newNotifications && <div className="notification-dot absolute top-2 right-2" />}
@@ -151,7 +172,6 @@ export default function BottomMenuBar({
       </div>
 
       {/* 우측 메뉴 */}
-      {/* TODO 상태가 full일 경우는 동작할 수 없도록 막아야 함 */}
       {/* TODO 청소하는 거 미디어파이프 말고 버튼으로도 처리할 수 있도록 */}
       <div className="flex space-x-2 md:space-x-4">
         <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
@@ -165,6 +185,7 @@ export default function BottomMenuBar({
             }
             setActiveComponent("clean");
           }}
+          isActive={activeComponent === "clean"} // 현재 활성화 여부
         />
         <MenuButton icon="/icon/feedIcon.png" label="Feed" onClick={() => handleAquariumUpdate("feed")} />
       </div>
