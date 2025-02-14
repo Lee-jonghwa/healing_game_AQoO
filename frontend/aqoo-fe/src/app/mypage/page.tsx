@@ -1,5 +1,7 @@
 "use client";
 
+import { UserInfo, AquariumData } from "@/types";
+
 import MyCollection from "./components/MyCollection";
 import Profile from "./components/Profile";
 
@@ -9,6 +11,9 @@ import { useCustomFishCollectionTest } from "@/hooks/useCustomFishCollection";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import axiosInstance from "@/services/axiosInstance";
+import { AxiosResponse } from "axios";
 
 export default function MyPage() {
   const { auth, logout } = useAuth();
@@ -18,10 +23,14 @@ export default function MyPage() {
   const { fishList: allFishList } = useAllFishCollectionTest();
   const { fishList: customFishList, isLoading: customLoading } = useCustomFishCollectionTest(userId);
 
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
+  const [background, setBackground] = useState("/background-1.png");
+
   // 총 물고기
   const totalFishCount = userFishList.reduce((acc, fish) => acc + fish.cnt, 0) + customFishList.length;
 
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/";
+  const API_BASE_URL = "https://i12e203.p.ssafy.io";
 
   // 로그아웃 기능 핸들러
   const handleLogout = async () => {
@@ -33,9 +42,54 @@ export default function MyPage() {
     }
   };
 
+  // 접속 유저의 정보 조회
+  useEffect(() => {
+    if (!auth.user?.id) return; // 로그인한 유저 ID가 없으면 API 호출 안 함
+    axiosInstance
+      .get(`/users/${auth.user.id}`)
+      .then((response: AxiosResponse<UserInfo>) => {
+        console.log("✅ 유저 정보:", response.data);
+        setUserInfo(response.data);
+      })
+      .catch((error) => {
+        console.error("❌ 유저 정보 불러오기 실패", error);
+      });
+  }, [auth.user?.id]);
+
+  // 어항 상세 정보 및 배경 정보 조회
+  useEffect(() => {
+    console.log("Fetching aquarium data...");
+    if (!userInfo?.mainAquarium) return;
+
+    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+
+    axiosInstance
+      .get(`/aquariums/${userInfo.mainAquarium}`)
+      .then((res: AxiosResponse<AquariumData>) => {
+        console.log("✅ 어항 상세 정보:", res.data);
+        setAquariumData(res.data);
+
+        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
+        // TODO  배경화면 제대로 불러오기 로직 추가
+        // const savedBg = localStorage.getItem("background");
+
+        let bgUrl = res.data.aquariumBackground; // API에서 받아온 값
+
+        if (!bgUrl) return;
+
+        // bgUrl이 전체 URL이 아니라면 BASE_URL을 붙임
+        if (!bgUrl.startsWith("http")) {
+          bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
+        }
+        console.log("Setting background to:", bgUrl);
+        setBackground(bgUrl);
+      })
+      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+  }, [userInfo]);
+
   return (
     <div
-      style={{ backgroundImage: `url(${API_BASE_URL}/images/bg1.png)` }}
+      style={{ backgroundImage: `url(${background})` }}
       className={`
         flex
         h-screen

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "@/services/axiosInstance";
 import BackgroundItemCard from "./BackgroundItemCard";
+import { BADFLAGS } from "dns";
 
 interface Background {
   id: number;
@@ -11,9 +12,10 @@ interface Background {
 
 interface BackgroundListProps {
   aquariumId: number;
+  onBackgroundChange: (newBackground: string) => void;
 }
 
-export default function BackgroundList({ aquariumId }: BackgroundListProps) {
+export default function BackgroundList({ aquariumId, onBackgroundChange }: BackgroundListProps) {
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -39,7 +41,7 @@ export default function BackgroundList({ aquariumId }: BackgroundListProps) {
       });
   }, []);
 
-  const handleBackgroundSelect = (backgroundId: number) => {
+  const handleBackgroundSelect = (backgroundId: number, newBgUrl: string) => {
     setSelectedBackgroundId(backgroundId);
     axiosInstance
       .post("/aquariums/update", {
@@ -48,6 +50,7 @@ export default function BackgroundList({ aquariumId }: BackgroundListProps) {
         data: backgroundId,
       })
       .then(() => {
+        onBackgroundChange(newBgUrl);
         alert("배경화면이 변경되었습니다.");
       })
       .catch((error) => {
@@ -60,7 +63,6 @@ export default function BackgroundList({ aquariumId }: BackgroundListProps) {
   if (backgrounds.length === 0) return <div>배경화면이 없습니다.</div>;
 
   return (
-    // 고정 높이(h-64)를 적용하고 내용이 초과하면 세로 스크롤이 생기도록 overflow-y-auto 적용
     <div className="h-64 overflow-y-auto">
       <div className="flex flex-wrap gap-4 justify-center">
         {backgrounds.map((bg, idx) => {
@@ -77,7 +79,7 @@ export default function BackgroundList({ aquariumId }: BackgroundListProps) {
               isHovered={isHovered}
               onMouseEnter={() => setHoveredIndex(idx)}
               onMouseLeave={() => setHoveredIndex(null)}
-              onClick={() => handleBackgroundSelect(bg.id)}
+              onClick={() => handleBackgroundSelect(bg.id, bg.imageUrl)}
             />
           );
         })}
