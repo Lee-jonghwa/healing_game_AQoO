@@ -24,7 +24,9 @@ export default function CustomFishPages() {
   const [history, setHistory] = useState<string[]>([]);
   const [redoStack, setRedoStack] = useState<string[]>([]);
   const [background, setBackground] = useState("/background-1.png");
+
   const [fishName, setFishName] = useState(""); // 🎨 물고기 이름
+  const [fishSize, setFishSize] = useState("M"); // 기본값을 'M'으로 설정
 
   const { auth } = useAuth();
   const userId = auth.user?.id;
@@ -298,6 +300,11 @@ export default function CustomFishPages() {
       return;
     }
 
+    if (!fishSize) {
+      alert("물고기 크기를 선택해주세요!");
+      return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -311,6 +318,7 @@ export default function CustomFishPages() {
         JSON.stringify({
           userId: userId,
           fishName: fishName,
+          size: fishSize,
         })
       );
       formData.append("image", blob, `${fishName}.png`);
@@ -448,19 +456,40 @@ export default function CustomFishPages() {
         </div>
 
         {/* ✅ 🐟 물고기 이름 입력 */}
-        <input
-          type="text"
-          placeholder="물고기 이름 입력"
-          value={fishName}
-          onChange={(e) => setFishName(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-md text-lg w-full sm:w-96 text-center"
-        />
+        <div className="flex  items-center">
+          <div className="flex flex-col items-center mr-4">
+            <label className="font-semibold text-lg">🐟 물고기 이름 입력 </label>
+            <input
+              type="text"
+              placeholder="물고기 이름 입력"
+              value={fishName}
+              onChange={(e) => setFishName(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md text-lg w-56 h-12 text-center"
+            />
+          </div>
+
+          {/* 🐟 물고기 크기 선택 (Select Box) */}
+          <div className="flex flex-col items-center">
+            <label className="font-semibold text-lg">🐟 크기 선택</label>
+            <select
+              value={fishSize}
+              onChange={(e) => setFishSize(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md text-xl w-56 h-12 text-center"
+            >
+              <option value="XS">XS</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+            </select>
+          </div>
+        </div>
 
         {/* 🏁 버튼 */}
         <div className="flex flex-col items-center justify-center sm:flex-row gap-4 mt-6 w-full">
           <button
             onClick={() => router.back()}
-            className="px-6 py-3 bg-gray-400 text-white rounded-lg shadow-md w-full sm:w-auto"
+            className="px-6 py-3 bg-gray-400 text-white rounded-lg shadow-md w-full sm:w-auto ml-6"
           >
             취소하기
           </button>
