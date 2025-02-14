@@ -26,6 +26,10 @@ RUN ./gradlew bootJar --no-daemon
 # ---- 실행 환경 ----
 FROM eclipse-temurin:17-jdk as runtime
 
+# 시간 설정
+RUN ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime \
+    && echo "Asia/Seoul" > /etc/timezone
+
 # 작업 디렉토리 생성
 WORKDIR /app
 
