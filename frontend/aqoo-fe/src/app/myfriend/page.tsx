@@ -35,62 +35,64 @@ interface UserInfo {
   // 기타 필요한 필드
 }
 
+const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+
 export default function FriendFishPage() {
+  // 모든 Hook은 컴포넌트 최상위에서 호출합니다.
   const searchParams = useSearchParams();
   const router = useRouter();
-  const friendId = searchParams.get("friendId"); // 예: /myfriend?friendId=1234
+  const friendId = searchParams.get("friendId");
 
-  // friendId가 없으면 /main으로 리다이렉트
+  // friendId가 없으면 즉시 리다이렉트 (렌더링 이전에 실행)
   useEffect(() => {
     if (!friendId) {
       router.push("/main");
     }
   }, [friendId, router]);
 
-  if (!friendId) return null;
-
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
-
+  // 상태 변수들은 항상 최상위에서 선언 (조건문 없이)
   const [friendUserInfo, setFriendUserInfo] = useState<UserInfo | null>(null);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
   const [background, setBackground] = useState("/background-1.png");
   const [loading, setLoading] = useState(true);
   const [showFishList, setShowFishList] = useState(false);
 
+  // friendId가 없더라도 Hook은 이미 호출되었으므로, 여기서 단순히 null을 리턴합니다.
+  if (!friendId) return null;
+
   // 1. 친구 유저 정보 불러오기
   useEffect(() => {
-    if (!friendId) {
-      console.error("friendId가 제공되지 않았습니다.");
-      setLoading(false);
-      return;
+    // friendId가 유효한 경우에만 API 호출 (조건은 effect 내부에서 처리)
+    if (friendId) {
+      axios
+        .get(`${API_BASE_URL}/users/${friendId}`)
+        .then((res: AxiosResponse<UserInfo>) => {
+          console.log("친구 유저 정보:", res.data);
+          setFriendUserInfo(res.data);
+        })
+        .catch((err) => {
+          console.error("친구 유저 정보 불러오기 실패:", err);
+          setLoading(false);
+        });
     }
-    axios
-      .get(`${API_BASE_URL}/users/${friendId}`)
-      .then((res: AxiosResponse<UserInfo>) => {
-        console.log("친구 유저 정보:", res.data);
-        setFriendUserInfo(res.data);
-      })
-      .catch((err) => {
-        console.error("친구 유저 정보 불러오기 실패:", err);
-        setLoading(false);
-      });
   }, [friendId]);
 
   // 2. 어항 상세 정보 불러오기 (친구의 mainAquarium 사용)
   useEffect(() => {
-    if (!friendUserInfo?.mainAquarium) return;
-    axios
-      .get(`${API_BASE_URL}/aquariums/${friendUserInfo.mainAquarium}`)
-      .then((res: AxiosResponse<AquariumData>) => {
-        console.log("어항 상세 정보:", res.data);
-        setAquariumData(res.data);
-        const bgUrl =
-          "https://i12e203.p.ssafy.io/images" + res.data.aquariumBackground;
-        console.log("배경 이미지 URL:", bgUrl);
-        setBackground(bgUrl);
-      })
-      .catch((err) => console.error("어항 정보 불러오기 실패:", err))
-      .finally(() => setLoading(false));
+    if (friendUserInfo?.mainAquarium) {
+      axios
+        .get(`${API_BASE_URL}/aquariums/${friendUserInfo.mainAquarium}`)
+        .then((res: AxiosResponse<AquariumData>) => {
+          console.log("어항 상세 정보:", res.data);
+          setAquariumData(res.data);
+          const bgUrl =
+            "https://i12e203.p.ssafy.io/images" + res.data.aquariumBackground;
+          console.log("배경 이미지 URL:", bgUrl);
+          setBackground(bgUrl);
+        })
+        .catch((err) => console.error("어항 정보 불러오기 실패:", err))
+        .finally(() => setLoading(false));
+    }
   }, [friendUserInfo]);
 
   if (loading) return <div>로딩 중...</div>;
@@ -158,13 +160,13 @@ export default function FriendFishPage() {
                 닫기
               </button>
             </div>
-            {/* 4열 그리드, 각 카드에는 가져오기 버튼을 추가 */}
+            {/* 4열 그리드, 각 카드 아래에 가져오기 버튼 추가 (물고기 개수는 표시하지 않음) */}
             <div className="grid grid-cols-4 gap-2">
               {aquariumData.fishes.map((fishInfo, index) => (
                 <div key={index} className="flex flex-col items-center">
                   <CollectionItemCard
                     name={fishInfo.fish}
-                    count={1} // 개수 표시 안됨
+                    count={1}
                     imageSrc={getFishImageUrl(fishInfo.fish)}
                   />
                   <button
@@ -232,13 +234,9 @@ function Fish({ fishInfo }: { fishInfo: FishInfo }) {
       const randomSpeed = Math.random() * 7 + 9;
       const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
       let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
-      const currentY = parseFloat(
-        gsap.getProperty(fishRef.current, "y") as string
-      );
+      const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
       let moveDistanceY =
-        windowHeight *
-        (0.1 + Math.random() * 0.15) *
-        (Math.random() > 0.65 ? 1 : -1);
+        windowHeight * (0.1 + Math.random() * 0.15) * (Math.random() > 0.65 ? 1 : -1);
 
       if (currentY < upperLimit) {
         moveDistanceY = windowHeight * (0.1 + Math.random() * 0.2);
