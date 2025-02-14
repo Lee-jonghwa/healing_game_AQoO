@@ -20,6 +20,7 @@ import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import axiosInstance from "@/services/axiosInstance";
 import { gsap } from "gsap";
+import { useRouter } from 'next/router';
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
 
 // 🔹 물고기 데이터 타입 정의
@@ -33,7 +34,7 @@ interface FishData {
 
 export default function MainPage() {
   const { auth } = useAuth(); // 로그인한 유저 정보 가져오기
-
+  const router = useRouter();
   const [background, setBackground] = useState("/background-1.png");
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -338,12 +339,13 @@ export default function MainPage() {
 
       {/* Electron 환경일 때만 "Electron 전용 페이지 이동" 버튼 표시 */}
       {isElectron && (
-          <Link href='/electron-only-page'>
-            <button className='absolute top-30 left-50 mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
-              Electron 전용 페이지 이동
-            </button>
-          </Link>
-        )}
+        <button
+          onClick={() => router.push('/electron-only-page')}
+          className="absolute top-96 left-50 mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Electron 전용 페이지 이동
+        </button>
+      )}
     </div>
   );
 }
