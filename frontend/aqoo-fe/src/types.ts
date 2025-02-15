@@ -61,3 +61,11 @@ export interface UserData {
   nickname: string;
   mainFishImage: string;
 }
+
+export interface GotchaFish {
+  userFishId: number;
+  fishTypeId: number;
+  fishName: string;
+  rarity: "COMMON" | "RARE" | "EPIC";
+  imageUrl: string;
+}
