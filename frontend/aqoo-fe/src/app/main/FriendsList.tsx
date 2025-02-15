@@ -1,6 +1,7 @@
 "use client";
 
 import { Friend, SearchUser } from "@/types";
+import Image from "next/image";
 import axios, { AxiosResponse } from "axios";
 import { useEffect, useRef, useState } from "react";
 import axiosInstance from "@/services/axiosInstance";
@@ -8,13 +9,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { useInput } from "@/hooks/useInput";
 import Link from "next/link";
 
-export default function FriendsList({
-  onClose,
-  userId,
-}: {
-  onClose: () => void;
-  userId: string;
-}) {
+const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+
+// ✅ 친구 목록을 가져오는 함수 (외부에서도 사용할 수 있도록 분리)
+export const fetchFriends = async (userId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/friends/${userId}`);
+    console.log("✅ 친구 목록 조회 성공:", response.data);
+    return response.data.friends;
+  } catch (error) {
+    console.error("❌ 친구 목록 불러오기 실패", error);
+    return null;
+  }
+};
+
+export default function FriendsList({ onClose, userId }: { onClose: () => void; userId: string }) {
+
   const { auth, fetchUser } = useAuth();
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,29 +34,25 @@ export default function FriendsList({
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
-
-  // 친구 목록 API 호출
   useEffect(() => {
     if (!auth.accessToken) {
       console.warn("🔄 토큰 만료 감지 - 사용자 정보 재요청...");
       fetchUser();
     }
-
-    axios
-      .get(`${API_BASE_URL}/friends/${userId}`)
-      .then(
-        (response: AxiosResponse<{ count: number; friends: Friend[] }>) => {
-          console.log("친구 목록 조회:", response.data);
-          setMyFriends(response.data.friends);
-        }
-      )
-      .catch((error) => {
+    const fetchAndSetFriends = async () => {
+      try {
+        const response = await fetchFriends(userId); // 비동기 데이터 가져오기
+        setMyFriends(response); // 상태 업데이트
+      } catch (error) {
         console.error("친구 목록 불러오기 실패", error);
-        setError("친구 목록을 불러오는데 실패했습니다.");
-      })
-      .finally(() => setLoading(false));
-  }, [auth.accessToken, userId, fetchUser]);
+      }
+
+    };
+    fetchAndSetFriends();
+    
+  }, []);
+
+  
 
   // 친구 추가 함수
   const handleAddFriend = (friendId: string) => {
@@ -58,7 +64,8 @@ export default function FriendsList({
       })
       .then((response: AxiosResponse<{ relationshipId: number }>) => {
         console.log("친구 추가 요청 성공:", response.data);
-        alert("친구 요청을 했습니다.");
+
+        setSearchResults((prev) => prev.map((user) => (user.friendId === friendId ? { ...user, isFriend: 1 } : user)));
       })
       .catch((error) => {
         alert("친구 추가에 실패했습니다. 다시 시도하세요.");
@@ -194,10 +201,22 @@ function FriendItem({
   friend: Friend;
   handleDeleteFriend: (relationshipId: number) => void;
 }) {
+  const customLoader = ({ src }: { src: string }) => src;
+
   return (
     <Link href={`/myfriend?friendId=${friend.friendId}`}>
       <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
-        <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+      <div className="w-12 h-12 rounded-full overflow-hidden">
+        {/* <img src=${friend.mainFishImage} alt="profile" className="w-full h-full object-cover" /> */}
+        <Image
+        loader={customLoader}
+        src={friend.mainFishImage}
+        alt={friend.nickname}
+        width={12}
+        height={12}
+        className="w-full h-full object-contain"
+        ></Image>
+      </div>
         <div>
           <p className="text-xs">Lv. {friend.level}</p>
           <p className="font-bold">{friend.nickname}</p>
@@ -225,31 +244,45 @@ function SearchResultItem({
   user: SearchUser;
   handleAddFriend: (friendId: string) => void;
 }) {
+  const customLoader = ({ src }: { src: string }) => src;
+
+
   return (
     <div className="p-3 bg-white mb-2 rounded-lg border border-black flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+
+        <div className="w-10 h-10 bg-300 rounded-full">
+        <Image
+        loader={customLoader}
+        src={user.mainFishImage}
+        alt={user.nickname}
+        width={10}
+        height={10}
+        className="w-full h-full object-contain"
+        ></Image>
+        </div>
         <div>
           <p className="text-xs">Lv. {user.level}</p>
           <p className="font-bold">{user.nickname}</p>
           <p className="text-sm text-gray-500">@{user.friendId}</p>
         </div>
       </div>
-      {user.isFriend === 1 ? (
-        <button
-          className="px-3 py-1 bg-gray-400 text-white text-xs rounded-md cursor-default"
-          disabled
-        >
-          친구
-        </button>
-      ) : (
-        <button
-          onClick={() => handleAddFriend(user.friendId)}
-          className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
-        >
-          친구 추가
-        </button>
-      )}
+      {user.isFriend === 0 ? (
+      <button
+        onClick={() => handleAddFriend(user.friendId)}
+        className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
+      >
+        친구 추가
+      </button>
+      ) : user.isFriend === 1 ? (
+    <button className="px-3 py-1 bg-yellow-400 text-white text-xs rounded-md cursor-default" disabled>
+      대기 중
+    </button>
+    ) : (
+    <button className="px-3 py-1 bg-gray-400 text-white text-xs rounded-md cursor-default" disabled>
+      친구
+    </button>
+    )}
     </div>
   );
 }

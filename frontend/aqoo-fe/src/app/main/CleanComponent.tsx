@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
+const PALM_IMAGE_SRC = "/cleanIcon.png";
 
 export default function CleanComponent({
   onClose,
@@ -37,6 +38,8 @@ export default function CleanComponent({
   // 현재 선택된 제스처의 참조 처리
   const selectedGestureRef = useRef<"handMotion" | "rockGesture" | null>(null); // 🔥 추가
 
+  const [palmImage, setPalmImage] = useState<HTMLImageElement | null>(null);
+
   const startCameraAndHandRecognition = async () => {
     if (!videoRef.current) {
       console.error("🚨 videoRef가 초기화되지 않았습니다.");
@@ -49,7 +52,8 @@ export default function CleanComponent({
   };
 
   // 청소 왔다갔다 횟수
-  const count = useRef<number>(0)
+  const count = useRef<number>(0);
+  const [motionCount, setMotionCount] = useState<number>(0);
 
   // 손이 좌우로 움직였는지 추적
   const motionData = useRef<{ startX: number | null; movedLeft: boolean; movedRight: boolean }>({
@@ -59,6 +63,19 @@ export default function CleanComponent({
     movedLeft: false,
     movedRight: false,
   });
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = PALM_IMAGE_SRC;
+    // 이미지 로드가 끝나면 상태에 저장
+    img.onload = () => {
+      console.log("손바닥 이미지 로드");
+      setPalmImage(img);
+    };
+    img.onerror = () => {
+      console.error("손바닥 이미지 로드 실패");
+    };
+  }, []);
 
   useEffect(() => {
     let hands: Hands | null = null;
@@ -88,25 +105,27 @@ export default function CleanComponent({
           hands.setOptions({
             maxNumHands: 1,
             modelComplexity: 1,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7,
           });
 
           hands.onResults((results) => {
             if (!isMounted || !canvasCtx) return; // ✅ 컴포넌트가 언마운트되었으면 실행하지 않음
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
+            // 미러모드 적용
             if (isMirrored) {
               canvasCtx.save();
               canvasCtx.translate(canvasElement.width, 0);
               canvasCtx.scale(-1, 1);
             }
 
+            // 웹캠 영상 그리기
             if (results.image) {
-              canvasCtx.drawImage(results.image, 0, 0, 280, 200);
+              canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             }
 
-            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            // canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
             if (results.multiHandLandmarks) {
               for (const landmarks of results.multiHandLandmarks) {
@@ -127,6 +146,18 @@ export default function CleanComponent({
               }
             }
 
+            // 손바닥 이미지 테스트
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+              const landmarks = results.multiHandLandmarks[0];
+
+              // Bounding box 버전
+              drawPalmOverlay(canvasCtx, canvasElement, landmarks, palmImage);
+
+              // 단일 랜드마크(Wrist)에 이미지 찍어보기
+              // const wrist = landmarks[0];
+              // drawImageAtPoint(canvasCtx, canvasElement, wrist.x, wrist.y, palmImage);
+            }
+
             if (isMirrored) {
               canvasCtx.restore();
             }
@@ -134,7 +165,9 @@ export default function CleanComponent({
 
           camera = new Camera(videoElement, {
             onFrame: async () => {
-              if (hands) await hands.send({ image: videoElement });
+              if (!isMounted) return;
+              if (!hands) return;
+              await hands.send({ image: videoElement });
             },
           });
 
@@ -148,89 +181,161 @@ export default function CleanComponent({
       }
     };
 
-    const detectHandMotion = (landmarks: any) => {
-      const wrist = landmarks[0];
-      const currentX = wrist.x;
-
-      const sensitivity = 0.5;
-      const now = Date.now();
-      if (motionData.current.startX === null) {
-        motionData.current.startX = currentX;
-        return; // 초기값 설정 후 바로 리턴
-      }
-
-      const deltaX = currentX - motionData.current.startX;
-
-      if (deltaX > sensitivity && !motionData.current.movedRight) {
-        motionData.current.movedRight = true;
-        motionData.current.startX = currentX;
-        
-      }
-      if (deltaX < -sensitivity && !motionData.current.movedLeft) {
-        motionData.current.movedLeft = true;
-        motionData.current.startX = currentX;
-        
-      }
-
-      if (motionData.current.movedLeft && motionData.current.movedRight) {
-        count.current += 1
-        motionData.current.startX = currentX;
-        
-      }
-
-      if (count.current === 3) {
-        alert("청소에 성공했어요! 🐟");
-        motionData.current = { startX: null, movedLeft: false, movedRight: false };
-        count.current = 0
-        handleCleanSuccess();
-      }
-    };
-
-    const handleCleanSuccess = async () => {
-      try {
-        // ✅ 1. 어항 청소 API 호출
-        await axios.post(`${API_BASE_URL}/aquariums/update`, {
-          aquariumId: aquariumId,
-          type: "clean",
-          data: "",
-        });
-
-        console.log("✅ 어항 청소 성공");
-
-        // ✅ 2. 경험치 10 증가 및 레벨업 감지
-        await handleIncreaseExp(10);
-
-        // ✅ 3. 어항 상태 & 유저 정보 업데이트 요청
-        onCleanSuccess();
-
-        // ✅ 4. 모달 닫기
-        onClose();
-      } catch (error) {
-        console.error("❌ 청소 또는 경험치 지급 실패", error);
-      }
-    };
-
     startCameraAndHandRecognition();
 
     return () => {
-      isMounted = false; // ✅ Cleanup 전역 변수 설정
-
-      if (hands) {
-        hands.close();
-        hands = null;
-      }
-
+      isMounted = false;
       if (camera) {
         camera.stop();
         camera = null;
       }
-
+      if (hands) {
+        hands.close();
+        hands = null;
+      }
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [isMirrored]);
+  }, [isMirrored, palmImage]);
+
+  function detectHandMotion(landmarks: any) {
+    const wrist = landmarks[0];
+    const currentX = wrist.x;
+
+    const sensitivity = 0.1;
+    const now = Date.now();
+    if (motionData.current.startX === null) {
+      motionData.current.startX = currentX;
+      return; // 초기값 설정 후 바로 리턴
+    }
+
+    const deltaX = currentX - motionData.current.startX;
+
+    if (deltaX > sensitivity && !motionData.current.movedRight) {
+      motionData.current.movedRight = true;
+      motionData.current.startX = currentX;
+    }
+    if (deltaX < -sensitivity && !motionData.current.movedLeft) {
+      motionData.current.movedLeft = true;
+      motionData.current.startX = currentX;
+    }
+
+    if (motionData.current.movedLeft && motionData.current.movedRight) {
+      count.current += 1;
+      setMotionCount(count.current);
+      motionData.current = {
+        startX: currentX,
+        movedLeft: false,
+        movedRight: false,
+      };
+    }
+
+    if (count.current === 3) {
+      alert("청소에 성공했어요! 🐟");
+      motionData.current = { startX: null, movedLeft: false, movedRight: false };
+      count.current = 0;
+      handleCleanSuccess();
+    }
+  }
+
+  function drawPalmOverlay(
+    canvasCtx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    landmarks: { x: number; y: number }[],
+    image: HTMLImageElement | null
+  ) {
+    if (!image) return;
+
+    // landmark 중 x,y 최소/최대값 구해서 bounding box 계산
+    let minX = 1,
+      maxX = 0,
+      minY = 1,
+      maxY = 0;
+
+    for (const { x, y } of landmarks) {
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+
+    // 중앙 좌표 (정규화된 값 0~1)
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    // 손바닥 너비/높이 (정규화)
+    const boxWidth = maxX - minX;
+    const boxHeight = maxY - minY;
+
+    // 화면 좌표로 전환(canvas, width, height 곱)
+    const pxCenterX = centerX * canvas.width;
+    const pxCenterY = centerY * canvas.height;
+    // 손바닥 크기를 적당히 사용해 이미지 스케일 결정
+    // 너비, 높이 중 더 큰 쪽 기준으로
+    const PalmSize = Math.max(boxWidth, boxHeight);
+    const pxSize = PalmSize * Math.max(canvas.width, canvas.height);
+
+    // 이미지 비율 유지하며 그리기
+    const aspect = image.width / image.height;
+    let drawW, drawH;
+    if (aspect > 1) {
+      // 가로가 더 긴 이미지
+      drawW = pxSize;
+      drawH = pxSize / aspect;
+    } else {
+      // 세로가 더 긴 이미지
+      drawH = pxSize;
+      drawW = pxSize * aspect;
+    }
+
+    // 미러모드 적용
+    const drawX = pxCenterX - drawW / 2;
+    const drawY = pxCenterY - drawH / 2;
+
+    console.log("손바닥 오버레이:", { drawX, drawY, drawW, drawH, pxCenterX, pxCenterY });
+
+    // 실제 그리기
+    canvasCtx.drawImage(image, drawX, drawY, drawW, drawH);
+  }
+
+  function drawImageAtPoint(
+    canvasCtx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    normX: number,
+    normY: number,
+    image: HTMLImageElement
+  ) {
+    const pxX = normX * canvas.width;
+    const pxY = normY * canvas.height;
+    const size = 50;
+    canvasCtx.drawImage(image, pxX - size / 2, pxY - size / 2, size, size);
+    // canvasCtx.fillRect(pxY - 15, pxX - 15, 30, 30);
+  }
+
+  async function handleCleanSuccess() {
+    try {
+      // ✅ 1. 어항 청소 API 호출
+      await axios.post(`${API_BASE_URL}/aquariums/update`, {
+        aquariumId: aquariumId,
+        type: "clean",
+        data: "",
+      });
+
+      console.log("✅ 어항 청소 성공");
+      setMotionCount(0);
+      // ✅ 2. 경험치 10 증가 및 레벨업 감지
+      await handleIncreaseExp(20);
+
+      // ✅ 3. 어항 상태 & 유저 정보 업데이트 요청
+      onCleanSuccess();
+
+      // ✅ 4. 모달 닫기
+      onClose();
+    } catch (error) {
+      console.error("❌ 청소 또는 경험치 지급 실패", error);
+    }
+  }
 
   const labelLandmarks = (canvasCtx: CanvasRenderingContext2D, landmarks: any) => {
     canvasCtx.fillStyle = "yellow"; // 캡션 색상
@@ -258,13 +363,16 @@ export default function CleanComponent({
         </button>
       </div>
       <div className="space-y-3">
-        <div className="w-[300px] h-[200px]">
+        <div className="w-[300px] h-[200px] relative">
           {/* 📌 로딩 중일 때 스켈레톤 UI 표시 */}
           {!isCameraReady && (
             <div className="absolute inset-0 bg-gray-300 animate-pulse rounded-md flex items-center justify-center">
               <span className="text-gray-500 text-sm">카메라 준비 중...</span>
             </div>
           )}
+          <div className="absolute top-2 right-2 px-2 py-1 bg-black text-white rounded-md font-bold z-10">
+            {motionCount}
+          </div>
           <video
             ref={videoRef}
             className="absolute w-[300px] h-[200px]"

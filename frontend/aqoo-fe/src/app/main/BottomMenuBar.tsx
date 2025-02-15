@@ -69,7 +69,7 @@ export default function BottomMenuBar({
         });
 
       // ✅ 경험치 증가 및 레벨업 체크
-      await handleIncreaseExp(type === "water" ? 5 : 8);
+      await handleIncreaseExp(type === "water" ? 10 : 10);
       console.log("✅ 경험치 지급 성공");
 
       // 3️⃣ 어항 상태 & 유저 정보 다시 불러오기
