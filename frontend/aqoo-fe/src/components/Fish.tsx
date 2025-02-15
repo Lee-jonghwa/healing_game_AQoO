@@ -131,7 +131,7 @@ export default function Fish({ fish }: FishProps) {
         unoptimized
       />
 
-      {isHovered && <span className="mt-2 bg-black text-white text-sm px-2 py-1 rounded-md">{fish.fishName}</span>}
+      {/* {isHovered && <span className="mt-2 bg-black text-white text-sm px-2 py-1 rounded-md">{fish.fishName}</span>} */}
     </div>
   );
 }

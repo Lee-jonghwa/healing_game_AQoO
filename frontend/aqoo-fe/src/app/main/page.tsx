@@ -10,6 +10,7 @@ import { increaseFishTicket, increaseUserExp } from "@/services/userService";
 import BottomMenuBar from "@/app/main/BottomMenuBar";
 import CleanComponent from "@/app/main/CleanComponent";
 import FirstLoginModal from "@/app/main/components/FirstLoginModal";
+import Fish from "@/components/Fish";
 import FishTicketModal from "@/components/FishTicketModal"; // 물고기 뽑기 모달
 import FriendsList from "@/app/main/FriendsList";
 import Image from "next/image";
@@ -20,8 +21,8 @@ import NotificationComponent from "@/components/NotificationComponent";
 import PushNotifications from "@/app/main/PushNotifications";
 import axiosInstance from "@/services/axiosInstance";
 import { gsap } from "gsap";
-import { useRouter } from 'next/navigation';
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
+import { useRouter } from "next/navigation";
 
 // 🔹 물고기 데이터 타입 정의
 interface FishData {
@@ -57,9 +58,7 @@ export default function MainPage() {
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   // Electron 환경 감지: navigator.userAgent에 "electron" 문자열이 포함되어 있으면 Electron으로 판단
-  const isElectron =
-  typeof navigator !== 'undefined' &&
-  navigator.userAgent.toLowerCase().includes('electron');
+  const isElectron = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -381,126 +380,12 @@ export default function MainPage() {
       {/* Electron 환경일 때만 "Electron 전용 페이지 이동" 버튼 표시 */}
       {isElectron && (
         <button
-          onClick={() => router.push('/electron-only-page')}
+          onClick={() => router.push("/electron-only-page")}
           className="absolute top-96 left-50 mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Electron 전용 페이지 이동
         </button>
       )}
     </div>
-  );
-}
-
-function Fish({ fish }: { fish: FishData }) {
-  const fishRef = useRef<HTMLImageElement | null>(null);
-  const directionRef = useRef(1);
-
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  const handleClick = () => {
-    if (!fishRef.current) return;
-    gsap.to(fishRef.current, {
-      scale: 0.9,
-      duration: 0.15,
-      ease: "power1.inOut",
-      yoyo: true,
-      repeat: 1,
-    });
-  };
-
-  useEffect(() => {
-    if (!fishRef.current) return;
-
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-
-    const safeMargin = 80;
-    const bottomMargin = 100;
-    const upperLimit = windowHeight * 0.2;
-
-    const randomStartX = Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
-    const randomStartY = Math.random() * (windowHeight - bottomMargin - 50) + 50;
-
-    gsap.set(fishRef.current, {
-      x: randomStartX,
-      y: randomStartY,
-      scaleX: -1,
-    });
-
-    const moveFish = () => {
-      if (!fishRef.current) return;
-      const randomSpeed = Math.random() * 7 + 9;
-      const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
-      let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
-
-      const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
-      let moveDistanceY = windowHeight * (0.1 + Math.random() * 0.15) * (Math.random() > 0.65 ? 1 : -1);
-
-      if (currentY < upperLimit) {
-        moveDistanceY = windowHeight * (0.1 + Math.random() * 0.2);
-      }
-
-      let newX = parseFloat(gsap.getProperty(fishRef.current, "x") as string) + moveDistanceX;
-      let newY = currentY + moveDistanceY;
-
-      if (newX < safeMargin) {
-        newX = safeMargin + Math.random() * 50;
-        moveDistanceX = Math.abs(moveDistanceX);
-      }
-      if (newX > windowWidth - safeMargin) {
-        newX = windowWidth - safeMargin - Math.random() * 50;
-        moveDistanceX = -Math.abs(moveDistanceX);
-      }
-      if (newY < 50) newY = 50 + Math.random() * 30;
-      if (newY > windowHeight - bottomMargin) newY = windowHeight - bottomMargin - Math.random() * 30;
-
-      directionRef.current = moveDistanceX > 0 ? -1 : 1;
-
-      gsap.to(fishRef.current, {
-        x: newX,
-        y: newY,
-        scaleX: directionRef.current,
-        duration: randomSpeed,
-        ease: "power2.inOut",
-        onUpdate: () => {
-          const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
-          directionRef.current = newX > prevX ? -1 : 1;
-          gsap.set(fishRef.current, { scaleX: directionRef.current });
-        },
-        onComplete: moveFish,
-      });
-    };
-
-    moveFish();
-  }, []);
-
-  const customLoader = ({ src }: { src: string }) => src; // 이미지 url 변함 없이
-
-  const getSize = (size: "XS" | "S" | "M" | "L" | "XL") => {
-    const sizeMap = {
-      XS: { width: 40, height: 40 },
-      S: { width: 70, height: 70 },
-      M: { width: 110, height: 110 },
-      L: { width: 170, height: 170 },
-      XL: { width: 200, height: 200 },
-    };
-    return sizeMap[size] || sizeMap.M; // 기본값 M
-  };
-
-  const { width, height } = getSize(fish.size);
-
-  return (
-    <Image
-      loader={customLoader}
-      ref={fishRef}
-      src={fish.fishImage}
-      alt={fish.fishName.toString()}
-      width={width}
-      height={height}
-      className="absolute  transform-gpu"
-      onClick={handleClick}
-      layout="intrinsic"
-      unoptimized
-    />
   );
 }
