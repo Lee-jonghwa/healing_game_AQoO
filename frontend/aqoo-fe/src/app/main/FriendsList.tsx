@@ -1,6 +1,7 @@
 "use client";
 
 import { Friend, SearchUser } from "@/types";
+import Image from "next/image";
 import axios, { AxiosResponse } from "axios";
 import { useEffect, useRef, useState } from "react";
 import axiosInstance from "@/services/axiosInstance";
@@ -200,10 +201,22 @@ function FriendItem({
   friend: Friend;
   handleDeleteFriend: (relationshipId: number) => void;
 }) {
+  const customLoader = ({ src }: { src: string }) => src;
+
   return (
     <Link href={`/myfriend?friendId=${friend.friendId}`}>
       <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
-        <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+      <div className="w-12 h-12 rounded-full overflow-hidden">
+        {/* <img src=${friend.mainFishImage} alt="profile" className="w-full h-full object-cover" /> */}
+        <Image
+        loader={customLoader}
+        src={friend.mainFishImage}
+        alt={friend.nickname}
+        width={12}
+        height={12}
+        className="w-full h-full object-contain"
+        ></Image>
+      </div>
         <div>
           <p className="text-xs">Lv. {friend.level}</p>
           <p className="font-bold">{friend.nickname}</p>
@@ -231,10 +244,23 @@ function SearchResultItem({
   user: SearchUser;
   handleAddFriend: (friendId: string) => void;
 }) {
+  const customLoader = ({ src }: { src: string }) => src;
+
+
   return (
     <div className="p-3 bg-white mb-2 rounded-lg border border-black flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+
+        <div className="w-10 h-10 bg-300 rounded-full">
+        <Image
+        loader={customLoader}
+        src={user.mainFishImage}
+        alt={user.nickname}
+        width={10}
+        height={10}
+        className="w-full h-full object-contain"
+        ></Image>
+        </div>
         <div>
           <p className="text-xs">Lv. {user.level}</p>
           <p className="font-bold">{user.nickname}</p>

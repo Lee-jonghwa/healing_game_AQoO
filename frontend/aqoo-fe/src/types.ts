@@ -26,7 +26,7 @@ export interface Friend {
   friendId: string; // 친구 유저 ID
   nickname: string; // 친구 닉네임
   level: number; // 친구 레벨
-  mainFishImage: string | null; // 친구 메인 물고기 이미지
+  mainFishImage: string; // 친구 메인 물고기 이미지
 }
 
 // 검색 결과 데이터 타입
@@ -36,7 +36,7 @@ export interface SearchUser {
   isFriend: number; // 0 (친구 아님) / 1 (친구임)
   nickname: string; // 닉네임
   level: number; // 레벨
-  mainFishImage: string | null; // 대표 물고기 이미지 (없으면 null)
+  mainFishImage: string; // 대표 물고기 이미지 (없으면 null)
 }
 
 export interface Notification {

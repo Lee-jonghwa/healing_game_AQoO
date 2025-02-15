@@ -34,20 +34,12 @@ export default function ParticipantList() {
               className="p-3 bg-white bg-opacity-80 border border-black rounded-lg flex items-center justify-between shadow-[2px_2px_0_rgba(0,0,0,0.3)] transform transition duration-300 hover:scale-105 animate-fadeInSlideUp"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gray-300 rounded-full overflow-hidden">
-                  {participant.mainFishImage ? (
+                <div className="w-12 h-12 bg-300 rounded-full overflow-hidden">
                     <img
                       src={participant.mainFishImage}
                       alt="참가자의 대표 물고기"
-                      className="w-full h-full object-cover rounded-full"
+                      className="w-full h-full object-contain rounded-full"
                     />
-                  ) : (
-                    <img
-                      src="/fish/default.png"
-                      alt="기본 물고기 이미지"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  )}
                 </div>
                 <div>
                   <p className="text-xs">Lv. {participant.level}</p>
