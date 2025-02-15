@@ -56,7 +56,7 @@ public class User {
     // 기본값 설정 메서드
     @PrePersist
     public void prePersist() {
-        this.mainFishImage = (this.mainFishImage == null) ? "/fish.png" : this.mainFishImage;
+        this.mainFishImage = (this.mainFishImage == null) ? "/미등록이미지.png" : this.mainFishImage;
         this.exp = (this.exp == null) ? 0 : this.exp;
         this.level = (this.level == null) ? 1 : this.level;
         this.status = this.status == null || this.status;
