@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface Participant {
   userName: string;
@@ -17,6 +18,9 @@ interface ParticipantListProps {
 }
 
 export default function ParticipantList({ users, currentUser, currentIsHost, onKickUser }: ParticipantListProps) {
+
+  const customLoader = ({ src }: { src: string }) => src;
+
   return (
     <div className="mb-4 w-[330px] bg-white shadow-md rounded-lg p-3">
       <h3 className="text-xl font-semibold mb-2 text-gray-900">참가자 리스트</h3>
@@ -28,11 +32,17 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
               className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50"
             >
               <div className="flex items-center">
-                <img
-                  src={user.mainFishImage}
-                  alt={`${user.userName}의 대표 물고기`}
-                  className="w-18 h-12 object-cover mr-2"
-                />
+                
+                <div className="w-10 h-10 bg-300 rounded-full mr-4">
+                        <Image
+                        loader={customLoader}
+                        src={user.mainFishImage}
+                        alt={user.userName}
+                        width={10}
+                        height={10}
+                        className="w-full h-full object-contain"
+                        ></Image>
+                  </div>
                 <span className="text-gray-900 font-medium">
                   {user.userName}{' '}
                   {user.isHost && (
