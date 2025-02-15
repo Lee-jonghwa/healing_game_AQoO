@@ -1,11 +1,12 @@
 // 파일: app/user/find-password/page.tsx
 "use client";
 
-import React, { Suspense, useState, useEffect } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useState } from "react";
+import { SubmitHandler, useForm } from "react-hook-form";
+
 import InputField from "@/app/user/find-password/components/InputField";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 interface RequestFormInputs {
   userId: string;
@@ -19,8 +20,17 @@ interface VerifyFormInputs {
 function FindPasswordPageContent() {
   const router = useRouter();
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
-  const { register, handleSubmit, formState: { errors } } = useForm<RequestFormInputs>();
-  const { register: registerVerify, handleSubmit: handleSubmitVerify, formState: { errors: errorsVerify }, setError: setVerifyError } = useForm<VerifyFormInputs>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RequestFormInputs>();
+  const {
+    register: registerVerify,
+    handleSubmit: handleSubmitVerify,
+    formState: { errors: errorsVerify },
+    setError: setVerifyError,
+  } = useForm<VerifyFormInputs>();
 
   const [step, setStep] = useState<"request" | "verify">("request");
   const [timer, setTimer] = useState<number>(180);
@@ -32,7 +42,7 @@ function FindPasswordPageContent() {
     let interval: NodeJS.Timeout;
     if (step === "verify" && timer > 0) {
       interval = setInterval(() => {
-        setTimer(prev => prev - 1);
+        setTimer((prev) => prev - 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -77,16 +87,24 @@ function FindPasswordPageContent() {
   };
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
   return (
-    <div
-      className="flex justify-center items-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://i12e203.p.ssafy.io/images/bg1.png')" }}
-    >
+    <div className="flex justify-center items-center h-screen bg-cover bg-center relative">
+      {/* 배경 이미지 */}
+      <div
+        className="absolute inset-0 bg-black before:absolute before:inset-0 before:bg-white/30"
+        style={{
+          backgroundImage: "url(/background-1.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      ></div>
       <div className="relative bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
         <button onClick={() => router.back()} className="absolute top-4 left-4 text-blue-500 hover:underline">
           뒤로가기
@@ -119,9 +137,7 @@ function FindPasswordPageContent() {
         )}
         {step === "verify" && (
           <form onSubmit={handleSubmitVerify(onSubmitVerify)} className="space-y-6">
-            <div className="text-center text-xl font-semibold text-blue-800 mb-4">
-              남은 시간: {formatTime(timer)}
-            </div>
+            <div className="text-center text-xl font-semibold text-blue-800 mb-4">남은 시간: {formatTime(timer)}</div>
             <InputField
               label="인증번호"
               type="text"
@@ -145,7 +161,13 @@ function FindPasswordPageContent() {
 
 export default function FindPasswordPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><p>Loading...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <p>Loading...</p>
+        </div>
+      }
+    >
       <FindPasswordPageContent />
     </Suspense>
   );

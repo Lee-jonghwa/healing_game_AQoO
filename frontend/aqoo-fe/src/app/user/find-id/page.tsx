@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { SubmitHandler, useForm } from "react-hook-form";
+
 import InputField from "@/app/user/find-id/components/InputField";
+import React from "react";
+import { useRouter } from "next/navigation";
 
 interface FindIdFormInputs {
   email: string;
@@ -11,7 +12,11 @@ interface FindIdFormInputs {
 
 export default function FindIdPage() {
   const router = useRouter();
-  const { register, handleSubmit, formState: { errors } } = useForm<FindIdFormInputs>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FindIdFormInputs>();
 
   const onSubmit: SubmitHandler<FindIdFormInputs> = (data) => {
     console.log("아이디 찾기 데이터:", data);
@@ -20,16 +25,19 @@ export default function FindIdPage() {
   };
 
   return (
-    <div
-      className="flex justify-center items-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://i12e203.p.ssafy.io/images/bg1.png')" }}
-    >
+    <div className="flex justify-center items-center h-screen bg-cover bg-center relative">
+      {/* 배경 이미지 */}
+      <div
+        className="absolute inset-0 bg-black before:absolute before:inset-0 before:bg-white/30"
+        style={{
+          backgroundImage: "url(/background-1.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      ></div>
       <div className="relative bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-96 border-t-4 border-blue-500">
         {/* 뒤로가기 버튼 */}
-        <button
-          onClick={() => router.back()}
-          className="absolute top-4 left-4 text-blue-500 hover:underline"
-        >
+        <button onClick={() => router.back()} className="absolute top-4 left-4 text-blue-500 hover:underline">
           뒤로가기
         </button>
         <h2 className="text-center text-3xl font-bold text-blue-900 mb-6">아이디 찾기</h2>
