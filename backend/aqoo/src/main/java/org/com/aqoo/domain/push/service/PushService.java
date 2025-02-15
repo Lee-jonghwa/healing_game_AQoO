@@ -2,6 +2,7 @@ package org.com.aqoo.domain.push.service;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.WebpushConfig;
 import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.notification.dto.NotificationRequest;
 import org.com.aqoo.domain.notification.service.NotificationService;
@@ -109,6 +110,10 @@ public class PushService {
                     .putData("body", body)
                     .putData("data", request.getData())
                     .putData("click_action", "https://i12e203.p.ssafy.io/main") //게임 메인 페이지로 이동
+                    .setWebpushConfig(WebpushConfig.builder()
+                            .putHeader("TTL", "10") // TTL 설정 (10초 후 만료)
+                            .build()
+                    )
                     .build();
 
             // FCM으로 메시지 전송
