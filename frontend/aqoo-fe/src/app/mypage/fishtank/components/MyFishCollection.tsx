@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import CollectionItemCard from "./CollectionItemCard";
+import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { useRecoilValue } from "recoil";
-import { authAtom } from "@/store/authAtom";
 
 interface MyFish {
   fishName: string;
@@ -162,7 +163,7 @@ export default function MyFishCollection({
 
   return (
     <div>
-      <div className="max-h-[300px] overflow-y-auto">
+      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
         <div className="flex flex-wrap gap-4">
           {myFishList.map((fish) => (
             <div
@@ -170,11 +171,7 @@ export default function MyFishCollection({
               onClick={() => handleFishClick(fish)}
               className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer"
             >
-              <CollectionItemCard
-                name={fish.fishName}
-                count={fish.count}
-                imageSrc={fish.imageSrc}
-              />
+              <CollectionItemCard name={fish.fishName} count={fish.count} imageSrc={fish.imageSrc} />
             </div>
           ))}
         </div>
@@ -188,10 +185,7 @@ export default function MyFishCollection({
               <span className="font-bold">{selectedFish.fishName}</span>을(를) 넣겠습니까?
             </p>
             <div className="flex justify-end space-x-4">
-              <button
-                onClick={handleModalCancel}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm"
-              >
+              <button onClick={handleModalCancel} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm">
                 취소
               </button>
               <button
