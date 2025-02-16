@@ -11,9 +11,6 @@ import BottomMenuBar from '@/app/main/BottomMenuBar';
 import CleanComponent from '@/app/main/CleanComponent';
 import FirstLoginModal from '@/app/main/components/FirstLoginModal';
 import KickedModal from '@/app/main/components/KickedModal';
-import OverlayRegionModal, {
-  RegionOption,
-} from '@/app/main/components/OverlayRegionModal';
 import FriendsList from '@/app/main/FriendsList';
 import PushNotifications from '@/app/main/PushNotifications';
 import Fish from '@/components/Fish';
@@ -73,39 +70,32 @@ export default function MainPage() {
     typeof navigator !== 'undefined' &&
     navigator.userAgent.toLowerCase().includes('electron');
 
-  const [showOverlayModal, setShowOverlayModal] = useState(false);
-  const [fishPath, setFishPath] = useState('');
-
   const handleToggleOverlay = async () => {
     if (!auth.user?.id) {
       console.warn('사용자 정보가 없습니다.');
       return;
     }
+
     try {
       // 사용자 정보를 API 호출로 가져옵니다.
       const response: AxiosResponse = await axios.get(
         `${API_BASE_URL}/users/${auth.user.id}`,
         { withCredentials: true }
       );
-      const fetchedFishPath = response.data.mainFishImage;
-      if (!fetchedFishPath) {
+
+      // API 응답에서 mainFishImage 값을 추출합니다.
+      const fishPath = response.data.mainFishImage;
+      if (!fishPath) {
         console.warn('API 응답에 mainFishImage 값이 없습니다.');
         return;
       }
-      console.log('[MainPage] 오버레이 토글 - fishPath:', fetchedFishPath);
-      setFishPath(fetchedFishPath);
-      // 모달을 열어서 영역 선택하도록 함
-      setShowOverlayModal(true);
+      console.log('[MainPage] 오버레이 토글 - fishPath:', fishPath);
+
+      // electronAPI.toggleOverlay를 통해 오버레이를 토글합니다.
+      (window as any).electronAPI.toggleOverlay(fishPath);
     } catch (error) {
       console.error('사용자 정보를 불러오는 중 오류 발생:', error);
     }
-  };
-
-  const handleRegionSelect = (region: RegionOption) => {
-    // 선택된 영역 옵션과 함께 오버레이 토글 호출
-    console.log('[MainPage] 선택한 영역 옵션:', region);
-    (window as any).electronAPI.toggleOverlay(fishPath, region);
-    setShowOverlayModal(false);
   };
 
   useEffect(() => {
@@ -458,12 +448,6 @@ export default function MainPage() {
         >
           오버레이 온/오프
         </button>
-      )}
-      {showOverlayModal && (
-        <OverlayRegionModal
-          onSelect={handleRegionSelect}
-          onCancel={() => setShowOverlayModal(false)}
-        />
       )}
     </div>
   );
