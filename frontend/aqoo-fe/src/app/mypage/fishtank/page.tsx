@@ -53,7 +53,9 @@ export default function MyFishTank() {
   }, [userInfo]);
   return (
     <div
-      style={{ backgroundImage: `url(${background})` }}
+      style={{
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url(${background})`,
+      }}
       className="
         flex flex-col
         min-h-screen
@@ -61,7 +63,7 @@ export default function MyFishTank() {
       "
     >
       {/* 상단 내비게이션 버튼 */}
-      
+
       {/* 메인 컨테이너 */}
       <div
         className="

@@ -86,7 +86,9 @@ export default function MyPage() {
 
   return (
     <div
-      style={{ backgroundImage: `url(${background})` }}
+      style={{
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url(${background})`,
+      }}
       className={`
         flex
         h-screen
