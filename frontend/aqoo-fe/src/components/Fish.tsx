@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+
 import Image from "next/image";
 import { gsap } from "gsap";
+import { useSFX } from "@/hooks/useSFX"; // ✅ useSFX 적용
 
 // 🔹 물고기 데이터 타입 정의
 export interface FishData {
   fishName: string;
   fishImage: string;
-  size?: "XS" | "S" | "M" | "L" | "XL";  // size는 선택적 속성
+  size?: "XS" | "S" | "M" | "L" | "XL"; // size는 선택적 속성
 }
 
 interface FishProps {
@@ -19,6 +21,7 @@ export default function Fish({ fish }: FishProps) {
   const fishRef = useRef<HTMLImageElement | null>(null);
   const directionRef = useRef(1);
   const [isHovered, setIsHovered] = useState(false);
+  const { play } = useSFX("/sounds/pop-02.mp3");
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -33,6 +36,7 @@ export default function Fish({ fish }: FishProps) {
       yoyo: true,
       repeat: 1,
     });
+    play();
   };
 
   useEffect(() => {
@@ -54,7 +58,7 @@ export default function Fish({ fish }: FishProps) {
     if (!fishRef.current) return;
 
     const { width, height } = windowSize;
-    const size = fish.size ?? "S";  // size가 없으면 "S"로 기본값 설정
+    const size = fish.size ?? "S"; // size가 없으면 "S"로 기본값 설정
     const { width: fishWidth, height: fishHeight } = getSize(size);
 
     const safeMargin = (fishWidth - 70) / 2 + 90; // 물고기 사이즈에 맞는 safeMargin 계산
@@ -123,7 +127,7 @@ export default function Fish({ fish }: FishProps) {
     // Cleanup 함수로 애니메이션 정리
     return () => {
       if (fishRef.current) {
-        gsap.killTweensOf(fishRef.current);  // 현재 활성화된 모든 gsap 애니메이션을 제거합니다.
+        gsap.killTweensOf(fishRef.current); // 현재 활성화된 모든 gsap 애니메이션을 제거합니다.
       }
     };
   }, [windowSize, fish.size]); // 화면 크기와 fish.size가 변경될 때마다 애니메이션 업데이트
@@ -138,10 +142,10 @@ export default function Fish({ fish }: FishProps) {
       L: { width: 170, height: 170 },
       XL: { width: 200, height: 200 },
     };
-    return sizeMap[size] || sizeMap.S;  // 기본값은 "S"
+    return sizeMap[size] || sizeMap.S; // 기본값은 "S"
   };
 
-  const { width, height } = getSize(fish.size ?? "S");  // fish.size가 없으면 "S"로 처리
+  const { width, height } = getSize(fish.size ?? "S"); // fish.size가 없으면 "S"로 처리
 
   return (
     <div onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>

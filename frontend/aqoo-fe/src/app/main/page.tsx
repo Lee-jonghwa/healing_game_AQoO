@@ -23,6 +23,7 @@ import axiosInstance from "@/services/axiosInstance";
 import { gsap } from "gsap";
 import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
 import { useRouter } from "next/navigation";
+import { useSFX } from "@/hooks/useSFX"; // ✅ useSFX 가져오기
 
 // 🔹 물고기 데이터 타입 정의
 interface FishData {
@@ -45,6 +46,9 @@ export default function MainPage() {
   const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
   const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(null);
   const [firstLoginModal, setFirstLoginModal] = useState<{ status: boolean } | null>(null);
+
+  const { play: playPush } = useSFX("/sounds/push.mp3");
+  const { play: playLevelUp } = useSFX("/sounds/levelupRank.mp3");
 
   //알람 처리
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -126,6 +130,8 @@ export default function MainPage() {
       if (updatedExpData.userLevel > prevLevel) {
         console.log("🎉 레벨업 발생! 새로운 레벨:", updatedExpData.userLevel);
         setLevelUpInfo({ level: updatedExpData.userLevel, expProgress: updatedExpData.expProgress }); // ✅ 물고기 티켓 증가 API 호출
+
+        playLevelUp();
 
         const updatedFishTicket = await increaseFishTicket(auth.user.id);
         if (updatedFishTicket !== null) {
@@ -240,6 +246,12 @@ export default function MainPage() {
     };
     checkUnreadNotifications();
   }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
+
+  useEffect(() => {
+    if (newNotifications) {
+      playPush(); // ✅ 푸시 알림 효과음 재생
+    }
+  }, [newNotifications]);
 
   if (!userInfo)
     return (
