@@ -48,11 +48,8 @@ export default function RoomPage({ params }: RoomPageProps) {
     loadUserInfo();
   }, [router]);
 
-<<<<<<< HEAD
-  // (3) (선택) 채팅방 존재 여부 체크 로직
-=======
   // // (3) (선택) 채팅방 존재 여부 체크 로직
->>>>>>> 6dcdc35989251327d2e2e01f3a7af9f869632adb
+
   // useEffect(() => {
   //   async function checkRoomExistence() {
   //     try {
