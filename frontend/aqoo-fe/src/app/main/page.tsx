@@ -70,25 +70,31 @@ export default function MainPage() {
     typeof navigator !== 'undefined' &&
     navigator.userAgent.toLowerCase().includes('electron');
 
-  const handleToggleOverlay = () => {
-    // localStorage에서 "recoil-persist" 키를 읽어옵니다.
-    const recoilData = localStorage.getItem('recoil-persist');
-    if (!recoilData) {
-      console.warn('recoil-persist 데이터가 없습니다.');
+  const handleToggleOverlay = async () => {
+    if (!auth.user?.id) {
+      console.warn('사용자 정보가 없습니다.');
       return;
     }
+
     try {
-      const parsedData = JSON.parse(recoilData);
-      const fishPath = parsedData?.authAtom?.user?.mainFishImage;
+      // 사용자 정보를 API 호출로 가져옵니다.
+      const response: AxiosResponse = await axios.get(
+        `${API_BASE_URL}/users/${auth.user.id}`,
+        { withCredentials: true }
+      );
+
+      // API 응답에서 mainFishImage 값을 추출합니다.
+      const fishPath = response.data.mainFishImage;
       if (!fishPath) {
-        console.warn('recoil-persist에서 fishPath를 찾지 못했습니다.');
+        console.warn('API 응답에 mainFishImage 값이 없습니다.');
         return;
       }
       console.log('[MainPage] 오버레이 토글 - fishPath:', fishPath);
+
       // electronAPI.toggleOverlay를 통해 오버레이를 토글합니다.
       (window as any).electronAPI.toggleOverlay(fishPath);
     } catch (error) {
-      console.error('recoil-persist 데이터를 파싱하는 중 오류 발생:', error);
+      console.error('사용자 정보를 불러오는 중 오류 발생:', error);
     }
   };
 
