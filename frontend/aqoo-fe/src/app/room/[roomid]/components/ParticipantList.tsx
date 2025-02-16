@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Image from 'next/image';
+import Image from "next/image";
+import React from "react";
 
 interface Participant {
   userName: string;
@@ -13,41 +13,33 @@ interface Participant {
 interface ParticipantListProps {
   users: Participant[];
   currentUser: string;
-  currentIsHost: boolean; 
+  currentIsHost: boolean;
   onKickUser: (userName: string) => void;
 }
 
 export default function ParticipantList({ users, currentUser, currentIsHost, onKickUser }: ParticipantListProps) {
-
   const customLoader = ({ src }: { src: string }) => src;
 
   return (
     <div className="mb-4 w-[330px] bg-white shadow-md rounded-lg p-3">
       <h3 className="text-xl font-semibold mb-2 text-gray-900">참가자 리스트</h3>
-      <div className="max-h-[100px] overflow-y-auto">
+      <div className="max-h-[100px] overflow-y-auto custom-scrollbar">
         <ul className="space-y-2">
           {users.map((user) => (
-            <li
-              key={user.userName}
-              className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50"
-            >
+            <li key={user.userName} className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50">
               <div className="flex items-center">
-                
                 <div className="w-10 h-10 bg-300 rounded-full mr-4">
-                        <Image
-                        loader={customLoader}
-                        src={user.mainFishImage}
-                        alt={user.userName}
-                        width={10}
-                        height={10}
-                        className="w-full h-full object-contain"
-                        ></Image>
-                  </div>
+                  <Image
+                    loader={customLoader}
+                    src={user.mainFishImage}
+                    alt={user.userName}
+                    width={10}
+                    height={10}
+                    className="w-full h-full object-contain"
+                  ></Image>
+                </div>
                 <span className="text-gray-900 font-medium">
-                  {user.userName}{' '}
-                  {user.isHost && (
-                    <span className="ml-1 text-sm font-bold text-red-600">(방장)</span>
-                  )}
+                  {user.userName} {user.isHost && <span className="ml-1 text-sm font-bold text-red-600">(방장)</span>}
                 </span>
               </div>
               {user.ready && <span className="text-green-700 font-bold">Ready</span>}
