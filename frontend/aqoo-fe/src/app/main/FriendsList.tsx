@@ -133,19 +133,22 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
 
   return (
     <div className="relative w-[400px] h-[600px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col">
-      {/* 헤더 */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold">친구 {myFriends.length}</h2>
-        <button
-          onClick={onClose}
-          className="text-xl font-bold hover:text-red-500"
-        >
-          ✖
-        </button>
-      </div>
+  {/* 헤더 */}
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-lg font-bold">
+      친구
+      <span className="ml-3">{myFriends.length}</span> {/* ml-2로 왼쪽 마진 추가 */}
+    </h2>
+    <button
+      onClick={onClose}
+      className="text-xl font-bold hover:text-red-500"
+    >
+      ✖
+    </button>
+  </div>
 
       {/* 친구 리스트 */}
-      <div className="space-y-3 overflow-y-auto scrollbar-hide flex-grow">
+      <div className="space-y-2 overflow-y-auto scrollbar-hide flex-grow">
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
             <FriendItem
@@ -204,35 +207,34 @@ function FriendItem({
   const customLoader = ({ src }: { src: string }) => src;
 
   return (
-    <Link href={`/myfriend?friendId=${friend.friendId}`}>
-      <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
-      <div className="w-12 h-12 rounded-full overflow-hidden">
-        {/* <img src=${friend.mainFishImage} alt="profile" className="w-full h-full object-cover" /> */}
-        <Image
-        loader={customLoader}
-        src={friend.mainFishImage}
-        alt={friend.nickname}
-        width={12}
-        height={12}
-        className="w-full h-full object-contain"
-        ></Image>
-      </div>
+    <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
+      <Link href={`/myfriend?friendId=${friend.friendId}`} className="flex items-center space-x-3 w-full">
+        <div className="w-12 h-12 rounded-full overflow-hidden">
+          <Image
+            loader={customLoader}
+            src={friend.mainFishImage}
+            alt={friend.nickname}
+            width={12}
+            height={12}
+            className="w-full h-full object-contain"
+          />
+        </div>
         <div>
           <p className="text-xs">Lv. {friend.level}</p>
           <p className="font-bold">{friend.nickname}</p>
           <p className="text-sm text-gray-500">@{friend.friendId}</p>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteFriend(friend.id);
-          }}
-          className="absolute right-3 px-3 py-1 bg-red-500 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-        >
-          삭제
-        </button>
-      </div>
-    </Link>
+      </Link>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDeleteFriend(friend.id);
+        }}
+        className="absolute right-3 px-3 py-1 bg-red-500 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+      >
+        삭제
+      </button>
+    </div>
   );
 }
 

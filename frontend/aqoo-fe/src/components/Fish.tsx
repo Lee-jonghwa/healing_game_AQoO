@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-
 import Image from "next/image";
 import { gsap } from "gsap";
 
@@ -55,7 +54,8 @@ export default function Fish({ fish }: FishProps) {
     });
 
     const moveFish = () => {
-      if (!fishRef.current) return;
+      if (!fishRef.current) return; // fishRef가 null인 경우 애니메이션 실행하지 않음
+
       const randomSpeed = Math.random() * 7 + 9;
       const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
       let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
@@ -90,15 +90,24 @@ export default function Fish({ fish }: FishProps) {
         duration: randomSpeed,
         ease: "power2.inOut",
         onUpdate: () => {
-          const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
-          directionRef.current = newX > prevX ? -1 : 1;
-          gsap.set(fishRef.current, { scaleX: directionRef.current });
+          if (fishRef.current) {
+            const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
+            directionRef.current = newX > prevX ? -1 : 1;
+            gsap.set(fishRef.current, { scaleX: directionRef.current });
+          }
         },
         onComplete: moveFish,
       });
     };
 
     moveFish();
+
+    // Cleanup 함수로 애니메이션 정리
+    return () => {
+      if (fishRef.current) {
+        gsap.killTweensOf(fishRef.current);  // 현재 활성화된 모든 gsap 애니메이션을 제거합니다.
+      }
+    };
   }, []);
 
   const customLoader = ({ src }: { src: string }) => src;
