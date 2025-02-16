@@ -92,7 +92,7 @@ export default function MainPage() {
       console.log('[MainPage] 오버레이 토글 - fishPath:', fishPath);
 
       // electronAPI.toggleOverlay를 통해 오버레이를 토글합니다.
-      (window as any).electronAPI.toggleOverlay(fishPath);
+      (window as any).electronAPI.openOverlay(fishPath);
     } catch (error) {
       console.error('사용자 정보를 불러오는 중 오류 발생:', error);
     }
