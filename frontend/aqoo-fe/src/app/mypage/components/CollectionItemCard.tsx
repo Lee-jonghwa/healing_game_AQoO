@@ -1,6 +1,5 @@
 "use client";
 
-
 // 공통으로 사용할 아이템 카드 컴포넌트
 // name: 아이템 이름 (예: '거북이 1')
 // count: 아이템 수량
@@ -8,6 +7,7 @@
 interface CollectionItemCardProps {
   name: string;
   count?: number;
+  rarity?: string;
   imageSrc: string;
   isModal?: boolean;
   isSelected?: boolean;
@@ -17,6 +17,7 @@ interface CollectionItemCardProps {
 export default function CollectionItemCard({
   name,
   count,
+  rarity,
   imageSrc,
   isModal = false,
   isSelected = false,
@@ -60,10 +61,13 @@ export default function CollectionItemCard({
           flex items-end gap-1 text-[15px] text-black
         "
         >
+          <p>{rarity}</p>
           <p>{name}</p>
-          {imageSrc !== "https://i12e203.p.ssafy.io/images/미등록이미지.png" && !isModal && count !== undefined && count !== null && count > 0 && (
-            <p className="text-[10px] text-gray-500">x {count}</p>
-          )}
+          {imageSrc !== "https://i12e203.p.ssafy.io/images/미등록이미지.png" &&
+            !isModal &&
+            count !== undefined &&
+            count !== null &&
+            count > 0 && <p className="text-[10px] text-gray-500">x {count}</p>}
         </div>
       </div>
       {/* 배율이 120% 이상이면 크기를 줄이는 스타일 */}

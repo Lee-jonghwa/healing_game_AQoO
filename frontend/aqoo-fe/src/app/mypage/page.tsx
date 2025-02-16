@@ -70,11 +70,8 @@ export default function MyPage() {
         setAquariumData(res.data);
 
         const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
-        // TODO  배경화면 제대로 불러오기 로직 추가
-        // const savedBg = localStorage.getItem("background");
 
         let bgUrl = res.data.aquariumBackground; // API에서 받아온 값
-
         if (!bgUrl) return;
 
         // bgUrl이 전체 URL이 아니라면 BASE_URL을 붙임
@@ -136,8 +133,9 @@ export default function MyPage() {
       {/* 메인 컨테이너 (내 정보 & 도감) */}
       <div
         className="
-        relative z-10 min-h-screen w-full max-w-8xl mx-auto
-        flex flex-col items-center overflow-hidden"
+        relative z-10 h-screen w-full max-w-8xl mx-auto
+        flex flex-col items-center overflow-hidden
+        "
       >
         <Profile fishTotal={totalFishCount} />
         <MyCollection allFishList={allFishList} userFishList={userFishList} customFishList={customFishList} />
