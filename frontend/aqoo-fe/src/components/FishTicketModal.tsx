@@ -7,6 +7,7 @@ import Image from "next/image";
 import axios from "axios";
 import axiosInstance from "@/services/axiosInstance";
 import { useRouter } from "next/navigation";
+import { useSFX } from "@/hooks/useSFX";
 
 export default function FishTicketModal({
   onClose,
@@ -25,6 +26,9 @@ export default function FishTicketModal({
   const [step, setStep] = useState<"select" | "gacha">("select");
   const [fish, setFish] = useState<GotchaFish | null>(null);
 
+  const { play: playGet } = useSFX("/sounds/아이템등장.mp3");
+  const { play: playLoading } = useSFX("/sounds/뽑는중.mp3");
+
   const [animationStep, setAnimationStep] = useState<"idle" | "shaking" | "reveal">("idle");
 
   const handleGacha = async () => {
@@ -35,6 +39,7 @@ export default function FishTicketModal({
 
     setStep("gacha"); // ✅ 결과 화면으로 이동
     setAnimationStep("shaking"); // ✅ 뽑기 캡슐 흔들리는 애니메이션 시작
+    playLoading();
 
     setTimeout(async () => {
       try {
@@ -56,6 +61,7 @@ export default function FishTicketModal({
 
           setFish(newFish);
           setAnimationStep("reveal"); // ✅ 물고기 공개 애니메이션 실행
+          playGet();
 
           await refreshUserInfo();
 
@@ -79,7 +85,7 @@ export default function FishTicketModal({
       } catch (error) {
         console.error("❌ 물고기 뽑기 실패:", error);
       }
-    }, 2000); // ✅ 2초 후 API 호출 실행 (뽑기 애니메이션 대기)
+    }, 1500);
   };
 
   console.log("물고기 티켓 수 : ", fishTicket);

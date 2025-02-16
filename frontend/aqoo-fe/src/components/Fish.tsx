@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import Image from "next/image";
 import { gsap } from "gsap";
+import { useSFX } from "@/hooks/useSFX"; // ✅ useSFX 적용
 
 // 🔹 물고기 데이터 타입 정의
 export interface FishData {
@@ -23,6 +24,7 @@ export default function Fish({ fish }: FishProps) {
   const fishRef = useRef<HTMLImageElement | null>(null);
   const directionRef = useRef(1);
   const [isHovered, setIsHovered] = useState(false);
+  const { play } = useSFX("/sounds/pop-02.mp3");
 
   const handleClick = () => {
     if (!fishRef.current) return;
@@ -33,6 +35,7 @@ export default function Fish({ fish }: FishProps) {
       yoyo: true,
       repeat: 1,
     });
+    play();
   };
 
   useEffect(() => {

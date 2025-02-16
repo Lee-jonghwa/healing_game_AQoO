@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import MenuButton from "./MenuButton";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation";
+import { useSFX } from "@/hooks/useSFX"; // ✅ useSFX 적용
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -30,6 +31,9 @@ export default function BottomMenuBar({
   newNotifications: boolean;
 }) {
   const router = useRouter();
+
+  const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
+  const { play: playFeed } = useSFX("/sounds/gaugeeffect-02.mp3");
 
   // ✅ 버튼이 비활성화되는 상태 체크
   const isWaterMaxed = aquariumData?.waterStatus === 5;
@@ -65,6 +69,7 @@ export default function BottomMenuBar({
         })
         .then(() => {
           console.log(`✅ 어항 ${type === "water" ? "수질 변경" : "먹이 상태 변경"} 성공`);
+
           alert(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`);
         });
 
@@ -74,6 +79,7 @@ export default function BottomMenuBar({
 
       // 3️⃣ 어항 상태 & 유저 정보 다시 불러오기
       refreshAquariumData();
+      playFeed();
     } catch (error) {
       console.error(`❌ 어항 ${type} 변경 실패`, error);
     }
@@ -101,7 +107,10 @@ export default function BottomMenuBar({
         <MenuButton
           icon="/icon/friendIcon.png"
           label="Friends"
-          onClick={() => handleButtonClick("friends")}
+          onClick={() => {
+            playModal();
+            handleButtonClick("friends");
+          }}
           isActive={activeComponent === "friends"}
         />
 
@@ -111,7 +120,10 @@ export default function BottomMenuBar({
           <MenuButton
             icon="/icon/alertIcon.png"
             label="Push"
-            onClick={() => handleButtonClick("push")}
+            onClick={() => {
+              playModal();
+              handleButtonClick("push");
+            }}
             isActive={activeComponent === "push"}
           />
 
@@ -123,7 +135,14 @@ export default function BottomMenuBar({
         <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
 
         {/* ✅ FishTicket 물고기 뽑기 */}
-        <MenuButton icon="/fish-3.png" label="Ticket" onClick={onOpenFishModal} />
+        <MenuButton
+          icon="/icon/fishticketIcon.png"
+          label="Ticket"
+          onClick={() => {
+            playModal();
+            onOpenFishModal();
+          }}
+        />
       </div>
       {/* 중앙: 사용자 정보 */}
       <div className="flex flex-col items-center text-center">
