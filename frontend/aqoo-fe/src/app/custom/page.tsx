@@ -96,20 +96,25 @@ export default function CustomFishPages() {
     }
   }, [penWidth]); // ✅ 펜 굵기 변경 시에만 실행됨 (리사이징과 분리)
 
-  const getCanvasCoordinates = (event: React.MouseEvent) => {
+  const getCanvasCoordinates = (event: MouseEvent | TouchEvent) => {
     if (!canvasRef.current) return { x: 0, y: 0 };
 
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect(); // 캔버스의 위치 및 크기 가져오기
-
-    // 비율 조정 (CSS 크기와 실제 캔버스 크기 차이 보정)
+    const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
 
-    return {
-      x: (event.clientX - rect.left) * scaleX,
-      y: (event.clientY - rect.top) * scaleY,
-    };
+    if (event instanceof MouseEvent) {
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY,
+      };
+    } else {
+      return {
+        x: (event.touches[0].clientX - rect.left) * scaleX,
+        y: (event.touches[0].clientY - rect.top) * scaleY,
+      };
+    }
   };
 
   const saveToHistory = () => {
@@ -153,9 +158,9 @@ export default function CustomFishPages() {
     };
   };
 
-  const startDrawing = (event: React.MouseEvent) => {
+  const startDrawing = (event: React.MouseEvent | React.TouchEvent) => {
     if (fillMode) {
-      const { x, y } = getCanvasCoordinates(event);
+      const { x, y } = getCanvasCoordinates(event.nativeEvent);
       fillArea(x, y);
       return;
     }
@@ -164,23 +169,23 @@ export default function CustomFishPages() {
     setIsDrawing(true);
 
     const context = contextRef.current;
-    const { x, y } = getCanvasCoordinates(event); // 정확한 좌표 가져오기
+    const { x, y } = getCanvasCoordinates(event.nativeEvent);
     context.beginPath();
     context.moveTo(x, y);
 
     if (eraserMode) {
       context.globalCompositeOperation = "destination-out";
-      context.strokeStyle = "rgba(0,0,0,1)"; // 색은 무시되지만 투명으로 칠해짐
+      context.strokeStyle = "rgba(0,0,0,1)";
     } else {
-      context.globalCompositeOperation = "source-over"; // 일반 그리기 모드로 되돌림
+      context.globalCompositeOperation = "source-over";
       context.strokeStyle = penColor;
     }
   };
 
-  const draw = (event: React.MouseEvent) => {
+  const draw = (event: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing || !contextRef.current) return;
     const context = contextRef.current;
-    const { x, y } = getCanvasCoordinates(event); // 수정된 좌표 사용
+    const { x, y } = getCanvasCoordinates(event.nativeEvent);
     context.lineTo(x, y);
     context.stroke();
   };
@@ -391,6 +396,9 @@ export default function CustomFishPages() {
             onMouseMove={draw}
             onMouseUp={stopDrawing}
             onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
             className="border-[3px] border-black bg-gray-100 w-full max-w-[600px] h-[300px] sm:h-[400px]"
           />
 
