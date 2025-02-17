@@ -21,6 +21,9 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.data.title;
   const body = payload.data.body; // 상태 값 (0~3)
   const icon = payload.data.icon || "/icon/icon-fishTank.png"; // 기본 아이콘 경로
+
+<img src={icon} alt="Fish Tank Icon" style={{ objectFit: 'contain', width: '100%', height: '100%' }} />
+
   
     const options = {
       body: body,

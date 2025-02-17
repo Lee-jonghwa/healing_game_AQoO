@@ -68,7 +68,7 @@ export default function NotificationComponent({
       refreshAquariumData()
 
         if (title && body) {
-          if(type === "FRIEND REQUEST" || type === "FRIEND ACCEPT" || type === "GAME INVITE")
+          if(type === "FRIEND REQUEST" || type === "FRIEND ACCEPT" || type === "GAME INVITE" || type === "FRIEND FISH")
             //알람 테이블에 추가해야 할 알람 처리 ->
             //alert(`알림 제목: ${title}\n알림 내용: ${body}`);
 
