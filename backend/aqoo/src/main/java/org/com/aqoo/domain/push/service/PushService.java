@@ -74,7 +74,7 @@ public class PushService {
         String body = getMessageBody(type, request.getSenderId(), request.getData());
 
         // 알람 저장
-        if(type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
+        if(type.equals("FRIEND FISH") || type.equals("FRIEND REQUEST") || type.equals("FRIEND ACCEPT") || type.equals("GAME INVITE")){
             String recipient = request.getRecipientId();
             String data = request.getData();
 
@@ -100,8 +100,6 @@ public class PushService {
             return;
         }
 
-        if(request.getData().equals("5") || request.getData().equals("4")) return;
-
         UserToken userToken = data.get();
             Message message = Message.builder()
                     .setToken(userToken.getToken())  // 유저의 각 토큰에 대해 메시지 전송
@@ -125,6 +123,7 @@ public class PushService {
         return switch (type) {
             case "FRIEND REQUEST" -> "\uD83C\uDF1F 친구 요청 \uD83C\uDF1F";
             case "FRIEND ACCEPT" -> "\uD83E\uDD1D 친구 수락 \uD83E\uDD1D";
+            case "FRIEND FISH" -> "\uD83D\uDC1F 물고기 거래 \uD83D\uDC1F";
             case "GAME INVITE" -> "\uD83C\uDFAE 게임 초대 \uD83C\uDFAE";
             case "FEED" -> "\uD83C\uDF7D 어항 먹이 상태 \uD83C\uDF7D : " + aquariumName;
             case "CLEAN" -> "\uD83E\uDDFD 어항 청소 상태 \uD83E\uDDFD : " + aquariumName;
@@ -137,6 +136,7 @@ public class PushService {
         return switch (type) {
             case "FRIEND REQUEST" -> sender + "님께서 친구를 요청하였습니다.";
             case "FRIEND ACCEPT" -> sender + "님께서 친구를 수락하였습니다.";
+            case "FRIEND FISH" -> sender + "님께서 당신의 물고기를 선택했습니다. 물고기 티켓 +1!";
             case "GAME INVITE" -> sender + "님께서 게임에 초대하였습니다.";
             case "FEED" -> generateFeedMessage(data);
             case "CLEAN" -> generateCleanMessage(data);
