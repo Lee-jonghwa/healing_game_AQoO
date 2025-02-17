@@ -43,13 +43,6 @@ interface FishData {
   fishImage: string;
 }
 
-interface Friend {
-  friendId: string;
-  nickname: string;
-  level: number;
-  mainFishImage: string | null;
-}
-
 
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
@@ -62,9 +55,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
-  
-  // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
-  const [friendList, setFriendList] = useState<Friend[]>([]);
+
 
 
   // 기존 props의 user 대신 내부 상태로 관리하여 업데이트할 수 있도록 함
@@ -79,6 +70,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     currentIsHost && !users.some((u) => u.userName === userName)
       ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
       : users;
+
 
   // STOMP 연결 활성화
   useEffect(() => {
