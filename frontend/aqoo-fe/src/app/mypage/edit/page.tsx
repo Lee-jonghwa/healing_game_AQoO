@@ -261,7 +261,7 @@ function EditProfilePage() {
       }}
       className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
     >
-      <div className="absolute bottom-4 right-4">
+      <div className="absolute bottom-5 right-5">
         <Buttons text="BACK" />
       </div>
 

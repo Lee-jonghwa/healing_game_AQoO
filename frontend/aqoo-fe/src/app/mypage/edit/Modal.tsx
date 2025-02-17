@@ -13,7 +13,9 @@ export default function Modal({ children, onClose, className }: ModalProps) {
   };
 
   // 모달 내용 클릭 시 이벤트 버블링 차단
-  const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {};
+  const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+  };
 
   return (
     <div
@@ -22,7 +24,7 @@ export default function Modal({ children, onClose, className }: ModalProps) {
     >
       <div className={`bg-white p-6 rounded-lg shadow-lg relative ${className}`} onClick={handleContentClick}>
         {children}
-        <button className="absolute top-2 right-2 text-gray-500" onClick={onClose}>
+        <button className="absolute top-3 right-3 text-gray-500" onClick={onClose}>
           ✖
         </button>
       </div>
