@@ -206,53 +206,60 @@ const handleGetFish = (fish: FishData) => {
       </div>
 
       {/* 친구 물고기 리스트 모달 */}
-      {showFishList && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 max-h-[80vh] rounded-lg p-4 overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">친구 물고기 컬렉션</h2>
+{showFishList && (
+  <div
+    className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+    onClick={() => setShowFishList(false)}  // 외부 클릭 시 모달 닫기
+  >
+    <div
+      className="bg-white w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 max-h-[80vh] rounded-lg p-4 overflow-y-auto"
+      onClick={(e) => e.stopPropagation()} // 내부 클릭 시 전파 차단
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">친구 물고기 컬렉션</h2>
+        <button
+          onClick={() => setShowFishList(false)}
+          className="text-red-500"
+        >
+          닫기
+        </button>
+      </div>
+      <div className="grid grid-cols-4 gap-2">
+        {sortedFishes.map((fish, index) => {
+          // rarity가 COMMON, RARE, EPIC 인 경우 버튼 비활성화
+          const isEnabled = !["COMMON", "RARE", "EPIC"].includes(
+            fish.rarity
+          );
+          return (
+            <div key={index} className="flex flex-col items-center">
+              <CollectionItemCard
+                name={fish.fishName}
+                count={1}
+                imageSrc={fish.fishImage}
+              />
               <button
-                onClick={() => setShowFishList(false)}
-                className="text-red-500"
+                onClick={() => {
+                  if (isEnabled) {
+                    handleGetFish(fish);
+                  }
+                }}
+                disabled={!isEnabled}
+                className={`mt-1 px-2 py-1 rounded text-xs ${
+                  isEnabled
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-400 text-white cursor-not-allowed"
+                }`}
               >
-                닫기
+                가져오기
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              {sortedFishes.map((fish, index) => {
-                // rarity가 COMMON, RARE, EPIC 인 경우 버튼 비활성화
-                const isEnabled = !["COMMON", "RARE", "EPIC"].includes(
-                  fish.rarity
-                );
-                return (
-                  <div key={index} className="flex flex-col items-center">
-                    <CollectionItemCard
-                      name={fish.fishName}
-                      count={1}
-                      imageSrc={fish.fishImage}
-                    />
-                    <button
-                      onClick={() => {
-                        if (isEnabled) {
-                          handleGetFish(fish);
-                        }
-                      }}
-                      disabled={!isEnabled}
-                      className={`mt-1 px-2 py-1 rounded text-xs ${
-                        isEnabled
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-400 text-white cursor-not-allowed"
-                      }`}
-                    >
-                      가져오기
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
