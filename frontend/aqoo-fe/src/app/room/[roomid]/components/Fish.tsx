@@ -18,26 +18,42 @@ export default function Fish({ fish, message }: FishProps) {
   const fishRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const directionRef = useRef(1);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [showMessage, setShowMessage] = useState(false);
   const [currentMessage, setCurrentMessage] = useState<string | null>(null);
   const [fishPosition, setFishPosition] = useState({ x: 0, y: 0 });
 
   // ✅ 말풍선 메시지 처리 (3초 후 사라짐)
+  // -> 메시지 도배 상황에서도 타이머를 항상 재설정하여, 일정 시간 이후 메시지가 사라지도록 함.
   useEffect(() => {
     if (message && message.trim() !== '') {
       setShowMessage(true);
       setCurrentMessage(message);
       console.log(`💬 Message updated: "${message}" for ${fish.fishName}`);
 
-      const timer = setTimeout(() => {
+      // 기존 타이머가 있다면 항상 클리어
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      
+      timerRef.current = setTimeout(() => {
         console.log(`💨 [DEBUG] Message cleared for ${fish.fishName}`);
         setShowMessage(false);
         setCurrentMessage(null);
-      }, 3000);
-
-      return () => clearTimeout(timer);
+        timerRef.current = null;
+      }, 2000);
     }
-  }, [message]);
+    // 의존성 배열을 비워두어 매 렌더링마다 메시지 존재 여부를 체크
+  });
+
+  // 컴포넌트 언마운트 시 타이머 클리어
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   // ✅ 물고기 위치 추적하여 말풍선이 따라가도록 설정
   useEffect(() => {
@@ -50,7 +66,7 @@ export default function Fish({ fish, message }: FishProps) {
       }
     };
 
-    const positionInterval = setInterval(updatePosition, 50); // 50ms마다 위치 업데이트 (부드럽게 따라가도록)
+    const positionInterval = setInterval(updatePosition, 50); // 50ms마다 위치 업데이트
     return () => clearInterval(positionInterval);
   }, []);
 
