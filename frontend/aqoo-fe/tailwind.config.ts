@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         background: "rgb(var(--background) / <alpha-value>)",
-        foreground: "rgb(var(--foreground) / <alpha-value>)",
+        foreground: "#171717", // ✅ 항상 검은색 유지
       },
       keyframes: {
         bounce: {
