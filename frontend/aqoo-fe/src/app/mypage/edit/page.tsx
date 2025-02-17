@@ -73,8 +73,8 @@ function ProfileForm({
   handleSubmit: UseFormHandleSubmit<ProfileFormInputs>;
 }) {
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
+      <div className="flex flex-col gap-4 ">
         <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
         <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
         <div className="flex items-end justify-between gap-4 relative">
@@ -257,11 +257,11 @@ function EditProfilePage() {
   return (
     <div
       style={{
-        backgroundImage: `linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url(${background})`,
+        backgroundImage: `url(${background})`,
       }}
       className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
     >
-      <div className="absolute top-4 left-4">
+      <div className="absolute bottom-5 right-5">
         <Buttons text="BACK" />
       </div>
 
@@ -296,8 +296,17 @@ function EditProfilePage() {
         </div>
 
         <div className="flex-1">
-          <div className="bg-white p-8 rounded-2xl w-[450px] h-[70vh] items-center justify-center">
-            <h2 className="text-center text-3xl mb-6">회원정보 수정</h2>
+          <div
+            className="
+            bg-white p-8 rounded-2xl
+            w-[450px] min-h-[55vh]
+            flex flex-col
+            items-center justify-center
+            p-5
+            "
+            style={{ gap: "calc(60vh * 0.03)" }}
+          >
+            <h2 className="text-center text-4xl mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}
               // ***문제***
@@ -307,7 +316,7 @@ function EditProfilePage() {
               setValue={setValue}
               handleSubmit={handleSubmit}
             />
-            <div className="flex justify-between gap-4 mt-4">
+            <div className="w-full flex justify-between gap-4 mt-4">
               <ModalButtons
                 text="비밀번호 변경"
                 isLoading={isLoading}
