@@ -25,13 +25,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="ko">
-      <body className="w-full h-screen overflow-hidden">
-        <RecoilProvider>
-          <BackgroundMusic /> {/* 배경 음악 실행 */}
-          {/* ✅ 특정 페이지에서만 네비게이션을 렌더링 */}
-          {!hiddenNavPaths.includes(pathname) && <Navbar />}
-          <div className="w-full h-full">{children}</div>{" "}
-        </RecoilProvider>
+      <body className="w-full min-h-screen sm:overflow-auto">
+        <div className="relative w-full min-h-screen overflow-x-hidden">
+          <RecoilProvider>
+            <BackgroundMusic /> {/* 배경 음악 실행 */}
+            {/* ✅ 특정 페이지에서만 네비게이션을 렌더링 */}
+            {!hiddenNavPaths.includes(pathname) && <Navbar />}
+            <div className="w-full min-h-screen">{children}</div>{" "}
+          </RecoilProvider>
+        </div>
       </body>
     </html>
   );
