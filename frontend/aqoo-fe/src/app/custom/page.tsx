@@ -387,8 +387,24 @@ export default function CustomFishPages() {
     }, "image/png");
   };
 
+  // 색상 팔레트 (사용자 지정 색 추가)
+  const [customColor, setCustomColor] = useState("#ff0000");
+  const colors = [
+    "#FF0000",
+    "#FFA500",
+    "#FFFF00",
+    "#008000",
+    "#0000FF",
+    "#800080",
+    "#FFC0CB",
+    "#808080",
+    "#FFFFFF",
+    "#000000",
+    customColor,
+  ];
+
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-center gap-y-4 px-4 overflow-y-auto h-screen pb-20">
+    <div className="relative w-full min-h-screen flex flex-col items-center justify-center px-4 pb-20">
       <title>AQoO</title>
 
       {/* 🖼 배경 이미지 */}
@@ -399,42 +415,48 @@ export default function CustomFishPages() {
           backgroundSize: "cover", // ✅ 배경이 뷰포트 전체를 덮도록 설정
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
+          height: "auto", // ✅ 컨텐츠 길이에 맞게 자동 조정
           minHeight: "100vh", // ✅ 최소 높이를 100vh로 설정하여 모바일에서도 유지
         }}
       ></div>
 
       {/* 🖼 메인 컨테이너 */}
-      <div className="relative flex flex-col items-center bg-white border-[2px] mt-10 border-black rounded-lg p-4 w-full max-w-lg sm:max-w-4xl text-center shadow-lg">
-        {/* 🎨 타이틀 (반응형 적용) */}
-        <div className="absolute -top-8 sm:-top-10 left-1/2 transform -translate-x-1/2 bg-white border-[2px] border-black rounded-md shadow-md px-4 py-2">
-          <Image src="/icon/paintIcon.png" alt="paint" width={24} height={24} className="mr-2 hidden sm:block" />
+      <div className="relative flex flex-col items-center bg-white border-[2px] mt-20 border-black rounded-lg p-6 w-full max-w-lg sm:max-w-4xl text-center justify-center shadow-lg">
+        {/* 🖌️ 제목 */}
+        <div className="absolute top-[-25px] left-1/2 transform -translate-x-1/2 bg-white border-[2px] border-black rounded-md px-6 py-3 shadow-md flex items-center">
+          <Image src="/icon/paintIcon.png" alt="paint" width={24} height={24} className="mr-2" />
           <h2 className="text-lg sm:text-3xl font-bold tracking-widest text-black mx-2 whitespace-nowrap">
             물고기 그리기
           </h2>
-          <Image
-            src="/icon/paintIcon.png"
-            alt="paint"
-            width={24}
-            height={24}
-            className="ml-2 scale-x-[-1] hidden sm:block"
-          />
+          <Image src="/icon/paintIcon.png" alt="paint" width={24} height={24} className="ml-2 scale-x-[-1]" />
         </div>
 
         {/* 🎨 캔버스 영역 */}
-        <div className="flex flex-col md:flex-row w-full  items-center justify-center">
+        <div className="flex flex-col md:flex-row w-full  items-center justify-center mt-10">
           {/* 🎨 색상 팔레트 */}
-          <div className="grid grid-cols-5 md:flex md:flex-col gap-2 p-2">
-            {["#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#800080", "#FFC0CB", "#000000", "#FFFFFF"].map(
-              (color) => (
-                <button
-                  key={color}
-                  onClick={() => setPenColor(color)}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 border border-black rounded-md 
-          ${penColor === color ? "border-8 border-black" : "border"}`}
-                  style={{ backgroundColor: color }}
-                />
-              )
-            )}
+          <div className="grid grid-cols-6 sm:grid-cols-2 gap-2 p-2">
+            {colors.map((color, index) => (
+              <button
+                key={index}
+                onClick={() => setPenColor(color)}
+                className={`w-10 h-10 sm:w-12 sm:h-12 border rounded-md transition-all
+                  ${penColor === color ? "border-4 border-black" : "border border-black"}`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+            {/* 사용자 지정 색 선택 */}
+            <input
+              type="color"
+              value={customColor}
+              onChange={(e) => {
+                const newColor = e.target.value;
+
+                setCustomColor(newColor);
+                setPenColor(newColor);
+              }}
+              className={`w-10 h-10 sm:w-12 sm:h-12 border rounded-md cursor-pointer transition-all
+                ${penColor === customColor ? "border-4 border-black" : "border border-black"}`}
+            />
           </div>
 
           {/* 🖼 캔버스 */}
@@ -452,7 +474,7 @@ export default function CustomFishPages() {
           />
 
           {/* 🎨 도구 메뉴 */}
-          <div className="grid grid-cols-3 md:flex md:flex-col gap-4 md:ml-6 mt-6 md:mt-0">
+          <div className="grid grid-cols-4 sm:grid-cols-3 md:flex md:flex-col gap-2 md:ml-6 mt-6 md:mt-0">
             {/* ✏️ 펜 굵기 조절 슬라이더 */}
             <div className="flex flex-col items-center">
               <span className="text-xs">{penWidth}px</span>
