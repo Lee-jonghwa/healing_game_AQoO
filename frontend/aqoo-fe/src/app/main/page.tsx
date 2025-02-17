@@ -176,9 +176,9 @@ function FishOverlayModal({
     >
       <div
         className='bg-white rounded-lg p-6 w-96'
-        onClick={(e) => {
-          console.log('[FishOverlayModal] 모달 내부 클릭 - 이벤트 전파 중지.');
-          e.stopPropagation();
+        onClick={() => {
+          console.log('[FishOverlayModal] 모달 내부 클릭.');
+          // e.stopPropagation() 호출하지 않음: 전파 중지하지 않음.
         }}
       >
         <h2 className='text-xl font-bold mb-4'>오버레이에 띄울 물고기 선택</h2>
