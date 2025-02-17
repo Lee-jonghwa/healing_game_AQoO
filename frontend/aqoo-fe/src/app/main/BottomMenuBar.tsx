@@ -1,7 +1,11 @@
 'use client';
 
-import { useSFX } from '@/hooks/useSFX';
 import { AquariumData, UserInfo } from '@/types';
+
+import CleanComponent from '@/app/main/CleanComponent';
+import FriendsList from '@/app/main/FriendsList';
+import PushNotifications from '@/app/main/PushNotifications';
+import { useSFX } from '@/hooks/useSFX';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -10,27 +14,25 @@ import MenuButton from './MenuButton';
 const API_BASE_URL = 'https://i12e203.p.ssafy.io/api/v1';
 
 interface BottomMenuBarProps {
-  setActiveComponent: (value: string | null) => void;
-  activeComponent: string | null;
   userInfo: UserInfo;
   aquariumData?: AquariumData;
   refreshAquariumData: () => void;
-  handleIncreaseExp: (earnedExp: number) => void;
+  handleIncreaseExp: (earnedExp: number) => Promise<void>;
   onOpenFishModal: () => void;
   newNotifications: boolean;
+  setNewNotifications: (newNotifications: boolean) => void;
   handleToggleOverlay: () => void;
   overlayActive: boolean;
 }
 
 export default function BottomMenuBar({
-  setActiveComponent,
-  activeComponent,
   userInfo,
   aquariumData,
   refreshAquariumData,
   onOpenFishModal,
   handleIncreaseExp,
   newNotifications,
+  setNewNotifications,
   handleToggleOverlay,
   overlayActive,
 }: BottomMenuBarProps) {
@@ -40,6 +42,8 @@ export default function BottomMenuBar({
   const { play: playWater } = useSFX('/sounds/waterEffect.mp3');
   const { play: playFeed } = useSFX('/sounds/feedEffect.mp3');
   const [isMenuVisible, setIsMenuVisible] = useState(true);
+
+  const [activeComponent, setActiveComponent] = useState<string | null>(null);
 
   const toggleMenuBar = () => {
     setIsMenuVisible((prev) => !prev);
@@ -128,6 +132,39 @@ export default function BottomMenuBar({
             {overlayActive ? '오버레이 끄기' : '오버레이 켜기'}
           </button>
         )}
+
+        {activeComponent === 'friends' && (
+          <div className='absolute  bottom-full left-0 mb-2 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-hidden z-50'>
+            <div className='overflow-y-auto h-full custom-scollbar'>
+              <FriendsList
+                onClose={() => setActiveComponent(null)}
+                userId={userInfo.id}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeComponent === 'push' && (
+          <div className='absolute  bottom-full left-0 mb-2 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-auto z-50'>
+            <PushNotifications
+              onClose={() => setActiveComponent(null)}
+              setNewNotifications={() => {}}
+            />
+          </div>
+        )}
+
+        {/* ✅ 선택된 컴포넌트만 표시 (BottomMenuBar 위에서 반응형 유지) */}
+        {activeComponent === 'clean' && (
+          <div className='absolute  absolute bottom-full mb-2 right-0 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-auto z-50'>
+            <CleanComponent
+              onClose={() => setActiveComponent(null)}
+              onCleanSuccess={refreshAquariumData}
+              handleIncreaseExp={handleIncreaseExp} // ✅ 이 방식이 맞음 (async 함수이므로 그대로 전달 가능)
+              aquariumId={userInfo.mainAquarium}
+            />
+          </div>
+        )}
+
         <div
           className={`w-full bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md transition-all duration-500 ${
             isMenuVisible
@@ -157,6 +194,7 @@ export default function BottomMenuBar({
                 onClick={() => {
                   playModal();
                   handleButtonClick('push');
+                  setNewNotifications(false); // ✅ 푸시 버튼을 누르면 알림 핑 제거
                 }}
                 isActive={activeComponent === 'push'}
               />

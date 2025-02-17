@@ -8,12 +8,9 @@ import axios, { AxiosResponse } from 'axios';
 import { useEffect, useState } from 'react';
 
 import BottomMenuBar from '@/app/main/BottomMenuBar';
-import CleanComponent from '@/app/main/CleanComponent';
 import FirstLoginModal from '@/app/main/components/FirstLoginModal';
 import KickedModal from '@/app/main/components/KickedModal';
 import OverlayEffect from '@/app/main/components/OverlayEffect';
-import FriendsList from '@/app/main/FriendsList';
-import PushNotifications from '@/app/main/PushNotifications';
 import Fish from '@/components/Fish';
 import FishTicketModal from '@/components/FishTicketModal'; // 물고기 뽑기 모달
 import LevelUpModal from '@/components/LevelUpModal'; // 레벨업 모달
@@ -246,6 +243,7 @@ function FishOverlayModal({
         <div className='mb-2'>
           <span>전체 선택: {totalSelected} / 5</span>
         </div>
+
         <div className='flex justify-end space-x-2'>
           <button
             onClick={() => {
@@ -593,54 +591,30 @@ export default function MainPage() {
         className='absolute inset-0 bg-cover bg-center w-full h-full'
         style={{ backgroundImage: `url(${background})` }}
       ></div>
+
       <OverlayEffect aquariumData={aquariumData} />
       {fishes.map((fish) => (
         <Fish key={fish.fishId} fish={fish} />
       ))}
+
+      <NotificationComponent
+        refreshAquariumData={refreshAquariumData}
+        setNewNotifications={setNewNotifications}
+      />
+
       {/* BottomMenuBar에 오버레이 토글 함수 전달 */}
       <BottomMenuBar
-        setActiveComponent={setActiveComponent}
-        activeComponent={activeComponent}
         userInfo={userInfo}
         aquariumData={aquariumData}
         refreshAquariumData={refreshAquariumData}
         onOpenFishModal={() => setShowFishTicketModal(true)}
         handleIncreaseExp={handleIncreaseExp}
         newNotifications={newNotifications}
+        setNewNotifications={setNewNotifications}
         handleToggleOverlay={handleToggleOverlay}
         overlayActive={overlayActive}
       />
-      {/* 추가 컴포넌트들 */}
-      {activeComponent === 'clean' && (
-        <div className='absolute bottom-[130px] right-[100px] z-50'>
-          <CleanComponent
-            onClose={() => setActiveComponent(null)}
-            onCleanSuccess={refreshAquariumData}
-            handleIncreaseExp={handleIncreaseExp}
-            aquariumId={userInfo.mainAquarium}
-          />
-        </div>
-      )}
-      {activeComponent === 'friends' && (
-        <div className='absolute bottom-[130px] left-[100px] z-50'>
-          <FriendsList
-            onClose={() => setActiveComponent(null)}
-            userId={userInfo.id}
-          />
-        </div>
-      )}
-      {activeComponent === 'push' && (
-        <div className='absolute bottom-[130px] left-[100px] z-50'>
-          <PushNotifications
-            onClose={() => setActiveComponent(null)}
-            setNewNotifications={setNewNotifications}
-          />
-        </div>
-      )}
-      <NotificationComponent
-        refreshAquariumData={refreshAquariumData}
-        setNewNotifications={setNewNotifications}
-      />
+
       {levelUpInfo && (
         <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
           <LevelUpModal
@@ -650,6 +624,7 @@ export default function MainPage() {
           />
         </div>
       )}
+
       {firstLoginStatus && firstLoginModal && (
         <FirstLoginModal
           onClose={() => setFirstLoginModal(null)}
@@ -659,6 +634,7 @@ export default function MainPage() {
           }}
         />
       )}
+
       {showFishTicketModal && userInfo && (
         <FishTicketModal
           level={userInfo.level}

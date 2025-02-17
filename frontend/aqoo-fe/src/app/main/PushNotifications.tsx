@@ -12,6 +12,11 @@ import { fetchFriends } from "@/app/main/FriendsList";
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 const customLoader = ({ src }: { src: string }) => src;
 
+interface FriendRequest {
+  notificationId: number;
+  relationshipId: string;
+}
+
 export default function PushNotifications({
   onClose,
   setNewNotifications,
@@ -24,20 +29,39 @@ export default function PushNotifications({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFriendRequestModal, setShowFriendRequestModal] = useState(false);
-  const [selectedFriendRequest, setSelectedFriendRequest] = useState<string | null>(null);
+  const [selectedFriendRequest, setSelectedFriendRequest] = useState<FriendRequest | null>(null);
 
-  
-  const isFriendExists = async (relationshipId : number): Promise<boolean> => {
+  const handleDelete = (id: number) => {
+    console.log(id);
+    setLoading(true);
+    setError(""); // 이전 에러 초기화
+
+    // 삭제 요청 보내기
+    axios
+      .post(`${API_BASE_URL}/notification/delete`, { notificationId: id })
+      .then((response) => {
+        console.log(response.data.message); // 삭제 성공 메시지 출력
+        // 여기에서 알림 삭제 후 UI 업데이트 (예: 삭제된 알림을 상태에서 제거)
+        refreshNotifications(); // 부모 컴포넌트의 알림 업데이트 함수 호출
+      })
+      .catch((error) => {
+        console.error("❌ 알림 삭제 실패", error);
+        setError("알림 삭제에 실패했습니다.");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  const isFriendExists = async (relationshipId: number): Promise<boolean> => {
     console.log("비교 값 ", relationshipId);
     if (!auth.user?.id) {
       console.log("아이디 없음");
       return false; // ✅ 로그인되지 않은 경우 API 호출 안함
     }
-      
+
     const friends = await fetchFriends(auth.user.id); // 친구 목록 가져오기
     if (!friends) return false; // API 호출 실패 시 false 반환
-  
-    return friends.some((friend : Friend) => friend.id === relationshipId); // 특정 ID가 존재하는지 확인
+
+    return friends.some((friend: Friend) => friend.id === relationshipId); // 특정 ID가 존재하는지 확인
   };
 
   const refreshNotifications = () => {
@@ -108,20 +132,22 @@ export default function PushNotifications({
             <NotificationItem
               key={notif.id}
               notification={notif}
-              onFriendRequestClick={notif.type === "FRIEND REQUEST" 
-                ? async () => {
-                    const isFriend = await isFriendExists(Number(notif.data)); // isFriendExists가 Promise<boolean> 반환
-                    
-                    if (!isFriend) {
-                      setSelectedFriendRequest(notif.data || null);
-                      setShowFriendRequestModal(true);
-                    } else {
-                      alert("이미 친구입니다."); // isFriend가 false일 때 알림 창 표시
+              onFriendRequestClick={
+                notif.type === "FRIEND REQUEST"
+                  ? async () => {
+                      const isFriend = await isFriendExists(Number(notif.data)); // isFriendExists가 Promise<boolean> 반환
+
+                      if (!isFriend) {
+                        setSelectedFriendRequest({ notificationId: notif.id, relationshipId: notif.data });
+                        setShowFriendRequestModal(true);
+                      } else {
+                        alert("이미 친구입니다."); // isFriend가 false일 때 알림 창 표시
+                      }
                     }
-                  }
-                : undefined
+                  : undefined
               }
               refreshNotifications={refreshNotifications} // 알림 목록을 다시 불러오는 함수 전달
+              handleDelete={handleDelete}
             />
           ))}
         </div>
@@ -129,7 +155,12 @@ export default function PushNotifications({
 
       {/* ✅ 친구 신청 모달 */}
       {showFriendRequestModal && selectedFriendRequest && (
-        <FriendRequestModal relationshipId={selectedFriendRequest} onClose={() => setShowFriendRequestModal(false)} />
+        <FriendRequestModal
+          relationshipId={selectedFriendRequest.relationshipId}
+          notificationId={selectedFriendRequest.notificationId} // notif.id를 전달
+          onClose={() => setShowFriendRequestModal(false)}
+          handleDelete={handleDelete}
+        />
       )}
     </div>
   );
@@ -151,10 +182,12 @@ function NotificationItem({
   notification,
   onFriendRequestClick,
   refreshNotifications,
+  handleDelete,
 }: {
   notification: Notification;
   onFriendRequestClick?: () => void;
   refreshNotifications: () => void;
+  handleDelete: (id: number) => void;
 }) {
   const { type, message, status, data, createdAt, id } = notification;
   const [loading, setLoading] = useState(false); // 삭제 중 상태
@@ -182,26 +215,6 @@ function NotificationItem({
     }
   };
 
-  const handleDelete = (id: number) => {
-    console.log(id);
-    setLoading(true);
-    setError(""); // 이전 에러 초기화
-
-    // 삭제 요청 보내기
-    axios
-      .post(`${API_BASE_URL}/notification/delete`, { notificationId: id })
-      .then((response) => {
-        console.log(response.data.message); // 삭제 성공 메시지 출력
-        // 여기에서 알림 삭제 후 UI 업데이트 (예: 삭제된 알림을 상태에서 제거)
-        refreshNotifications(); // 부모 컴포넌트의 알림 업데이트 함수 호출
-      })
-      .catch((error) => {
-        console.error("❌ 알림 삭제 실패", error);
-        setError("알림 삭제에 실패했습니다.");
-      })
-      .finally(() => setLoading(false));
-  };
-
   return (
     <div
       className="relative p-3 bg-white border rounded-lg flex items-center space-x-3 shadow cursor-pointer hover:bg-gray-100"
@@ -218,13 +231,26 @@ function NotificationItem({
         <span className="text-lg font-bold">×</span> {/* 글자 크기도 조금 줄였어 */}
       </button>
       <div className="relative flex items-center">
-        <Image loader={customLoader} src={getIconSrc(type)} alt={type} width={32} height={32} className="w-8 h-8 object-contain" />
+        <Image
+          loader={customLoader}
+          src={getIconSrc(type)}
+          alt={type}
+          width={32}
+          height={32}
+          className="w-8 h-8 object-contain"
+        />
         {!status && <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></div>}
       </div>
 
       {/* ✅ GAME INVITE일 때 입장 버튼 포함 */}
       {type === "GAME INVITE" ? (
-        <GameInviteNotification message={message} gameRoomId={data} createdAt={createdAt} />
+        <GameInviteNotification
+          message={message}
+          gameRoomId={data}
+          createdAt={createdAt}
+          notificationId={id}
+          handleDelete={handleDelete}
+        />
       ) : (
         <div>
           <div className="flex items-end space-x-4">
@@ -243,10 +269,14 @@ function GameInviteNotification({
   message,
   gameRoomId,
   createdAt,
+  notificationId,
+  handleDelete,
 }: {
   message: string;
   gameRoomId?: string;
   createdAt: string;
+  notificationId: number;
+  handleDelete: (id: number) => void;
 }) {
   const router = useRouter(); // ✅ Next.js App Router 사용
   const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
@@ -261,6 +291,7 @@ function GameInviteNotification({
     const gameUrl = `https://i12e203.p.ssafy.io/room/${gameRoomId}?userName=${auth.user.id}`;
 
     console.log(`🎮 게임 입장 URL: ${gameUrl}`);
+    handleDelete(notificationId);
     router.push(gameUrl); // ✅ Next.js에서 페이지 이동
   };
 
@@ -308,7 +339,17 @@ const getNotificationLabel = (type: string) => {
 };
 
 // 🔹 친구 요청 모달 컴포넌트
-function FriendRequestModal({ relationshipId, onClose }: { relationshipId: string; onClose: () => void }) {
+function FriendRequestModal({
+  notificationId,
+  relationshipId,
+  handleDelete,
+  onClose,
+}: {
+  notificationId: number;
+  relationshipId: string;
+  handleDelete: (id: number) => void;
+  onClose: () => void;
+}) {
   const handleAcceptFriend = () => {
     console.log("친구 수락 코드 : ", relationshipId);
 
@@ -316,6 +357,7 @@ function FriendRequestModal({ relationshipId, onClose }: { relationshipId: strin
       .post(`${API_BASE_URL}/friends/accept`, { relationshipId: relationshipId })
       .then(() => {
         console.log("✅ 친구 요청 수락 성공");
+        handleDelete(notificationId);
         onClose();
       })
       .catch((error) => console.error("❌ 친구 요청 수락 실패", error));
