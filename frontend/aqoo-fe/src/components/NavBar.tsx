@@ -2,10 +2,11 @@
 
 import { Settings, X } from "lucide-react";
 import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+import { usePathname, useRouter } from "next/navigation";
+
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
-import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -16,9 +17,26 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname(); // 현재 경로 확인
 
+  // ✅ 배경음 & 효과음 개별 ON/OFF 상태 추가
+  const [isBgOn, setIsBgOn] = useState(bgMusicVolume > 0);
+  const [isSfxOn, setIsSfxOn] = useState(sfxVolume > 0);
+
+  // ✅ 배경음악 ON/OFF 토글
+  const toggleBgMusic = () => {
+    setIsBgOn(!isBgOn);
+    setBgMusicVolume(isBgOn ? 0 : 50); // OFF 시 0, ON 시 50%
+  };
+
+  // ✅ 효과음 ON/OFF 토글
+  const toggleSfx = () => {
+    setIsSfxOn(!isSfxOn);
+    setSfxVolume(isSfxOn ? 0 : 50); // OFF 시 0, ON 시 50%
+  };
+
   // 로고 클릭 핸들러
   const handleLogoClick = () => {
-    if (pathname.startsWith("/room")) {  // 경로가 "/room"으로 시작하면
+    if (pathname.startsWith("/room")) {
+      // 경로가 "/room"으로 시작하면
       router.replace("/main");
     } else {
       // 인증 상태에 따라 다른 경로로 이동
@@ -46,10 +64,7 @@ export default function Navbar() {
         </button>
 
         {/* ⚙️ 설정 버튼 */}
-        <button
-          className="p-2 bg-white/30 rounded-full hover:bg-white/50"
-          onClick={() => setIsSettingsOpen(true)}
-        >
+        <button className="p-2 bg-white/30 rounded-full hover:bg-white/50" onClick={() => setIsSettingsOpen(true)}>
           <Settings className="w-6 h-6 text-white" />
         </button>
       </nav>
@@ -67,7 +82,15 @@ export default function Navbar() {
 
             {/* 배경음악 조절 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium">배경음악</label>
+              <label className="block text-sm font-medium flex justify-between items-center">
+                배경음악
+                <button
+                  className={`p-2 rounded-md ${isBgOn ? "bg-green-500" : "bg-red-500"} text-white`}
+                  onClick={toggleBgMusic}
+                >
+                  {isBgOn ? "ON" : "OFF"}
+                </button>
+              </label>
               <input
                 type="range"
                 min="0"
@@ -75,13 +98,22 @@ export default function Navbar() {
                 value={bgMusicVolume}
                 onChange={(e) => setBgMusicVolume(Number(e.target.value))}
                 className="w-full"
+                disabled={!isBgOn} // OFF 상태면 비활성화
               />
               <span className="text-sm">{bgMusicVolume}%</span>
             </div>
 
             {/* 효과음 조절 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium">효과음</label>
+              <label className="block text-sm font-medium flex justify-between items-center">
+                효과음
+                <button
+                  className={`p-2 rounded-md ${isSfxOn ? "bg-green-500" : "bg-red-500"} text-white`}
+                  onClick={toggleSfx}
+                >
+                  {isSfxOn ? "ON" : "OFF"}
+                </button>
+              </label>
               <input
                 type="range"
                 min="0"
@@ -89,15 +121,13 @@ export default function Navbar() {
                 value={sfxVolume}
                 onChange={(e) => setSfxVolume(Number(e.target.value))}
                 className="w-full"
+                disabled={!isSfxOn} // OFF 상태면 비활성화
               />
               <span className="text-sm">{sfxVolume}%</span>
             </div>
 
             {/* 로그아웃 버튼 */}
-            <button
-              className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600"
-              onClick={handleLogout}
-            >
+            <button className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600" onClick={handleLogout}>
               로그아웃
             </button>
           </div>
