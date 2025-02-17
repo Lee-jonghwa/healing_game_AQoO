@@ -6,6 +6,11 @@ interface PasswordChangeModalProps {
   onClose: () => void;
 }
 
+// <div
+// className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+// onClick={() => setIsSettingsOpen(false)} // ✅ 바깥 클릭 시 모달 닫기
+// >
+
 export default function PasswordChangeModal({ onClose }: PasswordChangeModalProps) {
   const API_BASE_URL = "https://i12e203.p.ssafy.io";
   const token = localStorage.getItem("accessToken");

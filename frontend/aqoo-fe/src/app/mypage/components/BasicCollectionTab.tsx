@@ -12,6 +12,7 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
   const API_BASE_URL = "https://i12e203.p.ssafy.io/";
   const [paddingBottom, setPaddingBottom] = useState(0);
   const lastItemRef = useRef<HTMLDivElement | null>(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -29,6 +30,19 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
 
     return () => observer.disconnect();
   }, [allFishList]);
+
+  // fullscreen 모드 감지 (F11로 전체화면 전환 시)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      // document.fullscreenElement가 존재하면 전체화면 모드
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
 
   // 원본 배열을 변경하지 않으려면 slice()로 복사 후 정렬
   const sortedFishList = allFishList.slice().sort((a, b) => {
@@ -48,7 +62,7 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
       pl-1 pr-1
       grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
       flex flex-wrap
-      overflow-y-scroll max-h-[520px]
+      overflow-y-scroll h-[50vh] max-h-[60vh]
       scrollbar-none
       "
       style={{

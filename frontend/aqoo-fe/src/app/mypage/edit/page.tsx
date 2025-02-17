@@ -257,11 +257,11 @@ function EditProfilePage() {
   return (
     <div
       style={{
-        backgroundImage: `linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url(${background})`,
+        backgroundImage: `url(${background})`,
       }}
       className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
     >
-      <div className="absolute top-4 left-4">
+      <div className="absolute bottom-4 right-4">
         <Buttons text="BACK" />
       </div>
 
@@ -299,9 +299,12 @@ function EditProfilePage() {
           <div
             className="
             bg-white p-8 rounded-2xl
-            w-[450px] h-[60vh]
+            w-[450px] min-h-[55vh]
             flex flex-col
-            gap-3 items-center justify-center"
+            items-center justify-center
+            p-5
+            "
+            style={{ gap: "calc(60vh * 0.03)" }}
           >
             <h2 className="text-center text-4xl mb-6">회원정보 수정</h2>
             <ProfileForm
@@ -313,7 +316,7 @@ function EditProfilePage() {
               setValue={setValue}
               handleSubmit={handleSubmit}
             />
-            <div className="w-full flex justify-between gap-4 mt-6">
+            <div className="w-full flex justify-between gap-4 mt-4">
               <ModalButtons
                 text="비밀번호 변경"
                 isLoading={isLoading}
