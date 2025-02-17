@@ -114,14 +114,12 @@ export default function BottomMenuBar({
 
   return (
     <div className="fixed bottom-0 w-full flex flex-col items-center pb-2 md:pb-4">
-      {/* ✅ 토글 버튼 (▲ / ▼) - 메뉴바 위에 자연스럽게 배치 */}
+      {/* ✅ 토글 버튼 (▲ / ▼) - 메뉴가 사라지면 버튼이 더 아래로 이동 */}
       <button
         onClick={toggleMenuBar}
-        className="mb-2 px-4 py-2 bg-white/80 rounded-full shadow-md hover:bg-white transition-transform duration-300"
-        style={{
-          transform: isMenuVisible ? "translateY(0)" : "translateY(20px)",
-          opacity: isMenuVisible ? 1 : 0.7,
-        }}
+        className={`absolute left-1/2 transform -translate-x-1/2 px-3 py-1 bg-white/80 rounded-full shadow-md hover:bg-white transition-all ease-in-out duration-500 ${
+          isMenuVisible ? "bottom-[100%] mb-1 translate-y-0" : "bottom-2 translate-y-1"
+        }`}
       >
         {isMenuVisible ? "▼" : "▲"}
       </button>
