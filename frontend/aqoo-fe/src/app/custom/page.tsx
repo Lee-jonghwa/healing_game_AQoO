@@ -404,7 +404,11 @@ export default function CustomFishPages() {
   ];
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-center px-4 pb-20">
+    <div
+      className="relative w-full flex flex-col items-center justify-center px-4 pb-20
+  lg:h-screen lg:overflow-hidden 
+  sm:min-h-screen sm:overflow-auto"
+    >
       <title>AQoO</title>
 
       {/* 🖼 배경 이미지 */}
@@ -423,7 +427,7 @@ export default function CustomFishPages() {
       {/* 🖼 메인 컨테이너 */}
       <div className="relative flex flex-col items-center bg-white border-[2px] mt-20 border-black rounded-lg p-6 w-full max-w-lg sm:max-w-4xl text-center justify-center shadow-lg">
         {/* 🖌️ 제목 */}
-        <div className="absolute top-[-25px] left-1/2 transform -translate-x-1/2 bg-white border-[2px] border-black rounded-md px-6 py-3 shadow-md flex items-center">
+        <div className="absolute top-[-25px] left-1/2 transform -translate-x-1/2 bg-white border-[2px] border-black rounded-md px-6 py-3 shadow-md flex items-center justify-center w-[250px] sm:w-[250px] md:w-[350px] max-w-full">
           <Image src="/icon/paintIcon.png" alt="paint" width={24} height={24} className="mr-2" />
           <h2 className="text-lg sm:text-3xl font-bold tracking-widest text-black mx-2 whitespace-nowrap">
             물고기 그리기
@@ -535,7 +539,7 @@ export default function CustomFishPages() {
         </div>
 
         {/* ✅ 반응형 정렬 적용 */}
-        <div className="flex flex-col sm:flex-row items-center justify-center w-full gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center w-full gap-4 mt-6">
           <div className="flex flex-col items-center w-full sm:w-auto">
             <label className="font-semibold text-lg">🐟 물고기 이름 입력</label>
             <input
