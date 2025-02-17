@@ -20,6 +20,7 @@ interface BottomMenuBarProps {
   handleIncreaseExp: (earnedExp: number) => Promise<void>;
   onOpenFishModal: () => void;
   newNotifications: boolean;
+  setNewNotifications: (newNotifications: boolean) => void;
   handleToggleOverlay: () => void;
 }
 
@@ -30,6 +31,7 @@ export default function BottomMenuBar({
   onOpenFishModal,
   handleIncreaseExp,
   newNotifications,
+  setNewNotifications,
   handleToggleOverlay,
 }: BottomMenuBarProps) {
   const router = useRouter();
@@ -160,6 +162,7 @@ export default function BottomMenuBar({
                 onClick={() => {
                   playModal();
                   handleButtonClick("push");
+                  setNewNotifications(false); // ✅ 푸시 버튼을 누르면 알림 핑 제거
                 }}
                 isActive={activeComponent === "push"}
               />

@@ -539,6 +539,7 @@ export default function MainPage() {
         onOpenFishModal={() => setShowFishTicketModal(true)}
         handleIncreaseExp={handleIncreaseExp}
         newNotifications={newNotifications}
+        setNewNotifications={setNewNotifications}
         handleToggleOverlay={handleToggleOverlay}
       />
 
