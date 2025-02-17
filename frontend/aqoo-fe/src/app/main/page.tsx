@@ -128,7 +128,7 @@ export default function MainPage() {
 
   useEffect(() => {
     if (levelUpInfo) {
-      console.log("🔔 levelUpInfo가 변경됨!", levelUpInfo);
+      console.log("🔔 levelUpInfo가 변경!", levelUpInfo);
     }
   }, [levelUpInfo]);
 
