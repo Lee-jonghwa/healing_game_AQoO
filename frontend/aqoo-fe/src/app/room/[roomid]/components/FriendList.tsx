@@ -75,7 +75,7 @@ export default function FriendList({ userName, roomId, isHost, participantCount,
       {isHost && <h3 className="text-xl font-semibold mb-4">친구 {friends.length}</h3>}
 
       {/* 친구 리스트 (스크롤 가능) */}
-      <div className="flex-grow overflow-y-auto">
+      <div className="flex-grow overflow-y-auto custom-scrollbar">
         {!isHost ? (
           <p className="text-center text-gray-500">방장만 초대할 수 있습니다.</p>
         ) : filteredFriends.length === 0 ? (
