@@ -4,7 +4,6 @@ import { Settings, X } from "lucide-react";
 import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 import { usePathname, useRouter } from "next/navigation";
 
-import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
 import { useState } from "react";
@@ -36,10 +35,8 @@ export default function Navbar() {
   // 로고 클릭 핸들러
   const handleLogoClick = () => {
     if (pathname.startsWith("/room")) {
-      // 경로가 "/room"으로 시작하면
       router.replace("/main");
     } else {
-      // 인증 상태에 따라 다른 경로로 이동
       router.push(auth.isAuthenticated ? "/main" : "/");
     }
   };
@@ -57,11 +54,9 @@ export default function Navbar() {
 
   return (
     <>
-      {/* pointer-events-none => 해당 div 기본적으로 클릭 안 되게 설정 */}
-      <nav className="absolute top-4 left-4 z-50 flex justify-between w-full px-10 pointer-events-none">
+      <nav className="absolute top-4 left-4 z-10 flex justify-between w-full px-10 pointer-events-none">
         {/* 🏠 로고: 클릭 시 handleLogoClick 실행 */}
         <button onClick={handleLogoClick}>
-          {/* pointer-events-auto => 클릭 할 수 있도록 설정 */}
           <span className="pointer-events-auto text-white text-5xl hover:text-yellow-300">AQoO</span>
         </button>
 
@@ -76,8 +71,14 @@ export default function Navbar() {
 
       {/* 🎛️ 설정 모달 */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+          onClick={() => setIsSettingsOpen(false)} // ✅ 바깥 클릭 시 모달 닫기
+        >
+          <div
+            className="bg-white p-6 rounded-lg shadow-lg w-80"
+            onClick={(e) => e.stopPropagation()} // ✅ 내부 클릭 시 이벤트 전파 방지
+          >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">설정</h2>
               <button onClick={() => setIsSettingsOpen(false)}>
