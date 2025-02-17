@@ -65,12 +65,17 @@ function FishOverlayModal({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log(
+      '[FishOverlayModal] useEffect triggered for aquariumId:',
+      aquariumId
+    );
     // 새로운 API 호출: 어항 내 물고기 리스트 조회 (배열 반환)
     axios
       .get(`${API_BASE_URL}/aquariums/fish/${aquariumId}`, {
         withCredentials: true,
       })
       .then((res: AxiosResponse<FishData[]>) => {
+        console.log('[FishOverlayModal] API 호출 성공. 응답 데이터:', res.data);
         const data = res.data;
         // 그룹화: fishName을 기준으로 묶고, 총 개수 및 공통 정보 추출
         const groups: Record<string, GroupedFish> = {};
@@ -81,25 +86,32 @@ function FishOverlayModal({
             groups[item.fishName] = {
               fish: item.fishName,
               count: 1,
-              // 이미지는 URL 형식: "https://i12e203.p.ssafy.io/images/{fishName}.png"
-              fishImage: `https://i12e203.p.ssafy.io/images/${item.fishName}.png`,
+              // fishImage 값을 API 응답에서 직접 사용
+              fishImage: item.fishImage,
               size: item.size,
             };
           }
         });
+        console.log('[FishOverlayModal] 그룹화 결과:', groups);
         const groupsArray = Object.values(groups);
         setGroupedFish(groupsArray);
+        console.log('[FishOverlayModal] 그룹 배열 설정됨:', groupsArray);
+
         // 초기 선택값은 0
         const initCounts: Record<string, number> = {};
         groupsArray.forEach((group) => {
           initCounts[group.fish] = 0;
         });
         setSelectedCounts(initCounts);
+        console.log('[FishOverlayModal] 초기 선택 개수 설정됨:', initCounts);
       })
       .catch((err) => {
-        console.error('물고기 그룹 조회 실패', err);
+        console.error('[FishOverlayModal] 물고기 그룹 조회 실패', err);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        console.log('[FishOverlayModal] 로딩 완료. loading 상태:', false);
+      });
   }, [aquariumId]);
 
   // 전체 선택 개수 계산
@@ -107,27 +119,49 @@ function FishOverlayModal({
     (a, b) => a + b,
     0
   );
+  console.log('[FishOverlayModal] 전체 선택 개수 계산:', totalSelected);
 
   const increment = (fish: string, max: number) => {
+    console.log(
+      `[FishOverlayModal] increment called for ${fish} (max: ${max}). Current totalSelected: ${totalSelected}`
+    );
     if (totalSelected >= 5) {
       alert('전체 최대 5마리까지 선택할 수 있습니다.');
+      console.log('[FishOverlayModal] 최대 선택 개수 도달. 증가 불가.');
       return;
     }
     setSelectedCounts((prev) => {
       const current = prev[fish] || 0;
       if (current < max) {
-        return { ...prev, [fish]: current + 1 };
+        const newCounts = { ...prev, [fish]: current + 1 };
+        console.log(
+          `[FishOverlayModal] ${fish} count increased from ${current} to ${
+            current + 1
+          }. New counts:`,
+          newCounts
+        );
+        return newCounts;
       }
+      console.log(`[FishOverlayModal] ${fish} 이미 최대치(${max})에 도달함.`);
       return prev;
     });
   };
 
   const decrement = (fish: string) => {
+    console.log(`[FishOverlayModal] decrement called for ${fish}.`);
     setSelectedCounts((prev) => {
       const current = prev[fish] || 0;
       if (current > 0) {
-        return { ...prev, [fish]: current - 1 };
+        const newCounts = { ...prev, [fish]: current - 1 };
+        console.log(
+          `[FishOverlayModal] ${fish} count decreased from ${current} to ${
+            current - 1
+          }. New counts:`,
+          newCounts
+        );
+        return newCounts;
       }
+      console.log(`[FishOverlayModal] ${fish} count is already 0. No change.`);
       return prev;
     });
   };
@@ -135,11 +169,17 @@ function FishOverlayModal({
   return (
     <div
       className='fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50'
-      onClick={onClose}
+      onClick={() => {
+        console.log('[FishOverlayModal] 배경 클릭 - onClose 호출.');
+        onClose();
+      }}
     >
       <div
         className='bg-white rounded-lg p-6 w-96'
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          console.log('[FishOverlayModal] 모달 내부 클릭 - 이벤트 전파 중지.');
+          e.stopPropagation();
+        }}
       >
         <h2 className='text-xl font-bold mb-4'>오버레이에 띄울 물고기 선택</h2>
         {loading ? (
@@ -149,41 +189,55 @@ function FishOverlayModal({
             {groupedFish.length === 0 ? (
               <div>선택 가능한 물고기가 없습니다.</div>
             ) : (
-              groupedFish.map((group) => (
-                <div
-                  key={group.fish}
-                  className='flex items-center justify-between mb-2'
-                >
-                  <div className='flex items-center space-x-2'>
-                    {/* 이미지 표시 */}
-                    <img
-                      src={group.fishImage}
-                      alt={group.fish}
-                      className='w-8 h-8 object-cover rounded-full'
-                    />
-                    <span>
-                      {group.fish} (최대 {group.count}마리)
-                    </span>
+              groupedFish.map((group) => {
+                console.log('[FishOverlayModal] 렌더링 그룹:', group);
+                return (
+                  <div
+                    key={group.fish}
+                    className='flex items-center justify-between mb-2'
+                  >
+                    <div className='flex items-center space-x-2'>
+                      {/* 이미지 표시 */}
+                      <img
+                        src={group.fishImage}
+                        alt={group.fish}
+                        className='w-8 h-8 object-cover rounded-full'
+                        onError={(e) => {
+                          console.error(
+                            `[FishOverlayModal] 이미지 로드 실패: ${group.fishImage}`,
+                            e
+                          );
+                        }}
+                        onLoad={() => {
+                          console.log(
+                            `[FishOverlayModal] 이미지 로드 성공: ${group.fishImage}`
+                          );
+                        }}
+                      />
+                      <span>
+                        {group.fish} (최대 {group.count}마리)
+                      </span>
+                    </div>
+                    <div className='flex items-center'>
+                      <button
+                        onClick={() => decrement(group.fish)}
+                        className='px-2 py-1 bg-gray-300 rounded-l'
+                      >
+                        -
+                      </button>
+                      <span className='px-3'>
+                        {selectedCounts[group.fish] || 0}
+                      </span>
+                      <button
+                        onClick={() => increment(group.fish, group.count)}
+                        className='px-2 py-1 bg-gray-300 rounded-r'
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <div className='flex items-center'>
-                    <button
-                      onClick={() => decrement(group.fish)}
-                      className='px-2 py-1 bg-gray-300 rounded-l'
-                    >
-                      -
-                    </button>
-                    <span className='px-3'>
-                      {selectedCounts[group.fish] || 0}
-                    </span>
-                    <button
-                      onClick={() => increment(group.fish, group.count)}
-                      className='px-2 py-1 bg-gray-300 rounded-r'
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -191,24 +245,33 @@ function FishOverlayModal({
           <span>전체 선택: {totalSelected} / 5</span>
         </div>
         <div className='flex justify-end space-x-2'>
-          <button onClick={onClose} className='px-4 py-2 bg-gray-300 rounded'>
+          <button
+            onClick={() => {
+              console.log('[FishOverlayModal] 취소 버튼 클릭 - onClose 호출.');
+              onClose();
+            }}
+            className='px-4 py-2 bg-gray-300 rounded'
+          >
             취소
           </button>
           <button
-            onClick={() =>
-              onConfirm(
-                // 선택된 항목 중 count > 0 인 경우만 배열로 생성
-                Object.entries(selectedCounts)
-                  .filter(([, count]) => count > 0)
-                  .map(([fish, count]) => {
-                    // 그룹 정보를 찾은 후 fishImage와 size 포함하여 반환
-                    const group = groupedFish.find((g) => g.fish === fish);
-                    return group
-                      ? { fishImage: group.fishImage, size: group.size, count }
-                      : { fishImage: '', size: '', count };
-                  })
-              )
-            }
+            onClick={() => {
+              const selectedArray = Object.entries(selectedCounts)
+                .filter(([, count]) => count > 0)
+                .map(([fish, count]) => {
+                  const group = groupedFish.find((g) => g.fish === fish);
+                  const result = group
+                    ? { fishImage: group.fishImage, size: group.size, count }
+                    : { fishImage: '', size: '', count };
+                  console.log(`[FishOverlayModal] 선택된 항목 생성:`, result);
+                  return result;
+                });
+              console.log(
+                '[FishOverlayModal] 확인 버튼 클릭 - onConfirm 호출. 선택된 데이터:',
+                selectedArray
+              );
+              onConfirm(selectedArray);
+            }}
             className='px-4 py-2 bg-blue-600 text-white rounded'
           >
             확인
