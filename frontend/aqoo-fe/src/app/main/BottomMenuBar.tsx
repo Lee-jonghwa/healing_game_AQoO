@@ -142,7 +142,7 @@ export default function BottomMenuBar({
         </button>
 
         {/* Electron 환경에서 오버레이 토글 버튼 (메뉴바와 함께 이동) */}
-        {!isElectron && (
+        {isElectron && (
           <button
             onClick={handleToggleOverlay}
             className={`absolute left-0 transition-all duration-500 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 z-50 ${
