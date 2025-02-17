@@ -2,26 +2,54 @@
 
 import { Settings, X } from "lucide-react";
 import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+import { usePathname, useRouter } from "next/navigation";
 
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Navbar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [bgMusicVolume, setBgMusicVolume] = useRecoilState(bgMusicVolumeState); // Recoil 상태 관리
+  const [bgMusicVolume, setBgMusicVolume] = useRecoilState(bgMusicVolumeState);
   const [sfxVolume, setSfxVolume] = useRecoilState(sfxVolumeState);
   const { auth, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname(); // 현재 경로 확인
+
+  // ✅ 배경음 & 효과음 개별 ON/OFF 상태 추가
+  const [isBgOn, setIsBgOn] = useState(bgMusicVolume > 0);
+  const [isSfxOn, setIsSfxOn] = useState(sfxVolume > 0);
+
+  // ✅ 배경음악 ON/OFF 토글
+  const toggleBgMusic = () => {
+    setIsBgOn(!isBgOn);
+    setBgMusicVolume(isBgOn ? 0 : 50); // OFF 시 0, ON 시 50%
+  };
+
+  // ✅ 효과음 ON/OFF 토글
+  const toggleSfx = () => {
+    setIsSfxOn(!isSfxOn);
+    setSfxVolume(isSfxOn ? 0 : 50); // OFF 시 0, ON 시 50%
+  };
+
+  // 로고 클릭 핸들러
+  const handleLogoClick = () => {
+    if (pathname.startsWith("/room")) {
+      // 경로가 "/room"으로 시작하면
+      router.replace("/main");
+    } else {
+      // 인증 상태에 따라 다른 경로로 이동
+      router.push(auth.isAuthenticated ? "/main" : "/");
+    }
+  };
 
   // ✅ 로그아웃 함수
   const handleLogout = async () => {
     try {
-      await logout(); // Recoil 상태 초기화 & API 호출 <<< 이거 지금 안 되는 게 로컬이어서 그런 건지 아닌지 모르겠어서 수정 바람
-      setIsSettingsOpen(false); // ✅ 모달 닫기
-      router.push("/user/login"); // 로그아웃 후 로그인 페이지로 이동
+      await logout();
+      setIsSettingsOpen(false);
+      router.push("/user/login");
     } catch (error) {
       console.error("로그아웃 실패", error);
     }
@@ -29,12 +57,13 @@ export default function Navbar() {
 
   return (
     <>
+      {/* pointer-events-none => 해당 div 기본적으로 클릭 안 되게 설정 */}
       <nav className="absolute top-4 left-4 z-50 flex justify-between w-full px-10 pointer-events-none">
-        {/* <nav className="absolute top-4 left-4 z-10 flex justify-between w-full px-10"> */}
-        {/* 🏠 로고 */}
-        <Link href={auth.isAuthenticated ? "/main" : "/"}>
+        {/* 🏠 로고: 클릭 시 handleLogoClick 실행 */}
+        <button onClick={handleLogoClick}>
+          {/* pointer-events-auto => 클릭 할 수 있도록 설정 */}
           <span className="pointer-events-auto text-white text-5xl hover:text-yellow-300">AQoO</span>
-        </Link>
+        </button>
 
         {/* ⚙️ 설정 버튼 */}
         <button
@@ -49,7 +78,6 @@ export default function Navbar() {
       {isSettingsOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-            {/* 모달 헤더 */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">설정</h2>
               <button onClick={() => setIsSettingsOpen(false)}>
@@ -59,24 +87,38 @@ export default function Navbar() {
 
             {/* 배경음악 조절 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium">배경음악</label>
+              <label className="block text-sm font-medium flex justify-between items-center">
+                배경음악
+                <button
+                  className={`p-2 rounded-md ${isBgOn ? "bg-green-500" : "bg-red-500"} text-white`}
+                  onClick={toggleBgMusic}
+                >
+                  {isBgOn ? "ON" : "OFF"}
+                </button>
+              </label>
               <input
                 type="range"
                 min="0"
                 max="100"
                 value={bgMusicVolume}
-                onChange={(e) => {
-                  const newVolume = Number(e.target.value);
-                  setBgMusicVolume(newVolume);
-                }}
+                onChange={(e) => setBgMusicVolume(Number(e.target.value))}
                 className="w-full"
+                disabled={!isBgOn} // OFF 상태면 비활성화
               />
               <span className="text-sm">{bgMusicVolume}%</span>
             </div>
 
             {/* 효과음 조절 */}
             <div className="mb-4">
-              <label className="block text-sm font-medium">효과음</label>
+              <label className="block text-sm font-medium flex justify-between items-center">
+                효과음
+                <button
+                  className={`p-2 rounded-md ${isSfxOn ? "bg-green-500" : "bg-red-500"} text-white`}
+                  onClick={toggleSfx}
+                >
+                  {isSfxOn ? "ON" : "OFF"}
+                </button>
+              </label>
               <input
                 type="range"
                 min="0"
@@ -84,9 +126,11 @@ export default function Navbar() {
                 value={sfxVolume}
                 onChange={(e) => setSfxVolume(Number(e.target.value))}
                 className="w-full"
+                disabled={!isSfxOn} // OFF 상태면 비활성화
               />
               <span className="text-sm">{sfxVolume}%</span>
             </div>
+
             {/* 로그아웃 버튼 */}
             <button className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600" onClick={handleLogout}>
               로그아웃

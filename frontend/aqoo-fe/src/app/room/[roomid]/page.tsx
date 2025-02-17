@@ -36,6 +36,9 @@ export default function RoomPage({ params }: RoomPageProps) {
           router.replace("/main");
           return;
         }
+
+
+        
         // 정상적으로 유저 정보를 받아오면 set
         setCurrentUser(userData);
       } catch (error) {
