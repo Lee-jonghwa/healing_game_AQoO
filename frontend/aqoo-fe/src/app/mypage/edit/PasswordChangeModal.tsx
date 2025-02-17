@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { useAuth } from "@/hooks/useAuth";
@@ -5,11 +7,6 @@ import { useAuth } from "@/hooks/useAuth";
 interface PasswordChangeModalProps {
   onClose: () => void;
 }
-
-// <div
-// className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-// onClick={() => setIsSettingsOpen(false)} // ✅ 바깥 클릭 시 모달 닫기
-// >
 
 export default function PasswordChangeModal({ onClose }: PasswordChangeModalProps) {
   const API_BASE_URL = "https://i12e203.p.ssafy.io";
@@ -81,11 +78,11 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
   };
 
   return (
-    <Modal onClose={onClose} className="w-[400px] h-[450px] p-6">
-      <h3 className="text-3xl font-semibold mb-4">비밀번호 변경</h3>
-      <div className="space-y-4">
+    <Modal onClose={onClose} className="min-w-[25%] min-h-[55%] p-6">
+      <h3 className="text-center text-3xl font-semibold mb-4">비밀번호 변경</h3>
+      <div className="space-y-4 w-full flex flex-col items-start justify-center">
         {/* 현재 비밀번호 입력 */}
-        <div>
+        <div className="w-full">
           <label className="block text-gray-700 font-medium mb-1">현재 비밀번호</label>
           <input
             type="password"
@@ -96,7 +93,7 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
           />
         </div>
         {/* 새 비밀번호 입력 */}
-        <div>
+        <div className="w-full">
           <label className="block text-gray-700 font-medium mb-1">새 비밀번호</label>
           <input
             type="password"
@@ -107,7 +104,7 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
           />
         </div>
         {/* 새 비밀번호 확인 입력 */}
-        <div>
+        <div className="w-full">
           <label className="block text-gray-700 font-medium mb-1">새 비밀번호 확인</label>
           <input
             type="password"
@@ -120,9 +117,10 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
         </div>
       </div>
       <div className="flex justify-end mt-6">
-        <button className="px-4 py-2 bg-gray-300 rounded mr-2" onClick={onClose}>
+        {/* 취소 x표시 있으니 쓰지 않기 */}
+        {/* <button className="px-4 py-2 bg-gray-300 rounded mr-2" onClick={onClose}>
           취소
-        </button>
+        </button> */}
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={handlePasswordChange}

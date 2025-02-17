@@ -22,6 +22,10 @@ export default function CustomCollectionTab({ customFishList }: CustomCollection
         overflow-y-scroll max-h-[520px]
         scrollbar-none
       "
+      style={{
+        msOverflowStyle: "none", // IE, Edge에서 스크롤바 숨기기
+        scrollbarWidth: "none", // Firefox에서 스크롤바 숨기기
+      }}
     >
       {customFishList.map((fish) => (
         <CollectionItemCard key={fish.fishTypeId} imageSrc={fish.fishImage} name={fish.fishTypeName} />
