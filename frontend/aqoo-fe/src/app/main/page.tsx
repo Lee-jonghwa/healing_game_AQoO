@@ -169,11 +169,10 @@ function FishOverlayModal({
   return (
     // 배경 클릭 시 아무 동작도 하지 않도록 onClick 제거
     <div className='fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50'>
-      {/* 모달 내부 클릭 시 이벤트 전파 차단 */}
+      {/* 모달 내부 클릭 시 전파 차단 없이 단순 로그만 남김 */}
       <div
         className='bg-white rounded-lg p-6 w-96'
-        onClick={(e) => {
-          e.stopPropagation();
+        onClick={() => {
           console.log('[FishOverlayModal] 모달 내부 클릭.');
         }}
       >
