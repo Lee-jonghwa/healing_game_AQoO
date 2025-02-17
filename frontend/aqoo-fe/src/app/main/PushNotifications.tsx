@@ -218,7 +218,7 @@ function NotificationItem({
         <span className="text-lg font-bold">×</span> {/* 글자 크기도 조금 줄였어 */}
       </button>
       <div className="relative flex items-center">
-        <Image src={getIconSrc(type)} alt={type} width={32} height={32} className="w-8 h-8 object-contain" />
+        <Image loader={customLoader} src={getIconSrc(type)} alt={type} width={32} height={32} className="w-8 h-8 object-contain" />
         {!status && <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></div>}
       </div>
 
