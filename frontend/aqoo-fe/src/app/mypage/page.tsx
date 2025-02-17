@@ -34,6 +34,48 @@ export default function MyPage() {
 
   const [logoWidth, setLogoWidth] = useState<number>(0);
 
+  // 접속 유저의 정보 조회
+  useEffect(() => {
+    if (!auth.user?.id) return; // 로그인한 유저 ID가 없으면 API 호출 안 함
+    axiosInstance
+      .get(`/users/${auth.user.id}`)
+      .then((response: AxiosResponse<UserInfo>) => {
+        console.log("✅ 유저 정보:", response.data);
+        setUserInfo(response.data);
+      })
+      .catch((error) => {
+        console.error("❌ 유저 정보 불러오기 실패", error);
+      });
+  }, [auth.user?.id]);
+
+  useEffect(() => {
+    console.log("Fetching aquarium data...");
+
+    if (!userInfo?.mainAquarium) return;
+
+    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+
+    axiosInstance
+      .get(`/aquariums/${userInfo.mainAquarium}`)
+      .then((res: AxiosResponse<AquariumData>) => {
+        console.log("✅ 어항 상세 정보:", res.data);
+        setAquariumData(res.data);
+
+        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
+        console.log(res.data.aquariumBackground);
+        let bgUrl = res.data.aquariumBackground; // API에서 받아온 값
+        if (!bgUrl) return;
+
+        // bgUrl이 전체 URL이 아니라면 BASE_URL을 붙임
+        if (!bgUrl.startsWith("http")) {
+          bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
+        }
+        console.log("Setting background to:", bgUrl);
+        setBackground(bgUrl);
+      })
+      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+  }, [userInfo]);
+
   useEffect(() => {
     const updateLogoWidth = () => {
       const logoElement = document.getElementById("navbar-logo");
@@ -53,7 +95,7 @@ export default function MyPage() {
   return (
     <div
       style={{
-        backgroundImage: `linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url(${background})`,
+        backgroundImage: `url(${background})`,
         paddingLeft: `${logoWidth}px`,
       }}
       className={`
