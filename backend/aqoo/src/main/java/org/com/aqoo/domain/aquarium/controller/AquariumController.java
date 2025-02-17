@@ -87,6 +87,19 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("friend/{friend-id}")
+    public ResponseEntity<?> getAquariumFish(@PathVariable("friendId") String friendId) {
+
+        try{
+            List<AquariumFishResponse> response = aquariumService.getFriendAquariumFish(friendId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
     //어항 별 물고기 조회하기 (어항에 속하지 않은 경우 aquariumId : -1)
     @GetMapping("/fish/{aquariumId}")
     public ResponseEntity<?> getAquariumFish(@PathVariable("aquariumId") int aquariumId,

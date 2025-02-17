@@ -71,19 +71,29 @@ public class AquariumService {
         Aquarium aquarium = aquariumRepository.findById(aquariumId)
                 .orElseThrow(() -> new IllegalArgumentException("어항을 찾을 수 없습니다."));
 
-        // 어항 속 물고기 개수 조회 (예시: Object[] { fishTypeId, count })
+        // 어항 속 물고기 개수 조회 (Object[] { fishTypeId, count })
         List<Object[]> fishCounts = userFishRepository.countFishesInAquarium(aquariumId);
 
-        List<FishCountDto> fishList = fishCounts.stream().map(fishData -> {
-            Integer fishTypeId = (Integer) fishData[0];
-            Long count = (Long) fishData[1];
+        // N+1 문제 해결: fishTypeId 목록을 수집하여 한 번에 조회
+        Set<Integer> fishTypeIds = fishCounts.stream()
+                .map(row -> (Integer) row[0])
+                .collect(Collectors.toSet());
 
-            // 물고기 종류 조회
-            Fish fish = fishRepository.findById(fishTypeId)
-                    .orElseThrow(() -> new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다."));
+        Map<Integer, Fish> fishMap = fishRepository.findByIdIn(new ArrayList<>(fishTypeIds))
+                .stream()
+                .collect(Collectors.toMap(Fish::getId, fish -> fish));
 
-            return new FishCountDto(fish.getFishName(), count);
-        }).collect(Collectors.toList());
+        List<FishCountDto> fishList = fishCounts.stream()
+                .map(fishData -> {
+                    Integer fishTypeId = (Integer) fishData[0];
+                    Long count = (Long) fishData[1];
+                    Fish fish = fishMap.get(fishTypeId);
+                    if (fish == null) {
+                        throw new IllegalArgumentException("해당하는 물고기 타입을 찾을 수 없습니다.");
+                    }
+                    return new FishCountDto(fish.getFishName(), count);
+                })
+                .collect(Collectors.toList());
 
         // 엔티티의 모든 정보를 DTO로 매핑
         AquariumDetailResponseDto dto = new AquariumDetailResponseDto();
@@ -95,7 +105,11 @@ public class AquariumService {
         dto.setUserId(aquarium.getUserId());
 
 
-        String imageUrl = aquariumBackgroundRepository.findById(aquarium.getAquariumBackgroundId()).get().getImageUrl();
+        // Optional 처리 개선: 없을 경우 예외 발생
+        String imageUrl = aquariumBackgroundRepository.findById(aquarium.getAquariumBackgroundId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 배경을 찾을 수 없습니다."))
+                .getImageUrl();
+        dto.setAquariumBackground(imageUrl);
 
         dto.setAquariumBackground(imageUrl);
         dto.setWaterStatus(getElapsedTimeScore(aquarium.getLastWaterChangeTime(), waterInterval));
@@ -208,6 +222,38 @@ public class AquariumService {
         return new FishResponseDto("성공", "물고기가 어항에서 제거되었습니다.");
     }
 
+
+    @Transactional
+    public List<AquariumFishResponse> getFriendAquariumFish(String friendId) {
+        // getById 대신 findById를 사용하여 안전하게 조회
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 친구 유저가 존재하지 않습니다."));
+        int mainAquariumId = friend.getMainAquarium();
+        List<Object[]> fishData = userFishRepository.findFishDetailsByUserIdAndAquariumId(friendId, mainAquariumId);
+        if (fishData.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Integer> fishTypeIds = fishData.stream()
+                .map(row -> (Integer) row[1]) // fishTypeId 추출
+                .distinct()
+                .toList();
+        List<Fish> fishList = fishRepository.findByIdIn(fishTypeIds);
+
+        Map<Integer, Fish> fishTypeMap = fishList.stream()
+                .collect(Collectors.toMap(Fish::getId, fish -> fish));
+
+        return fishData.stream()
+                .map(row -> new AquariumFishResponse(
+                        row[2] != null ? (Integer) row[2] : -1,  // aquariumId
+                        (Integer) row[0], // fishId
+                        (Integer) row[1], // fishTypeId
+                        fishTypeMap.get((Integer) row[1]).getFishName(), // fishTypeName
+                        imageUtils.toAbsoluteUrl(fishTypeMap.get((Integer) row[1]).getImageUrl()), // fishImage
+                        fishTypeMap.get((Integer) row[1]).getSize()
+                ))
+                .sorted(Comparator.comparing(AquariumFishResponse::getFishTypeId))
+                .toList();
+    }
 
 
     // 어항 속 물고기 조회
