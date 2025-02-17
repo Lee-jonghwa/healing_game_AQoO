@@ -9,7 +9,8 @@ import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
 import Fish from "./Fish";
 import { User } from '@/store/authAtom';
-
+import { useRecoilValue } from "recoil";
+import { authAtom } from "@/store/authAtom";
 
 
 // 플레이어 타입 정의
@@ -43,6 +44,13 @@ interface FishData {
   fishImage: string;
 }
 
+interface Friend {
+  friendId: string;
+  nickname: string;
+  level: number;
+  mainFishImage: string | null;
+}
+
 
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
@@ -55,7 +63,10 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
+  const authState = useRecoilValue(authAtom);
 
+  // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
+  const [friendList, setFriendList] = useState<Friend[]>([]);
 
 
   // 기존 props의 user 대신 내부 상태로 관리하여 업데이트할 수 있도록 함
@@ -71,6 +82,16 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
       ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
       : users;
 
+
+  useEffect(() => {
+    fetch(`https://i12e203.p.ssafy.io/api/v1/friends/${encodeURIComponent(userName)}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("📢 친구 목록 데이터:", data.friends);
+        setFriendList(data.friends)
+      })
+      .catch((error) => console.error("❌ 친구 목록 불러오기 실패:", error));
+  }, [userName]);
 
   // STOMP 연결 활성화
   useEffect(() => {
@@ -316,6 +337,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                     </div>
                     <FriendList 
                       userName={userName} 
+                      friendList={friendList}
                       roomId={roomId} 
                       isHost={currentIsHost} 
                       participantCount={users.length} 
@@ -361,20 +383,22 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   
                   {/* 참가자 리스트 */}
                   <div>
-                    <ParticipantList 
-                      users={displayUsers} 
-                      currentUser={userName} 
-                      currentIsHost={currentIsHost} 
-                      onKickUser={(target) => {
-                        const client = getStompClient();
-                        if (client && client.connected) {
-                          client.publish({
-                            destination: '/app/chat.kickUser',
-                            body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
-                          });
-                        }
-                      }} 
-                    />
+                  <ParticipantList 
+                    users={displayUsers} 
+                    currentUser={userName} 
+                    currentIsHost={currentIsHost} 
+                    friendList={friendList}  // ✅ 친구 목록 전달
+                    onKickUser={(target) => {
+                      const client = getStompClient();
+                      if (client && client.connected) {
+                        client.publish({
+                          destination: '/app/chat.kickUser',
+                          body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
+                        });
+                      }
+                    }} 
+                  />
+
                   </div>
   
                   {/* 채팅창 */}
