@@ -63,7 +63,8 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
   if (backgrounds.length === 0) return <div>배경화면이 없습니다.</div>;
 
   return (
-    <div className="h-64 overflow-y-auto">
+    <div className="h-38 overflow-y-auto">
+      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
       <div className="flex flex-wrap gap-4 justify-center">
         {backgrounds.map((bg, idx) => {
           const isSelected = bg.id === selectedBackgroundId;
@@ -83,6 +84,7 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
             />
           );
         })}
+      </div>
       </div>
     </div>
   );

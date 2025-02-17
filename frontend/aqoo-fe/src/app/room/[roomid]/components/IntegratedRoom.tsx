@@ -234,7 +234,52 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
       }));
     }, 3000);
   };
-  
+
+  /*  
+    ===================================================
+    아래의 useEffect들은 브라우저를 닫거나 다른 페이지로 이동할 때,
+    chat.leaveRoom API를 호출하도록 합니다.
+    단, 키보드 새로고침(F5, Ctrl/Cmd+R)을 감지한 경우에는
+    새로고침으로 동작하도록 (즉, leave 메시지 전송을 생략) 합니다.
+    ===================================================
+  */
+  // 새로고침 키(F5, Ctrl/Cmd+R) 감지를 위한 ref
+  const isRefreshRef = useRef(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === 'F5' ||
+        (event.ctrlKey && event.key.toLowerCase() === 'r') ||
+        (event.metaKey && event.key.toLowerCase() === 'r')
+      ) {
+        isRefreshRef.current = true;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      // 새로고침이 아니라면 leaveRoom API 실행
+      if (!isRefreshRef.current) {
+        const client = getStompClient();
+        if (client && client.connected) {
+          client.publish({
+            destination: '/app/chat.leaveRoom',
+            body: JSON.stringify({ roomId, sender: userName }),
+          });
+          console.log('chat.leaveRoom 메시지가 beforeunload에서 전송되었습니다.');
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [roomId, userName]);
+
   return (
     <>
       {!isConnected ? (
