@@ -389,7 +389,7 @@ export default function MainPage() {
 
       {/* 🖼 배경 이미지 */}
       <div
-        className="absolute inset-0 bg-cover bg-center w-full h-full before:absolute before:inset-0 before:bg-white/30"
+        className="absolute inset-0 bg-cover bg-center w-full h-full"
         style={{ backgroundImage: `url(${background})` }}
       ></div>
 
