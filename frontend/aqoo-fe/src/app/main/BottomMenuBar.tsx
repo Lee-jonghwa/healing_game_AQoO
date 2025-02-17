@@ -5,39 +5,52 @@ import axios, { AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
 
 import MenuButton from "./MenuButton";
-import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
+import { useAuth } from "@/hooks/useAuth"; // 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation";
-import { useSFX } from "@/hooks/useSFX"; // ✅ useSFX 적용
+import { useSFX } from "@/hooks/useSFX"; // useSFX 적용
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
-export default function BottomMenuBar({
-  setActiveComponent,
-  activeComponent, // 현재 활성화된 컴포넌트 상태 추가
-  userInfo,
-  aquariumData,
-  refreshAquariumData, // ✅ 어항 상태 새로고침 함수
-  onOpenFishModal,
-  handleIncreaseExp, // ✅ 경험치 증가 함수 추가
-  newNotifications,
-}: {
+interface BottomMenuBarProps {
   setActiveComponent: (value: string | null) => void;
-  activeComponent: string | null; // 현재 활성화된 컴포넌트 상태 추가
+  activeComponent: string | null;
   userInfo: UserInfo;
   aquariumData?: AquariumData;
   refreshAquariumData: () => void;
   handleIncreaseExp: (earnedExp: number) => void;
   onOpenFishModal: () => void;
   newNotifications: boolean;
-}) {
+  handleToggleOverlay: () => void; // 오버레이 토글 함수
+}
+
+export default function BottomMenuBar({
+  setActiveComponent,
+  activeComponent,
+  userInfo,
+  aquariumData,
+  refreshAquariumData,
+  onOpenFishModal,
+  handleIncreaseExp,
+  newNotifications,
+  handleToggleOverlay,
+}: BottomMenuBarProps) {
   const router = useRouter();
 
   const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
   const { play: playSuccess } = useSFX("/sounds/gaugeeffect-02.mp3");
-  const { play: playWater } = useSFX("/sounds/waterEffect.mp3"); // ✅ 물 갈이 소리
-  const { play: playFeed } = useSFX("/sounds/feedEffect.mp3"); // ✅ 먹이 주는 소리
+  const { play: playWater } = useSFX("/sounds/waterEffect.mp3"); // 물 갈이 소리
+  const { play: playFeed } = useSFX("/sounds/feedEffect.mp3"); // 먹이 주는 소리
 
-  // ✅ 버튼이 비활성화되는 상태 체크
+  // 메뉴바 보이기/숨기기 상태
+  const [isMenuVisible, setIsMenuVisible] = useState(true);
+
+  // 토글 버튼 클릭 시 메뉴바 보이기/숨기기 변경
+  const toggleMenuBar = () => {
+    setIsMenuVisible((prev) => !prev);
+    setActiveComponent(null); // 열려 있는 메뉴 닫기
+  };
+
+  // 버튼 비활성화 상태 체크
   const isWaterMaxed = aquariumData?.waterStatus === 5;
   const isPollutionMaxed = aquariumData?.pollutionStatus === 5;
   const isFeedMaxed = aquariumData?.feedStatus === 5;
@@ -51,18 +64,22 @@ export default function BottomMenuBar({
     }
   };
 
-  // ✅ Water & Feed 버튼 클릭 시 실행할 함수 (type에 따라 분기)
+  // Water & Feed 버튼 클릭 시 실행할 함수 (type에 따라 분기)
   const handleAquariumUpdate = async (type: "water" | "feed") => {
     if (!userInfo?.mainAquarium) return;
 
-    // ✅ 만약 상태가 최대(5)라면 실행 X, Alert 띄우기
     if ((type === "water" && isWaterMaxed) || (type === "feed" && isFeedMaxed)) {
-      alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
+      alert(
+        `👍👍 ${
+          type === "water"
+            ? "수질이 이미 최고 상태입니다!"
+            : "먹이가 이미 가득 찼습니다!"
+        } 👍👍`
+      );
       return;
     }
 
     try {
-      // 1️⃣ 어항 상태 업데이트 API 호출
       await axios
         .post(`${API_BASE_URL}/aquariums/update`, {
           aquariumId: userInfo.mainAquarium,
@@ -70,22 +87,24 @@ export default function BottomMenuBar({
           data: "",
         })
         .then(() => {
-          console.log(`✅ 어항 ${type === "water" ? "수질 변경" : "먹이 상태 변경"} 성공`);
+          console.log(
+            `✅ 어항 ${type === "water" ? "수질 변경" : "먹이 상태 변경"} 성공`
+          );
 
           if (type === "water") {
-            playWater(); // 물 갈이 소리 재생
+            playWater();
           } else {
-            playFeed(); // 먹이 주는 소리 재생
+            playFeed();
           }
 
-          alert(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`);
+          alert(
+            `${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`
+          );
         });
 
-      // ✅ 경험치 증가 및 레벨업 체크
-      await handleIncreaseExp(type === "water" ? 10 : 10);
+      await handleIncreaseExp(10);
       console.log("✅ 경험치 지급 성공");
 
-      // 3️⃣ 어항 상태 & 유저 정보 다시 불러오기
       refreshAquariumData();
       playSuccess();
     } catch (error) {
@@ -93,154 +112,215 @@ export default function BottomMenuBar({
     }
   };
 
-  // ✅ 현재 레벨에서 필요한 경험치량 계산
-  // 🚀 현재 레벨에서 필요한 경험치 (다음 레벨업까지)
+  // 현재 레벨에서 필요한 경험치량 계산
   const expToNextLevel = userInfo.level * 20;
+  // 현재 경험치 진행도 계산 (최소 0%, 최대 100%)
+  const expProgress = Math.max(
+    0,
+    Math.min((userInfo.exp / expToNextLevel) * 100, 100)
+  );
 
-  // 🚀 현재 경험치 진행도 (경험치 / 목표 경험치 비율)
-  const expProgress = (userInfo.exp / expToNextLevel) * 100;
-
-  // 🚀 경험치 바 최소 5% 보장
-  const progressBarWidth = Math.max(0, Math.min(expProgress, 100));
-  const { auth } = useAuth(); // ✅ 로그인된 사용자 정보 가져오기
+  // Electron 환경 감지 (오버레이 토글 버튼 표시 여부에 사용)
+  const isElectron =
+    typeof navigator !== "undefined" &&
+    navigator.userAgent.toLowerCase().includes("electron");
 
   return (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full max-w-[1400px] bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md">
-      {/* 좌측 메뉴 */}
-      <div className="flex space-x-2 md:space-x-4">
-        {/* ✅ MyPage는 페이지 이동 */}
-        <MenuButton icon="/icon/icon-fishTank.png" label="MyPage" onClick={() => router.push("/mypage")} />
+    <div className="fixed bottom-0 w-full flex flex-col items-center pb-2 md:pb-4">
+      {/* 상단에 메뉴바 토글 버튼과 오버레이 토글 버튼을 같이 감싼 컨테이너 */}
+      <div className="relative w-full max-w-[1400px]">
+        {/* 메뉴바 보이기/숨기기 토글 버튼 */}
+        <button
+          onClick={toggleMenuBar}
+          className={`absolute left-1/2 transform -translate-x-1/2 px-3 py-1 bg-white/80 rounded-full shadow-md hover:bg-white transition-all ease-in-out duration-500 ${
+            isMenuVisible
+              ? "bottom-[100%] mb-1 translate-y-0"
+              : "bottom-2 translate-y-1"
+          }`}
+        >
+          {isMenuVisible ? "▼" : "▲"}
+        </button>
 
-        {/* ✅ 친구 목록 */}
-        <MenuButton
-          icon="/icon/friendIcon.png"
-          label="Friends"
-          onClick={() => {
-            playModal();
-            handleButtonClick("friends");
-          }}
-          isActive={activeComponent === "friends"}
-        />
+        {/* Electron 환경에서 오버레이 토글 버튼 (메뉴바와 함께 이동) */}
+        {isElectron && (
+          <button
+            onClick={handleToggleOverlay}
+            className={`absolute left-0 transition-all duration-500 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 z-50 ${
+              isMenuVisible
+                ? "bottom-[100%] mb-1 translate-y-0"
+                : "bottom-2 translate-y-1"
+            }`}
+          >
+            오버레이 온/오프
+          </button>
+        )}
 
-        {/* ✅ Push 알림 */}
-        <div className="relative">
-          {/* 푸시 알람 버튼 */}
-          <MenuButton
-            icon="/icon/alertIcon.png"
-            label="Push"
-            onClick={() => {
-              playModal();
-              handleButtonClick("push");
-            }}
-            isActive={activeComponent === "push"}
-          />
+        {/* BottomMenuBar 콘텐츠 */}
+        <div
+          className={`w-full bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md transition-all duration-500 ${
+            isMenuVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-12 pointer-events-none"
+          } relative`}
+        >
+          {/* 좌측 메뉴 */}
+          <div className="flex space-x-2 md:space-x-4">
+            <MenuButton
+              icon="/icon/icon-fishTank.png"
+              label="MyPage"
+              onClick={() => router.push("/mypage")}
+            />
 
-          {/* 알림 동그라미 애니메이션 */}
-          {newNotifications && <div className="notification-dot absolute top-2 right-2" />}
-        </div>
+            <MenuButton
+              icon="/icon/friendIcon.png"
+              label="Friends"
+              onClick={() => {
+                playModal();
+                handleButtonClick("friends");
+              }}
+              isActive={activeComponent === "friends"}
+            />
 
-        {/* ✅ Game 히스토리 */}
-        <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
-
-        {/* ✅ FishTicket 물고기 뽑기 */}
-        <MenuButton
-          icon="/icon/fishticketIcon.png"
-          label="Ticket"
-          onClick={() => {
-            playModal();
-            onOpenFishModal();
-          }}
-        />
-      </div>
-      {/* 중앙: 사용자 정보 */}
-      <div className="flex flex-col items-center text-center">
-        <p className="text-sm md:text-lg font-bold">
-          Lv. {userInfo.level} {userInfo.nickname}
-        </p>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-3 w-full">
-            {/* "exp" 텍스트 (왼쪽) */}
-            <p className="text-lg font-bold">exp</p>
-
-            {/* 경험치 바 컨테이너 */}
-            <div className="relative w-48 h-6 bg-gray-300 rounded-full overflow-hidden flex items-center">
-              {/* 경험치 진행 바 */}
-              <div
-                className="bg-blue-600 h-full transition-all duration-300"
-                style={{ width: `${progressBarWidth}%` }}
-              ></div>
-
-              {/* 현재 경험치 텍스트 (바 안에 중앙) */}
-              <p className="absolute inset-0 flex justify-center items-center text-base font-bold text">
-                {userInfo.exp}
-              </p>
+            <div className="relative">
+              <MenuButton
+                icon="/icon/alertIcon.png"
+                label="Push"
+                onClick={() => {
+                  playModal();
+                  handleButtonClick("push");
+                }}
+                isActive={activeComponent === "push"}
+              />
+              {newNotifications && (
+                <div className="notification-dot absolute top-2 right-2" />
+              )}
             </div>
 
-            {/* 목표 경험치 텍스트 (오른쪽) */}
-            <p className="text-lg font-bold">{expToNextLevel}</p>
+            <MenuButton
+              icon="/icon/gameIcon.png"
+              label="Game"
+              onClick={() => router.push("/gameroom")}
+            />
+
+            <MenuButton
+              icon="/icon/fishticketIcon.png"
+              label="Ticket"
+              onClick={() => {
+                playModal();
+                onOpenFishModal();
+              }}
+            />
+          </div>
+
+          {/* 중앙: 사용자 정보 및 경험치 */}
+          <div className="flex flex-col items-center text-center">
+            <p className="text-sm md:text-lg font-bold">
+              Lv. {userInfo.level} {userInfo.nickname}
+            </p>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 w-full">
+                <p className="text-lg font-bold">exp</p>
+                <div className="relative w-48 h-6 bg-gray-300 rounded-full overflow-hidden flex items-center">
+                  <div
+                    className="bg-blue-600 h-full transition-all duration-300"
+                    style={{ width: `${expProgress}%` }}
+                  ></div>
+                  <p className="absolute inset-0 flex justify-center items-center text-base font-bold">
+                    {userInfo.exp}
+                  </p>
+                </div>
+                <p className="text-lg font-bold">{expToNextLevel}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 중앙: 어항 상태 바 */}
+          <div className="flex flex-col space-y-1 p-1">
+            <StatusBar
+              icon="icon/waterIcon.png"
+              label="어항 수질"
+              value={aquariumData?.waterStatus ?? 0}
+              color="bg-blue-900"
+            />
+            <StatusBar
+              icon="icon/cleanIcon.png"
+              label="청결도"
+              value={aquariumData?.pollutionStatus ?? 0}
+              color="bg-indigo-400"
+            />
+            <StatusBar
+              icon="icon/feedIcon.png"
+              label="포만감"
+              value={aquariumData?.feedStatus ?? 0}
+              color="bg-cyan-400"
+            />
+          </div>
+
+          {/* 우측 메뉴 */}
+          <div className="flex space-x-2 md:space-x-4">
+            <MenuButton
+              icon="/icon/waterIcon.png"
+              label="Water"
+              onClick={() => handleAquariumUpdate("water")}
+            />
+            <MenuButton
+              icon="/icon/cleanIcon.png"
+              label="Clean"
+              onClick={() => {
+                if (isPollutionMaxed) {
+                  alert("👍👍 청결 상태가 이미 최고 상태입니다! 👍👍");
+                  return;
+                }
+                setActiveComponent("clean");
+              }}
+              isActive={activeComponent === "clean"}
+            />
+            <MenuButton
+              icon="/icon/feedIcon.png"
+              label="Feed"
+              onClick={() => handleAquariumUpdate("feed")}
+            />
           </div>
         </div>
-      </div>
-      {/* 중앙: 어항 상태 바 */}
-      <div className="flex flex-col space-y-1 p-1">
-        <StatusBar
-          icon="icon/waterIcon.png"
-          label="어항 수질"
-          value={aquariumData?.waterStatus ?? 0}
-          color="bg-blue-900"
-        />
-        <StatusBar
-          icon="icon/cleanIcon.png"
-          label="청결도"
-          value={aquariumData?.pollutionStatus ?? 0}
-          color="bg-indigo-400"
-        />
-        <StatusBar icon="icon/feedIcon.png" label="포만감" value={aquariumData?.feedStatus ?? 0} color="bg-cyan-400" />{" "}
-      </div>
-
-      {/* 우측 메뉴 */}
-      {/* TODO 청소하는 거 미디어파이프 말고 버튼으로도 처리할 수 있도록 */}
-      <div className="flex space-x-2 md:space-x-4">
-        <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
-        <MenuButton
-          icon="/icon/cleanIcon.png"
-          label="Clean"
-          onClick={() => {
-            if (isPollutionMaxed) {
-              alert("👍👍 청결 상태가 이미 최고 상태입니다! 👍👍");
-              return;
-            }
-            setActiveComponent("clean");
-          }}
-          isActive={activeComponent === "clean"} // 현재 활성화 여부
-        />
-        <MenuButton icon="/icon/feedIcon.png" label="Feed" onClick={() => handleAquariumUpdate("feed")} />
       </div>
     </div>
   );
 }
 
-/* 상태 바 */
-function StatusBar({ icon, label, value, color }: { icon: string; label: string; value: number; color: string }) {
-  const segmentCount = 5; // ✅ 상태 바는 총 5칸
-  const activeSegments = Math.max(0, Math.min(value, segmentCount)); // ✅ 0~5 범위로 유지
+/* 상태 바 컴포넌트 */
+function StatusBar({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  const segmentCount = 5;
+  const activeSegments = Math.max(0, Math.min(value, segmentCount));
 
   return (
     <div className="flex items-center space-x-3">
-      {/* 아이콘 */}
-      <img src={`/${icon}`} alt={label} className="w-[24px] h-[24px] md:w-[24px] md:h-[24px]" />
-
-      {/* 라벨 */}
-      <span className="w-[72px] md:w-[86px] text-xs md:text-base text-black text-center">{label}</span>
-
-      {/* 상태 바 */}
+      <img
+        src={`/${icon}`}
+        alt={label}
+        className="w-[24px] h-[24px] md:w-[24px] md:h-[24px]"
+      />
+      <span className="w-[72px] md:w-[86px] text-xs md:text-base text-black text-center">
+        {label}
+      </span>
       <div className="w-40 md:w-48 h-4 md:h-5 flex border-2 border-black rounded-full overflow-hidden">
         {Array.from({ length: segmentCount }).map((_, index) => (
           <div
             key={index}
-            className={`flex-1 border-l border-black ${index < activeSegments ? color : "bg-white"} ${
-              index === 0 ? "rounded-l-full" : ""
-            } ${index === segmentCount - 1 ? "rounded-r-full" : ""}`}
+            className={`flex-1 border-l border-black ${
+              index < activeSegments ? color : "bg-white"
+            } ${index === 0 ? "rounded-l-full" : ""} ${
+              index === segmentCount - 1 ? "rounded-r-full" : ""
+            }`}
           />
         ))}
       </div>

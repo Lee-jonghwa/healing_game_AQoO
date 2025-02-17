@@ -3,10 +3,10 @@
 import { Settings, X } from "lucide-react";
 import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 import { usePathname, useRouter } from "next/navigation";
-
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
 import { useState } from "react";
+import { getStompClient } from "@/lib/stompclient";
 
 export default function Navbar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -16,17 +16,17 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname(); // 현재 경로 확인
 
-  // ✅ 배경음 & 효과음 개별 ON/OFF 상태 추가
+  // 배경음 & 효과음 개별 ON/OFF 상태 추가
   const [isBgOn, setIsBgOn] = useState(bgMusicVolume > 0);
   const [isSfxOn, setIsSfxOn] = useState(sfxVolume > 0);
 
-  // ✅ 배경음악 ON/OFF 토글
+  // 배경음악 ON/OFF 토글
   const toggleBgMusic = () => {
     setIsBgOn(!isBgOn);
     setBgMusicVolume(isBgOn ? 0 : 50); // OFF 시 0, ON 시 50%
   };
 
-  // ✅ 효과음 ON/OFF 토글
+  // 효과음 ON/OFF 토글
   const toggleSfx = () => {
     setIsSfxOn(!isSfxOn);
     setSfxVolume(isSfxOn ? 0 : 50); // OFF 시 0, ON 시 50%
@@ -35,13 +35,24 @@ export default function Navbar() {
   // 로고 클릭 핸들러
   const handleLogoClick = () => {
     if (pathname.startsWith("/room")) {
+      // 채팅방에서 로고 클릭 시 채팅방 나감 API 호출
+      const pathParts = pathname.split("/");
+      const roomId = pathParts[2] || "";
+      const client = getStompClient();
+      if (client && client.connected && roomId) {
+        client.publish({
+          destination: '/app/chat.leaveRoom',
+          body: JSON.stringify({ roomId, sender: auth?.user?.id || "" }),
+        });
+        console.log("chat.leaveRoom API 호출됨", { roomId, sender: auth?.user?.id || "" });
+      }
       router.replace("/main");
     } else {
       router.push(auth.isAuthenticated ? "/main" : "/");
     }
   };
 
-  // ✅ 로그아웃 함수
+  // 로그아웃 함수
   const handleLogout = async () => {
     try {
       await logout();
@@ -73,11 +84,11 @@ export default function Navbar() {
       {isSettingsOpen && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-          onClick={() => setIsSettingsOpen(false)} // ✅ 바깥 클릭 시 모달 닫기
+          onClick={() => setIsSettingsOpen(false)} // 바깥 클릭 시 모달 닫기
         >
           <div
             className="bg-white p-6 rounded-lg shadow-lg w-80"
-            onClick={(e) => e.stopPropagation()} // ✅ 내부 클릭 시 이벤트 전파 방지
+            onClick={(e) => e.stopPropagation()} // 내부 클릭 시 이벤트 전파 방지
           >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">설정</h2>
