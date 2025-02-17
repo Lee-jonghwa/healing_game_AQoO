@@ -17,8 +17,8 @@ const pageMusicPatterns: Record<string, string> = {
 
 // ✅ 특정한 페이지에 배경음악 설정 (정확한 경로 매칭)
 const pageMusicMap: Record<string, string> = {
+  "/": "/sounds/bgm-3.mp3",
   "/main": "/sounds/bgm-3.mp3", // 메인 페이지
-  // "/shop": "/sounds/shop-bgm.mp3", // 상점 페이지
   default: "/sounds/bgm-3.mp3", // 기본값
 };
 
