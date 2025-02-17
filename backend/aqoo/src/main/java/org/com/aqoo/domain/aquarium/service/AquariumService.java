@@ -6,9 +6,12 @@ import org.com.aqoo.domain.aquarium.entity.Aquarium;
 import org.com.aqoo.domain.aquarium.entity.AquariumBackground;
 import org.com.aqoo.domain.auth.entity.User;
 import org.com.aqoo.domain.fish.entity.Fish;
+import org.com.aqoo.domain.push.dto.PushRequest;
+import org.com.aqoo.domain.push.service.PushService;
 import org.com.aqoo.repository.*;
 import org.com.aqoo.domain.fish.entity.UserFish;
 import org.com.aqoo.util.ImageUrlUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,8 @@ public class AquariumService {
     private final FishRepository fishRepository;
     private final UserRepository userRepository;
     private final ImageUrlUtils imageUtils;
+    @Autowired
+    private PushService pushService;
 
     // 각 상태 시간 주기
     @Value("${game.feed-interval}")
@@ -121,19 +126,19 @@ public class AquariumService {
     }
 
     // 마지막 어항 관리 시간 바탕으로 어항 상태 계산하기
-    // 밥 먹기 : 4시간, 물 갈기 : 24시간, 청소하기 : 12시간
+    // 밥 먹기 : 30분, 물 갈기 : 120분, 청소하기 : 240분
     public static int getElapsedTimeScore(LocalDateTime savedTime, int timeInterval) {
-        long hoursElapsed = Duration.between(savedTime, LocalDateTime.now()).toHours();
+        long minutesElapsed = Duration.between(savedTime, LocalDateTime.now()).toMinutes();
 
-        if (hoursElapsed < timeInterval) {
+        if (minutesElapsed < timeInterval) {
             return 5;
-        } else if (hoursElapsed < 2 * timeInterval) {
+        } else if (minutesElapsed < 2 * timeInterval) {
             return 4;
-        } else if (hoursElapsed < 3 * timeInterval) {
+        } else if (minutesElapsed < 3 * timeInterval) {
             return 3;
-        } else if (hoursElapsed < 4 * timeInterval) {
+        } else if (minutesElapsed < 4 * timeInterval) {
             return 2;
-        } else if (hoursElapsed < 5 * timeInterval) {
+        } else if (minutesElapsed < 5 * timeInterval) {
             return 1;
         } else {
             return 0;
@@ -236,6 +241,7 @@ public class AquariumService {
             return new GetFriendFishResponseDto("티켓이 부족합니다.(필요 티켓수 1개이상)", false);
         }
 
+        String fishImageUrl = targetFish.getImageUrl();
         try {
             // 새로운 물고기 엔티티 생성 (빌더 사용 예시, 필요시 setter 사용)
             Fish newFish = Fish.builder()
@@ -243,7 +249,7 @@ public class AquariumService {
                     // rarity 값 설정: 만약 request.getUserId()가 아니라 targetFish.getRarity()를 원한다면 변경 필요
                     .rarity(request.getUserId())
                     .size(targetFish.getSize())
-                    .imageUrl(targetFish.getImageUrl())
+                    .imageUrl(fishImageUrl)
                     .build();
 
             int fishTypeId = fishRepository.save(newFish).getId();
@@ -259,6 +265,14 @@ public class AquariumService {
             User friend = userRepository.getById(request.getFriendId());
             friend.setFishTicket(friend.getFishTicket()+1);
             userRepository.save(friend);
+
+            //친구 물고기 가져왔음 알람 보내기
+            //친구 요청 알람 보내기
+            String sender = request.getUserId();
+            String recipient = request.getFriendId();
+            PushRequest pushRequest =
+                    new PushRequest(sender, recipient, "FRIEND FISH", imageUtils.toAbsoluteUrl(fishImageUrl));
+            pushService.sendPush(pushRequest);
 
             return new GetFriendFishResponseDto("가져오기 성공", true);
         } catch (Exception e) {

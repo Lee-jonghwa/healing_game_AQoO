@@ -21,7 +21,6 @@ public class PushScheduleService {
     @Autowired
     private PushService pushService;
 
-    // 각 상태 시간 주기
     @Value("${game.feed-interval}")
     private int feedInterval;
 
@@ -47,9 +46,9 @@ public class PushScheduleService {
     }
 
     // 물 상태 알람 (9시간마다 실행)
-    @Scheduled(fixedRate = 9 * 60 * 60 * 1000)
+    @Scheduled(fixedRate = 7 * 60 * 60 * 1000)
     public void checkWaterNotifications() {
-        System.out.println("[물 교체 점검] 9시간마다 실행");
+        System.out.println("[물 교체 점검] 7시간마다 실행");
         processNotificationsForType("WATER");
     }
 
@@ -65,23 +64,26 @@ public class PushScheduleService {
                 default -> -1;
             };
 
+
+            if(level == 5 || level == 4)
+                return;
             processNotification(aquarium.getUserId(), aquarium.getAquariumName(), type, level);
         }
     }
     public static int getLastPassedInterval(LocalDateTime savedTime, int timeInterval) {
-        if(savedTime == null) return -1;
+        if (savedTime == null) return -1;
 
-        long hoursElapsed = Duration.between(savedTime, LocalDateTime.now()).toHours();
+        long minutesElapsed = Duration.between(savedTime, LocalDateTime.now()).toMinutes();
 
-        if (hoursElapsed < timeInterval) {
+        if (minutesElapsed < timeInterval) {
             return 5;
-        } else if (hoursElapsed < 2 * timeInterval) {
+        } else if (minutesElapsed < 2 * timeInterval) {
             return 4;
-        } else if (hoursElapsed < 3 * timeInterval) {
+        } else if (minutesElapsed < 3 * timeInterval) {
             return 3;
-        } else if (hoursElapsed < 4 * timeInterval) {
+        } else if (minutesElapsed < 4 * timeInterval) {
             return 2;
-        } else if (hoursElapsed < 5 * timeInterval) {
+        } else if (minutesElapsed < 5 * timeInterval) {
             return 1;
         } else {
             return 0;
