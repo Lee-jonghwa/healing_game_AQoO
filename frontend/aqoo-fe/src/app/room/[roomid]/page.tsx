@@ -6,6 +6,7 @@ import IntegratedRoom from "./components/IntegratedRoom";
 import { fetchUser } from "@/services/authService";   // <-- import fetchUser
 import { User } from "@/store/authAtom";              // <-- User 인터페이스
 
+
 interface RoomPageProps {
   params: { roomid: string };
 }
@@ -49,6 +50,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   }, [router]);
 
   // // (3) (선택) 채팅방 존재 여부 체크 로직
+
   // useEffect(() => {
   //   async function checkRoomExistence() {
   //     try {

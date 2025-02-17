@@ -1,16 +1,18 @@
 "use client";
 
 import { Settings, X } from "lucide-react";
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useRecoilState } from "recoil";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function Navbar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [bgMusicVolume, setBgMusicVolume] = useState(50); // 배경음악 기본값 50
-  const [sfxVolume, setSfxVolume] = useState(50); // 효과음 기본값 50
+  const [bgMusicVolume, setBgMusicVolume] = useRecoilState(bgMusicVolumeState); // Recoil 상태 관리
+  const [sfxVolume, setSfxVolume] = useRecoilState(sfxVolumeState);
   const { auth, logout } = useAuth();
   const router = useRouter();
 
@@ -59,7 +61,10 @@ export default function Navbar() {
                 min="0"
                 max="100"
                 value={bgMusicVolume}
-                onChange={(e) => setBgMusicVolume(Number(e.target.value))}
+                onChange={(e) => {
+                  const newVolume = Number(e.target.value);
+                  setBgMusicVolume(newVolume);
+                }}
                 className="w-full"
               />
               <span className="text-sm">{bgMusicVolume}%</span>
@@ -78,7 +83,6 @@ export default function Navbar() {
               />
               <span className="text-sm">{sfxVolume}%</span>
             </div>
-
             {/* 로그아웃 버튼 */}
             <button className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600" onClick={handleLogout}>
               로그아웃

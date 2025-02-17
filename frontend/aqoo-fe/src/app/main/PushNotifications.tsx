@@ -4,9 +4,10 @@ import axios, { AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
 
 import Image from "next/image";
-import { Notification } from "@/types";
+import { Notification, Friend } from "@/types";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation"; // ✅ next/navigation에서 import
+import { fetchFriends } from "@/app/main/FriendsList";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -23,6 +24,20 @@ export default function PushNotifications({
   const [error, setError] = useState<string | null>(null);
   const [showFriendRequestModal, setShowFriendRequestModal] = useState(false);
   const [selectedFriendRequest, setSelectedFriendRequest] = useState<string | null>(null);
+
+  
+  const isFriendExists = async (relationshipId : number): Promise<boolean> => {
+    console.log("비교 값 ", relationshipId);
+    if (!auth.user?.id) {
+      console.log("아이디 없음");
+      return false; // ✅ 로그인되지 않은 경우 API 호출 안함
+    }
+      
+    const friends = await fetchFriends(auth.user.id); // 친구 목록 가져오기
+    if (!friends) return false; // API 호출 실패 시 false 반환
+  
+    return friends.some((friend : Friend) => friend.id === relationshipId); // 특정 ID가 존재하는지 확인
+  };
 
   const refreshNotifications = () => {
     if (!auth.user?.id) return; // ✅ 로그인되지 않은 경우 API 호출 안함
@@ -92,13 +107,18 @@ export default function PushNotifications({
             <NotificationItem
               key={notif.id}
               notification={notif}
-              onFriendRequestClick={
-                notif.type === "FRIEND REQUEST"
-                  ? () => {
+              onFriendRequestClick={notif.type === "FRIEND REQUEST" 
+                ? async () => {
+                    const isFriend = await isFriendExists(Number(notif.data)); // isFriendExists가 Promise<boolean> 반환
+                    
+                    if (!isFriend) {
                       setSelectedFriendRequest(notif.data || null);
                       setShowFriendRequestModal(true);
+                    } else {
+                      alert("이미 친구입니다."); // isFriend가 false일 때 알림 창 표시
                     }
-                  : undefined
+                  }
+                : undefined
               }
               refreshNotifications={refreshNotifications} // 알림 목록을 다시 불러오는 함수 전달
             />

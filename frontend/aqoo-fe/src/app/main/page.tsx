@@ -1,27 +1,26 @@
-"use client";
+'use client';
 
-import "@/lib/firebase"; // Firebase 초기화
+import '@/lib/firebase'; // Firebase 초기화
 
-import { AquariumData, Notification, UserInfo } from "@/types";
-import React, { useEffect, useRef, useState } from "react";
-import axios, { AxiosResponse } from "axios";
-import { increaseFishTicket, increaseUserExp } from "@/services/userService";
+import { increaseFishTicket, increaseUserExp } from '@/services/userService';
+import { AquariumData, Notification, UserInfo } from '@/types';
+import axios, { AxiosResponse } from 'axios';
+import { useEffect, useState } from 'react';
 
-import BottomMenuBar from "@/app/main/BottomMenuBar";
-import CleanComponent from "@/app/main/CleanComponent";
-import FirstLoginModal from "@/app/main/components/FirstLoginModal";
-import FishTicketModal from "@/components/FishTicketModal"; // 물고기 뽑기 모달
-import FriendsList from "@/app/main/FriendsList";
-import Image from "next/image";
-import KickedModal from "@/app/main/components/KickedModal";
-import LevelUpModal from "@/components/LevelUpModal"; // 레벨업 모달
-import Link from "next/link";
-import NotificationComponent from "@/components/NotificationComponent";
-import PushNotifications from "@/app/main/PushNotifications";
-import axiosInstance from "@/services/axiosInstance";
-import { gsap } from "gsap";
+import BottomMenuBar from '@/app/main/BottomMenuBar';
+import CleanComponent from '@/app/main/CleanComponent';
+import FirstLoginModal from '@/app/main/components/FirstLoginModal';
+import KickedModal from '@/app/main/components/KickedModal';
+import FriendsList from '@/app/main/FriendsList';
+import PushNotifications from '@/app/main/PushNotifications';
+import Fish from '@/components/Fish';
+import FishTicketModal from '@/components/FishTicketModal'; // 물고기 뽑기 모달
+import LevelUpModal from '@/components/LevelUpModal'; // 레벨업 모달
+import NotificationComponent from '@/components/NotificationComponent';
+import { useAuth } from '@/hooks/useAuth'; // 로그인 정보 가져오기
+import { useSFX } from '@/hooks/useSFX'; // ✅ useSFX 가져오기
+import axiosInstance from '@/services/axiosInstance';
 import { useRouter } from 'next/navigation';
-import { useAuth } from "@/hooks/useAuth"; // 로그인 정보 가져오기
 
 // 🔹 물고기 데이터 타입 정의
 interface FishData {
@@ -30,20 +29,30 @@ interface FishData {
   fishTypeId: number;
   fishName: string;
   fishImage: string;
-  size: "XS" | "S" | "M" | "L" | "XL";
+  size: 'XS' | 'S' | 'M' | 'L' | 'XL';
 }
 
 export default function MainPage() {
   const { auth } = useAuth(); // 로그인한 유저 정보 가져오기
   const router = useRouter();
-  const [background, setBackground] = useState("/background-1.png");
+  const [background, setBackground] = useState('/background-1.png');
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
-  const [levelUpInfo, setLevelUpInfo] = useState<{ level: number; expProgress: number } | null>(null);
-  const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(null);
-  const [firstLoginModal, setFirstLoginModal] = useState<{ status: boolean } | null>(null);
+  const [levelUpInfo, setLevelUpInfo] = useState<{
+    level: number;
+    expProgress: number;
+  } | null>(null);
+  const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(
+    null
+  );
+  const [firstLoginModal, setFirstLoginModal] = useState<{
+    status: boolean;
+  } | null>(null);
+
+  const { play: playPush } = useSFX('/sounds/push.mp3');
+  const { play: playLevelUp } = useSFX('/sounds/levelupRank.mp3');
 
   //알람 처리
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -54,32 +63,64 @@ export default function MainPage() {
   // 모달 상태 중앙 관리
   const [showFishTicketModal, setShowFishTicketModal] = useState(false);
 
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+  const API_BASE_URL = 'https://i12e203.p.ssafy.io/api/v1';
 
   // Electron 환경 감지: navigator.userAgent에 "electron" 문자열이 포함되어 있으면 Electron으로 판단
   const isElectron =
-  typeof navigator !== 'undefined' &&
-  navigator.userAgent.toLowerCase().includes('electron');
+    typeof navigator !== 'undefined' &&
+    navigator.userAgent.toLowerCase().includes('electron');
+
+  const handleToggleOverlay = async () => {
+    if (!auth.user?.id) {
+      console.warn('사용자 정보가 없습니다.');
+      return;
+    }
+
+    try {
+      // 사용자 정보를 API 호출로 가져옵니다.
+      const response: AxiosResponse = await axios.get(
+        `${API_BASE_URL}/users/${auth.user.id}`,
+        { withCredentials: true }
+      );
+
+      // API 응답에서 mainFishImage 값을 추출합니다.
+      const fishPath = response.data.mainFishImage;
+      if (!fishPath) {
+        console.warn('API 응답에 mainFishImage 값이 없습니다.');
+        return;
+      }
+      console.log('[MainPage] 오버레이 토글 - fishPath:', fishPath);
+
+      // electronAPI.toggleOverlay를 통해 오버레이를 토글합니다.
+      (window as any).electronAPI.toggleOverlay(fishPath);
+    } catch (error) {
+      console.error('사용자 정보를 불러오는 중 오류 발생:', error);
+    }
+  };
 
   useEffect(() => {
-    if ("serviceWorker" in navigator) {
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register("/firebase-messaging-sw.js")
+        .register('/firebase-messaging-sw.js')
         .then((registration: ServiceWorkerRegistration) => {
-          console.log("✅ 서비스 워커 등록 완료:", registration);
+          console.log('✅ 서비스 워커 등록 완료:', registration);
         })
-        .catch((err: unknown) => console.error("🔥 서비스 워커 등록 실패:", err));
+        .catch((err: unknown) =>
+          console.error('🔥 서비스 워커 등록 실패:', err)
+        );
     }
 
     const fetchIsFirstLogin = async () => {
       if (!auth.user) return; // ✅ auth.user가 없으면 실행 X
 
       try {
-        const response = await axios.get<boolean>(`${API_BASE_URL}/users/isFirst/${auth.user.id}`);
-        console.log("첫 로그인인지 아닌지:", response.data);
+        const response = await axios.get<boolean>(
+          `${API_BASE_URL}/users/isFirst/${auth.user.id}`
+        );
+        console.log('첫 로그인인지 아닌지:', response.data);
         setFirstLoginStatus(response.data); // ✅ true/false 할당
       } catch (error) {
-        console.error("API 호출 중 오류 발생:", error);
+        console.error('API 호출 중 오류 발생:', error);
       }
     };
 
@@ -94,7 +135,7 @@ export default function MainPage() {
 
   useEffect(() => {
     if (levelUpInfo) {
-      console.log("🔔 levelUpInfo가 변경됨!", levelUpInfo);
+      console.log('🔔 levelUpInfo가 변경됨!', levelUpInfo);
     }
   }, [levelUpInfo]);
 
@@ -103,11 +144,13 @@ export default function MainPage() {
     if (!userInfo?.mainAquarium) return;
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`);
-      console.log("✅ 어항 상태 갱신:", response.data);
+      const response = await axios.get(
+        `${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`
+      );
+      console.log('✅ 어항 상태 갱신:', response.data);
       setAquariumData(response.data);
     } catch (error) {
-      console.error("❌ 어항 상태 불러오기 실패", error);
+      console.error('❌ 어항 상태 불러오기 실패', error);
     }
   };
 
@@ -121,12 +164,17 @@ export default function MainPage() {
     const updatedExpData = await increaseUserExp(auth.user.id, earnedExp);
 
     if (updatedExpData) {
-      console.log("✅ 경험치 증가 API 응답:", updatedExpData);
+      console.log('✅ 경험치 증가 API 응답:', updatedExpData);
 
       // 레벨업 확인
       if (updatedExpData.userLevel > prevLevel) {
-        console.log("🎉 레벨업 발생! 새로운 레벨:", updatedExpData.userLevel);
-        setLevelUpInfo({ level: updatedExpData.userLevel, expProgress: updatedExpData.expProgress }); // ✅ 물고기 티켓 증가 API 호출
+        console.log('🎉 레벨업 발생! 새로운 레벨:', updatedExpData.userLevel);
+        setLevelUpInfo({
+          level: updatedExpData.userLevel,
+          expProgress: updatedExpData.expProgress,
+        }); // ✅ 물고기 티켓 증가 API 호출
+
+        playLevelUp();
 
         const updatedFishTicket = await increaseFishTicket(auth.user.id);
         if (updatedFishTicket !== null) {
@@ -146,10 +194,10 @@ export default function MainPage() {
 
     try {
       const response = await axios.get(`${API_BASE_URL}/users/${auth.user.id}`);
-      console.log("✅ 유저 정보 갱신 완료:", response.data);
+      console.log('✅ 유저 정보 갱신 완료:', response.data);
       setUserInfo(response.data);
     } catch (error) {
-      console.error("❌ 유저 정보 불러오기 실패", error);
+      console.error('❌ 유저 정보 불러오기 실패', error);
     }
   };
 
@@ -159,11 +207,11 @@ export default function MainPage() {
     axios
       .get(`${API_BASE_URL}/users/${auth.user.id}`)
       .then((response: AxiosResponse<UserInfo>) => {
-        console.log("✅ 유저 정보:", response.data);
+        console.log('✅ 유저 정보:', response.data);
         setUserInfo(response.data);
       })
       .catch((error) => {
-        console.error("❌ 유저 정보 불러오기 실패", error);
+        console.error('❌ 유저 정보 불러오기 실패', error);
       });
   }, [auth.user?.id]);
 
@@ -174,31 +222,31 @@ export default function MainPage() {
     axiosInstance
       .get(`aquariums/fish/${userInfo.mainAquarium}`, { withCredentials: true })
       .then((response: AxiosResponse<FishData[] | { message: string }>) => {
-        console.log("🐠 내 물고기 목록:", response.data);
+        console.log('🐠 내 물고기 목록:', response.data);
         if (Array.isArray(response.data)) {
           setFishes(response.data);
         } else {
-          console.warn("⚠️ 물고기 데이터가 없습니다.");
+          console.warn('⚠️ 물고기 데이터가 없습니다.');
           setFishes([]);
         }
       })
       .catch((error) => {
-        console.error("❌ 물고기 데이터 불러오기 실패", error);
+        console.error('❌ 물고기 데이터 불러오기 실패', error);
       });
   }, [auth.user?.id, userInfo?.mainAquarium]);
 
   useEffect(() => {
     if (!userInfo?.mainAquarium) return;
 
-    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+    console.log('🐠 메인 아쿠아리움 ID:', userInfo.mainAquarium);
 
     axios
       .get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`)
       .then((res: AxiosResponse<AquariumData>) => {
-        console.log("✅ 어항 상세 정보:", res.data);
+        console.log('✅ 어항 상세 정보:', res.data);
         setAquariumData(res.data);
 
-        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
+        const BACKGROUND_BASE_URL = 'https://i12e203.p.ssafy.io/images';
         // TODO  배경화면 제대로 불러오기 로직 추가
         // const savedBg = localStorage.getItem("background");
 
@@ -208,7 +256,7 @@ export default function MainPage() {
           setBackground(savedBg);
         }
       })
-      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+      .catch((err) => console.error('❌ 어항 정보 불러오기 실패', err));
   }, [userInfo]);
 
   useEffect(() => {
@@ -219,74 +267,82 @@ export default function MainPage() {
       axios
         .get(`${API_BASE_URL}/notification/${auth.user.id}`)
         .then((response: AxiosResponse<Notification[]>) => {
-          console.log("🔔 알림 데이터:", response.data);
+          console.log('🔔 알림 데이터:', response.data);
           setNotifications(response.data);
 
           // ✅ 안 읽은 알림들만 읽음 처리 API 호출
-          const unreadNotifications = response.data.filter((notif) => notif.status === false);
+          const unreadNotifications = response.data.filter(
+            (notif) => notif.status === false
+          );
 
           if (unreadNotifications.length > 0) {
-            console.log("안 읽은 알람 있음");
+            console.log('안 읽은 알람 있음');
             setNewNotifications(true);
           } else {
-            console.log("안 읽은 알람 없음");
+            console.log('안 읽은 알람 없음');
             setNewNotifications(false);
           }
         })
         .catch((error) => {
-          console.error("❌ 알림 불러오기 실패", error);
-          setError("알림을 불러오는데 실패했습니다.");
+          console.error('❌ 알림 불러오기 실패', error);
+          setError('알림을 불러오는데 실패했습니다.');
         })
         .finally(() => setLoading(false));
     };
     checkUnreadNotifications();
   }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
 
+  useEffect(() => {
+    if (newNotifications) {
+      playPush(); // ✅ 푸시 알림 효과음 재생
+    }
+  }, [newNotifications]);
+
   if (!userInfo)
     return (
-      <div className="absolute inset-0 bg-cover bg-center w-full h-full text-white text-xl text-center flex flex-col items-center justify-center before:absolute before:inset-0 before:bg-white/30 bg-[url(/background-1.png)]">
+      <div className='absolute inset-0 bg-cover bg-center w-full h-full text-white text-xl text-center flex flex-col items-center justify-center before:absolute before:inset-0 before:bg-white/30 bg-[url(/background-1.png)]'>
         <svg
-          aria-hidden="true"
-          className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 mb-4"
-          viewBox="0 0 100 101"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden='true'
+          className='w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 mb-4'
+          viewBox='0 0 100 101'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
         >
           <path
-            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-            fill="currentColor"
+            d='M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z'
+            fill='currentColor'
           />
           <path
-            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-            fill="currentFill"
+            d='M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z'
+            fill='currentFill'
           />
         </svg>
         유저 정보 불러오는 중...
       </div>
     );
   if (!aquariumData) return;
-  <div className="absolute inset-0 bg-cover bg-center w-full h-full text-white text-xl text-center flex flex-col items-center justify-center before:absolute before:inset-0 before:bg-white/30 bg-[url(/background-1.png)]">
+  <div className='absolute inset-0 bg-cover bg-center w-full h-full text-white text-xl text-center flex flex-col items-center justify-center before:absolute before:inset-0 before:bg-white/30 bg-[url(/background-1.png)]'>
     <svg
-      aria-hidden="true"
-      className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 mb-4"
-      viewBox="0 0 100 101"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden='true'
+      className='w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 mb-4'
+      viewBox='0 0 100 101'
+      fill='none'
+      xmlns='http://www.w3.org/2000/svg'
     >
       <path
-        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-        fill="currentColor"
+        d='M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z'
+        fill='currentColor'
       />
       <path
-        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-        fill="currentFill"
+        d='M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z'
+        fill='currentFill'
       />
     </svg>
     아쿠아리움 정보 로딩 중...
   </div>;
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className='relative w-full h-screen overflow-hidden'>
       <title>AQoO</title>
 
       {/* ✅ 추방 모달 추가 (URL에 status=kicked가 있으면 모달이 표시됩니다) */}
@@ -294,7 +350,7 @@ export default function MainPage() {
 
       {/* 🖼 배경 이미지 */}
       <div
-        className="absolute inset-0 bg-cover bg-center w-full h-full before:absolute before:inset-0 before:bg-white/30"
+        className='absolute inset-0 bg-cover bg-center w-full h-full before:absolute before:inset-0 before:bg-white/30'
         style={{ backgroundImage: `url(${background})` }}
       ></div>
 
@@ -316,8 +372,8 @@ export default function MainPage() {
       />
 
       {/* ✅ CleanComponent를 BottomMenuBar 위에 정확하게 배치 */}
-      {activeComponent === "clean" && (
-        <div className="absolute bottom-[130px] right-[100px] z-50">
+      {activeComponent === 'clean' && (
+        <div className='absolute bottom-[130px] right-[100px] z-50'>
           <CleanComponent
             onClose={() => setActiveComponent(null)}
             onCleanSuccess={refreshAquariumData}
@@ -328,16 +384,22 @@ export default function MainPage() {
       )}
 
       {/* ✅ FriendsList도 같은 방식 적용 */}
-      {activeComponent === "friends" && (
-        <div className="absolute bottom-[130px] left-[100px] z-50">
-          <FriendsList onClose={() => setActiveComponent(null)} userId={userInfo.id} />
+      {activeComponent === 'friends' && (
+        <div className='absolute bottom-[130px] left-[100px] z-50'>
+          <FriendsList
+            onClose={() => setActiveComponent(null)}
+            userId={userInfo.id}
+          />
         </div>
       )}
 
       {/* ✅ PushNotifications도 같은 방식 적용 */}
-      {activeComponent === "push" && (
-        <div className="absolute bottom-[130px] left-[100px] z-50">
-          <PushNotifications onClose={() => setActiveComponent(null)} setNewNotifications={setNewNotifications} />
+      {activeComponent === 'push' && (
+        <div className='absolute bottom-[130px] left-[100px] z-50'>
+          <PushNotifications
+            onClose={() => setActiveComponent(null)}
+            setNewNotifications={setNewNotifications}
+          />
         </div>
       )}
       <NotificationComponent
@@ -347,7 +409,7 @@ export default function MainPage() {
 
       {/* 📌 레벨업 모달 */}
       {levelUpInfo && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
           <LevelUpModal
             level={levelUpInfo.level}
             onClose={() => setLevelUpInfo(null)}
@@ -378,129 +440,15 @@ export default function MainPage() {
         />
       )}
 
-      {/* Electron 환경일 때만 "Electron 전용 페이지 이동" 버튼 표시 */}
+      {/* Electron 환경일 때만 오버레이 온/오프 버튼 표시 */}
       {isElectron && (
         <button
-          onClick={() => router.push('/electron-only-page')}
-          className="absolute top-96 left-50 mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={handleToggleOverlay}
+          className='absolute top-96 left-50 mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
         >
-          Electron 전용 페이지 이동
+          오버레이 온/오프
         </button>
       )}
     </div>
-  );
-}
-
-function Fish({ fish }: { fish: FishData }) {
-  const fishRef = useRef<HTMLImageElement | null>(null);
-  const directionRef = useRef(1);
-
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  const handleClick = () => {
-    if (!fishRef.current) return;
-    gsap.to(fishRef.current, {
-      scale: 0.9,
-      duration: 0.15,
-      ease: "power1.inOut",
-      yoyo: true,
-      repeat: 1,
-    });
-  };
-
-  useEffect(() => {
-    if (!fishRef.current) return;
-
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-
-    const safeMargin = 80;
-    const bottomMargin = 100;
-    const upperLimit = windowHeight * 0.2;
-
-    const randomStartX = Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
-    const randomStartY = Math.random() * (windowHeight - bottomMargin - 50) + 50;
-
-    gsap.set(fishRef.current, {
-      x: randomStartX,
-      y: randomStartY,
-      scaleX: -1,
-    });
-
-    const moveFish = () => {
-      if (!fishRef.current) return;
-      const randomSpeed = Math.random() * 7 + 9;
-      const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
-      let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
-
-      const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
-      let moveDistanceY = windowHeight * (0.1 + Math.random() * 0.15) * (Math.random() > 0.65 ? 1 : -1);
-
-      if (currentY < upperLimit) {
-        moveDistanceY = windowHeight * (0.1 + Math.random() * 0.2);
-      }
-
-      let newX = parseFloat(gsap.getProperty(fishRef.current, "x") as string) + moveDistanceX;
-      let newY = currentY + moveDistanceY;
-
-      if (newX < safeMargin) {
-        newX = safeMargin + Math.random() * 50;
-        moveDistanceX = Math.abs(moveDistanceX);
-      }
-      if (newX > windowWidth - safeMargin) {
-        newX = windowWidth - safeMargin - Math.random() * 50;
-        moveDistanceX = -Math.abs(moveDistanceX);
-      }
-      if (newY < 50) newY = 50 + Math.random() * 30;
-      if (newY > windowHeight - bottomMargin) newY = windowHeight - bottomMargin - Math.random() * 30;
-
-      directionRef.current = moveDistanceX > 0 ? -1 : 1;
-
-      gsap.to(fishRef.current, {
-        x: newX,
-        y: newY,
-        scaleX: directionRef.current,
-        duration: randomSpeed,
-        ease: "power2.inOut",
-        onUpdate: () => {
-          const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
-          directionRef.current = newX > prevX ? -1 : 1;
-          gsap.set(fishRef.current, { scaleX: directionRef.current });
-        },
-        onComplete: moveFish,
-      });
-    };
-
-    moveFish();
-  }, []);
-
-  const customLoader = ({ src }: { src: string }) => src; // 이미지 url 변함 없이
-
-  const getSize = (size: "XS" | "S" | "M" | "L" | "XL") => {
-    const sizeMap = {
-      XS: { width: 40, height: 40 },
-      S: { width: 70, height: 70 },
-      M: { width: 110, height: 110 },
-      L: { width: 170, height: 170 },
-      XL: { width: 200, height: 200 },
-    };
-    return sizeMap[size] || sizeMap.M; // 기본값 M
-  };
-
-  const { width, height } = getSize(fish.size);
-
-  return (
-    <Image
-      loader={customLoader}
-      ref={fishRef}
-      src={fish.fishImage}
-      alt={fish.fishName.toString()}
-      width={width}
-      height={height}
-      className="absolute  transform-gpu"
-      onClick={handleClick}
-      layout="intrinsic"
-      unoptimized
-    />
   );
 }

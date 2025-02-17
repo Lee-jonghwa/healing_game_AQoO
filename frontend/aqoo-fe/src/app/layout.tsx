@@ -3,6 +3,7 @@
 
 import "@/styles/globals.css"; // Tailwind를 적용하려면 반드시 추가해야 함!
 
+import BackgroundMusic from "@/components/BackgroundMusic";
 import Navbar from "@/components/NavBar";
 import RecoilProvider from "@/providers/RecoilProvider";
 import { usePathname } from "next/navigation";
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body className="w-full h-screen overflow-hidden">
         <RecoilProvider>
+          <BackgroundMusic /> {/* 배경 음악 실행 */}
           {/* ✅ 특정 페이지에서만 네비게이션을 렌더링 */}
           {!hiddenNavPaths.includes(pathname) && <Navbar />}
           <div className="w-full h-full">{children}</div>{" "}

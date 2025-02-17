@@ -325,7 +325,7 @@ export default function CleanComponent({
       console.log("✅ 어항 청소 성공");
       setMotionCount(0);
       // ✅ 2. 경험치 10 증가 및 레벨업 감지
-      await handleIncreaseExp(10);
+      await handleIncreaseExp(20);
 
       // ✅ 3. 어항 상태 & 유저 정보 업데이트 요청
       onCleanSuccess();
