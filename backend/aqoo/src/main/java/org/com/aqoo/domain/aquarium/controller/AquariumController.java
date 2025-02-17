@@ -87,7 +87,7 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("friend/{friend-id}")
+    @GetMapping("friend/{friendId}")
     public ResponseEntity<?> getAquariumFish(@PathVariable("friendId") String friendId) {
 
         try{
