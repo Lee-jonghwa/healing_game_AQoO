@@ -261,7 +261,7 @@ function EditProfilePage() {
       }}
       className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
     >
-      <div className="absolute top-0 left-0 m-2">
+      <div className="absolute top-4 left-4">
         <Buttons text="BACK" />
       </div>
 
@@ -296,7 +296,7 @@ function EditProfilePage() {
         </div>
 
         <div className="flex-1">
-          <div className="bg-white p-8 rounded-2xl shadow-lg w-[450px]">
+          <div className="bg-white p-8 rounded-2xl w-[450px] h-[70vh] items-center justify-center">
             <h2 className="text-center text-3xl mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}

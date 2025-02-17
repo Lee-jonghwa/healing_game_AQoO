@@ -34,7 +34,7 @@ export default function ModalButton({
       disabled={isLoading}
       className={`${
         isSpecial
-          ? "m-1 p-1 min-w-[200px] h-[40px] px-2 flex items-center justify-center rounded-xl border border-[#040303] bg-white  [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] text-[#070707] text-center font-[400] text-xl"
+          ? "m-1 p-1 min-w-[240px] min-h-[40px] px-2 flex items-center justify-center rounded-xl border border-[#040303] bg-white  [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] text-[#070707] text-center font-[400] text-xl"
           : "w-full flex items-center justify-center gap-2 p-3 rounded-lg transition"
       } ${colorClasses[color]} ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
     >

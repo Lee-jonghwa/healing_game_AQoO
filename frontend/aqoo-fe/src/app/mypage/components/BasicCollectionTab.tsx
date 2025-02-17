@@ -44,11 +44,11 @@ export default function BasicCollectionTab({ allFishList = [], userFishList = []
     <div
       id="one-panel"
       className="
-      w-full h-screen gap-4
-      pb-[50px] sm:pb-[120px] md:pb-[120px] lg:pb-[120px]
+      w-full h-screen gap-3
+      pl-1 pr-1
       grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
       flex flex-wrap
-      overflow-y-scroll max-h-[500px]
+      overflow-y-scroll max-h-[520px]
       scrollbar-none
       "
       style={{
