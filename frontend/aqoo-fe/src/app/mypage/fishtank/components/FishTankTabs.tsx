@@ -227,19 +227,19 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
         />
       ) : (
         <button
-          onClick={() => handleTabClick(idx)}
-          className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] 
-            ${selectedIndex === idx ? "bg-[#A3D8FF]" : "hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"}`}  // 선택된 탭에는 호버 효과 제거
-          title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
-        >
-          {/* 편집 아이콘을 이름 왼쪽에 배치 (간격 유지) */}
-          {selectedIndex === idx && !editingIndex && (
-            <span className="mr-1 text-[#1c5e8d] hover:text-[#070707] cursor-pointer text-sm">
-              ✎
-            </span>
-          )}
-          {tab.name}
-        </button>
+  onClick={() => handleTabClick(idx)}
+  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro]
+    ${selectedIndex === idx ? "!bg-[#A3D8FF]" : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"}`}
+  title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
+>
+  {selectedIndex === idx && !editingIndex && (
+    <span className="mr-1 text-[#1c5e8d] hover:text-[#070707] cursor-pointer text-sm">
+      ✎
+    </span>
+  )}
+  {tab.name}
+</button>
+
       )}
 
       {/* 삭제 버튼을 탭의 상단 오른쪽에 조금 안쪽으로 배치 */}
