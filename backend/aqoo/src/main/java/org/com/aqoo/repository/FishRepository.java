@@ -10,7 +10,11 @@ import java.util.List;
 
 @Repository
 public interface FishRepository extends JpaRepository<Fish, Integer> {
-    @Query("SELECT f FROM Fish f WHERE LOWER(f.rarity) IN ('common', 'rare', 'epic')")
+    @Query("SELECT f FROM Fish f WHERE LOWER(f.rarity) IN ('common', 'rare', 'epic') " +
+            "ORDER BY CASE LOWER(f.rarity) " +
+            "WHEN 'common' THEN 1 " +
+            "WHEN 'rare' THEN 2 " +
+            "WHEN 'epic' THEN 3 END")
     List<Fish> findByRarityInIgnoreCase();
 
     @Query("SELECT f FROM Fish f WHERE f.id IN :ids AND LOWER(f.rarity) IN ('common', 'rare', 'epic')")
