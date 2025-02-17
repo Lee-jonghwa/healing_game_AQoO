@@ -161,7 +161,7 @@ public class FishService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다."));
 
-        int curFishTicket = user.getFishTicket() + 1;
+        int curFishTicket = user.getFishTicket() + 3;
         user.setFishTicket(curFishTicket);
         userRepository.save(user);
 
