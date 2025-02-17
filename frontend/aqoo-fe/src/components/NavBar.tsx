@@ -29,15 +29,19 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="absolute top-4 left-4 z-10 flex justify-between w-full px-10">
+      <nav className="absolute top-4 left-4 z-50 flex justify-between w-full px-10 pointer-events-none">
+        {/* <nav className="absolute top-4 left-4 z-10 flex justify-between w-full px-10"> */}
         {/* 🏠 로고 */}
         <Link href={auth.isAuthenticated ? "/main" : "/"}>
-          <span className="text-white text-5xl hover:text-yellow-300">AQoO</span>
+          <span className="pointer-events-auto text-white text-5xl hover:text-yellow-300">AQoO</span>
         </Link>
 
         {/* ⚙️ 설정 버튼 */}
-        <button className="p-2 bg-white/30 rounded-full hover:bg-white/50" onClick={() => setIsSettingsOpen(true)}>
-          <Settings className="w-6 h-6 text-white" />
+        <button
+          className="pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50"
+          onClick={() => setIsSettingsOpen(true)}
+        >
+          <Settings className="w-6 h-6 text-fwhite" />
         </button>
       </nav>
 

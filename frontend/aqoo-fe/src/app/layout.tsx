@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "/user/login",
     "/register",
     "/some-other-page",
-    "/mypage",
+    // "/mypage",
     "/mypage/fishtank",
     "/mypage/edit",
   ]; // 네비게이션 숨길 경로

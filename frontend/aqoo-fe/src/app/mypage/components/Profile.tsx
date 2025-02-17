@@ -89,7 +89,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
         {/* 초상화 컨테이너 */}
         <div
           className="
-            max-w-[160px] md:max-w-[150px] lg:max-w-[170px]
+            w-[160px] md:max-w-[150px] lg:max-w-[170px]
             aspect-square flex-shrink-0
             flex items-center justify-center
             rounded-xl border border-black bg-white
