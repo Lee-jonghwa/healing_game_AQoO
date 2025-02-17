@@ -33,7 +33,9 @@ export default function BottomMenuBar({
   const router = useRouter();
 
   const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
-  const { play: playFeed } = useSFX("/sounds/gaugeeffect-02.mp3");
+  const { play: playSuccess } = useSFX("/sounds/gaugeeffect-02.mp3");
+  const { play: playWater } = useSFX("/sounds/waterEffect.mp3"); // ✅ 물 갈이 소리
+  const { play: playFeed } = useSFX("/sounds/feedEffect.mp3"); // ✅ 먹이 주는 소리
 
   // ✅ 버튼이 비활성화되는 상태 체크
   const isWaterMaxed = aquariumData?.waterStatus === 5;
@@ -70,6 +72,12 @@ export default function BottomMenuBar({
         .then(() => {
           console.log(`✅ 어항 ${type === "water" ? "수질 변경" : "먹이 상태 변경"} 성공`);
 
+          if (type === "water") {
+            playWater(); // 물 갈이 소리 재생
+          } else {
+            playFeed(); // 먹이 주는 소리 재생
+          }
+
           alert(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`);
         });
 
@@ -79,7 +87,7 @@ export default function BottomMenuBar({
 
       // 3️⃣ 어항 상태 & 유저 정보 다시 불러오기
       refreshAquariumData();
-      playFeed();
+      playSuccess();
     } catch (error) {
       console.error(`❌ 어항 ${type} 변경 실패`, error);
     }
