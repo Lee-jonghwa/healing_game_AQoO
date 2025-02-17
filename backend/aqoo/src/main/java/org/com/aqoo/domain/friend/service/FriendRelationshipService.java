@@ -203,5 +203,24 @@ public class FriendRelationshipService {
         return existingRelationship;
     }
 
+    public String getNonFriendUsers(String userId) {
+        List<User> list = userRepository.findNonFriends(userId);
+        int size = list.size();
+        if (size == 0) {
+            // 친구가 없는 경우 처리 (예: null 반환 또는 예외 처리)
+            return null;
+        }
+        Random random = new Random();
+        int randomIndex = random.nextInt(size); // 0 이상 size 미만의 랜덤 인덱스
+        User randomUser = list.get(randomIndex);
+        while(!randomUser.getStatus()&& size >= 0){
+            size--;
+            randomIndex = random.nextInt(size); // 0 이상 size 미만의 랜덤 인덱스
+            randomUser = list.get(randomIndex);
+        }
+        return randomUser.getId();
+    }
+
+
 
 }

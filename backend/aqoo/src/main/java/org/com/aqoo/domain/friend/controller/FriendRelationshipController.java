@@ -99,4 +99,15 @@ public class FriendRelationshipController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "사용자 검색에 실패했습니다."));
         }
     }
+    @GetMapping("/find-non-friend/{userId}")
+    public ResponseEntity<?> findNotFriend(@PathVariable String userId){
+        try{
+            return ResponseEntity.ok(friendRelationshipService.getNonFriendUsers(userId));
+        }catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "유저 검색에 실패했습니다."));
+        }
+    }
+
+
 }

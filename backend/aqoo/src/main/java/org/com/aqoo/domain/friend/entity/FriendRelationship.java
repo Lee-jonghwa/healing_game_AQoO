@@ -21,7 +21,7 @@ public class FriendRelationship {
     @Column(name = "friend2_id", length = 50)
     private String friend2Id;
 
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private String status;
 
     @PrePersist
