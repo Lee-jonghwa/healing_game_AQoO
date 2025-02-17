@@ -170,11 +170,12 @@ public class FishService {
 
     @Transactional
     public Fish saveFishType(FishTypeRequest request) {
-        Fish fishType = new Fish();
-        fishType.setFishName(request.getFishName());
-        fishType.setImageUrl(request.getImageUrl());
-        fishType.setRarity(request.getRarity());
-        fishType.setSize(request.getSize());
+        Fish fishType = Fish.builder()
+                .fishName(request.getFishName())
+                .imageUrl(request.getImageUrl())
+                .rarity(request.getRarity())
+                .size(request.getSize())
+                .build();
 
         // EC2 이미지 저장 로직
         // 예: "/var/www/fish-images" 경로로 파일 복사
@@ -182,6 +183,7 @@ public class FishService {
         fishRepository.save(fishType);
         return fishType;
     }
+
 
     public String paintFish(String userId, String fishName, String size, MultipartFile imageFile) throws Exception {
 

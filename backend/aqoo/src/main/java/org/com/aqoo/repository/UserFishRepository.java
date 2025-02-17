@@ -44,4 +44,10 @@ public interface UserFishRepository extends JpaRepository<UserFish, Integer> {
             @Param("userId") String userId,
             @Param("aquariumId") Integer aquariumId
     );
+
+    @Query("SELECT CASE WHEN COUNT(uf) > 0 THEN true ELSE false END " +
+            "FROM UserFish uf JOIN Fish ft ON uf.fishTypeId = ft.id " +
+            "WHERE uf.userId = :userId AND ft.fishName = :fishName")
+    boolean existsByUserIdAndFishName(@Param("userId") String userId,
+                                      @Param("fishName") String fishName);
 }

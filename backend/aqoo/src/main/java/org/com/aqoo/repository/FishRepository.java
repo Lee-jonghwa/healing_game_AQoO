@@ -21,4 +21,5 @@ public interface FishRepository extends JpaRepository<Fish, Integer> {
     List<Fish> findByRarity(String rarity);
 
     boolean existsByImageUrl(String imageUrl);
+
 }

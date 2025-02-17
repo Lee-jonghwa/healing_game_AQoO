@@ -222,6 +222,40 @@ public class AquariumService {
         return new FishResponseDto("성공", "물고기가 어항에서 제거되었습니다.");
     }
 
+    @Transactional
+    public GetFriendFishResponseDto getFriendFish(GetFriendFishRequestDto request) {
+        // 대상 물고기 조회 (프록시 객체 반환 후 실제 필드 접근 시 DB 호출)
+        Fish targetFish = fishRepository.getById(request.getFishTypeId());
+
+        // 이미 해당 물고기가 있는지 검사
+        if (userFishRepository.existsByUserIdAndFishName(request.getUserId(), request.getFishName())) {
+            return new GetFriendFishResponseDto("이미 있는 물고기 입니다.", false);
+        }
+
+        try {
+            // 새로운 물고기 엔티티 생성 (빌더 사용 예시, 필요시 setter 사용)
+            Fish newFish = Fish.builder()
+                    .fishName(request.getFishName())
+                    // rarity 값 설정: 만약 request.getUserId()가 아니라 targetFish.getRarity()를 원한다면 변경 필요
+                    .rarity(request.getUserId())
+                    .size(targetFish.getSize())
+                    .imageUrl(targetFish.getImageUrl())
+                    .build();
+
+            int fishTypeId = fishRepository.save(newFish).getId();
+
+            // user_fish 레코드 저장
+            UserFish userFish = new UserFish();
+            userFish.setFishTypeId(fishTypeId);
+            userFish.setUserId(request.getUserId());
+            userFishRepository.save(userFish);
+
+            return new GetFriendFishResponseDto("가져오기 성공", true);
+        } catch (Exception e) {
+            // 예외 로그 기록 등 추가 작업 가능
+            return new GetFriendFishResponseDto("실패", false);
+        }
+    }
 
     @Transactional
     public List<FriendAquariumFishResponse> getFriendAquariumFish(String friendId) {
