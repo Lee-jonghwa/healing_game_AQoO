@@ -101,7 +101,7 @@ public class UserService {
     }
 
     public boolean isAlreadyJoin(String email) {
-        return userRepository.existsById(email); // 이미 존재하는 이메일이면 true 리턴
+        return userRepository.existsById(email) || userRepository.existsByEmail(email); // 이미 존재하는 이메일이면 true 리턴
     }
 
     public boolean getAccountStatus(String userId){
