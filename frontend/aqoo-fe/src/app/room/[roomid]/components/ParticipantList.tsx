@@ -20,6 +20,8 @@ interface ParticipantListProps {
 }
 
 export default function ParticipantList({ users, currentUser, currentIsHost, onKickUser }: ParticipantListProps) {
+  console.log("현재 참가자 목록:", users);
+  
   return (
     <div className="bg-white/70 border border-gray-300 rounded-lg shadow-lg p-4 z-10 w-[300px] h-[170px] overflow-auto custom-scrollbar">
       <h3 className="text-lg font-bold mb-2">참가자 리스트{` `}{users.length}</h3>
@@ -35,7 +37,6 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
                   />
                 </div>
                 <div>
-
                   {user.userName} {user.isHost && '(방장)'}
                 </div>
                 

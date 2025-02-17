@@ -10,6 +10,8 @@ import FriendList from './FriendList';
 import Fish from "./Fish";
 import { User } from '@/store/authAtom';
 
+
+
 // 플레이어 타입 정의
 interface Player {
   userName: string;
@@ -41,6 +43,14 @@ interface FishData {
   fishImage: string;
 }
 
+interface Friend {
+  friendId: string;
+  nickname: string;
+  level: number;
+  mainFishImage: string | null;
+}
+
+
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
   const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[]>([]);
@@ -52,6 +62,10 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
+  
+  // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
+  const [friendList, setFriendList] = useState<Friend[]>([]);
+
 
   // 기존 props의 user 대신 내부 상태로 관리하여 업데이트할 수 있도록 함
   const [currentUser, setCurrentUser] = useState<User>(user);
@@ -104,6 +118,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
           console.log('Join room message sent:', joinMessage);
           hasSentJoinRef.current = true;
         }
+        
         const subscription = client.subscribe(`/topic/room/${roomId}`, (message) => {
           const data: RoomUpdate = JSON.parse(message.body);
           console.log('Room update received:', data);
