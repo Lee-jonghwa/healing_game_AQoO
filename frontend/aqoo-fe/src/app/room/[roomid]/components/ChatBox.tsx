@@ -1,14 +1,15 @@
-'use client';
+"use client";
 
-import { getStompClient } from '@/lib/stompclient';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
+
+import { getStompClient } from "@/lib/stompclient";
 
 // 채팅 메시지 타입 (필요에 따라 ChatMessageDto를 사용해도 됩니다)
 interface ChatMessage {
   roomId: string;
   sender: string;
   content: string;
-  type: 'CHAT' | 'JOIN' | 'LEAVE' | 'READY';
+  type: "CHAT" | "JOIN" | "LEAVE" | "READY";
 }
 
 interface ChatBoxProps {
@@ -19,14 +20,14 @@ interface ChatBoxProps {
 
 export default function ChatBox({ roomId, userName, onNewMessage }: ChatBoxProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
 
   // 메시지 목록의 끝을 가리킬 ref
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // 메시지가 업데이트될 때마다 스크롤을 맨 아래로 이동
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // WebSocket 구독: 채팅 메시지를 받음
@@ -52,20 +53,20 @@ export default function ChatBox({ roomId, userName, onNewMessage }: ChatBoxProps
 
   // 메시지 전송 함수 (일반 사용자가 입력하는 채팅)
   const sendMessage = () => {
-    if (newMessage.trim() === '') return;
+    if (newMessage.trim() === "") return;
     const client = getStompClient();
     if (client && client.connected) {
       const chatMessage: ChatMessage = {
         roomId,
         sender: userName,
         content: newMessage,
-        type: 'CHAT',
+        type: "CHAT",
       };
       client.publish({
-        destination: '/app/chat.sendMessage',
+        destination: "/app/chat.sendMessage",
         body: JSON.stringify(chatMessage),
       });
-      setNewMessage('');
+      setNewMessage("");
     } else {
       console.error('STOMP client is not connected yet.');
       console.log(`🚀 [DEBUG] Sent message: ${userName}: ${newMessage}`);
@@ -102,7 +103,7 @@ export default function ChatBox({ roomId, userName, onNewMessage }: ChatBoxProps
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
               e.preventDefault();
               sendMessage();
             }

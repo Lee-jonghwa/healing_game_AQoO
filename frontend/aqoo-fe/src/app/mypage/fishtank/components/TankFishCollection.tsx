@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import CollectionItemCard from "./CollectionItemCard";
 import axiosInstance from "@/services/axiosInstance";
 
@@ -24,7 +25,12 @@ interface TankFishCollectionProps {
   onCountChange?: (count: number) => void;
 }
 
-export default function TankFishCollection({ aquariumId, refresh, onFishRemoved, onCountChange }: TankFishCollectionProps) {
+export default function TankFishCollection({
+  aquariumId,
+  refresh,
+  onFishRemoved,
+  onCountChange,
+}: TankFishCollectionProps) {
   const [aquariumDetails, setAquariumDetails] = useState<AquariumDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
@@ -155,11 +161,13 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
 
   if (error) return <div>{error}</div>;
   if (!aquariumDetails && loading) return <div>로딩중...</div>;
-  if (!aquariumDetails || aquariumDetails.fishes.length === 0)
-    return <div>어항에 물고기가 없습니다.</div>;
+  if (!aquariumDetails || aquariumDetails.fishes.length === 0) return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    <div className="w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto" style={{ maxHeight: "300px" }}>
+    <div
+      className="w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto custom-scrollbar"
+      style={{ maxHeight: "300px" }}
+    >
       <div className="flex flex-wrap gap-4">
         {aquariumDetails.fishes.map((group) => (
           <div
@@ -167,11 +175,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
             onClick={() => handleFishClick(group)}
             className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer"
           >
-            <CollectionItemCard
-              name={group.fishName}
-              count={group.cnt}
-              imageSrc={group.imageSrc}
-            />
+            <CollectionItemCard name={group.fishName} count={group.cnt} imageSrc={group.imageSrc} />
           </div>
         ))}
       </div>
@@ -183,10 +187,7 @@ export default function TankFishCollection({ aquariumId, refresh, onFishRemoved,
               <span className="font-bold">{selectedFish.fishName}</span>를 어항밖으로 빼시겠습니까?
             </p>
             <div className="flex justify-end space-x-4">
-              <button
-                onClick={handleModalCancel}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm"
-              >
+              <button onClick={handleModalCancel} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm">
                 취소
               </button>
               <button

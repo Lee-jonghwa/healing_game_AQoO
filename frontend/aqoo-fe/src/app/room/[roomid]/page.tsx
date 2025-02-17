@@ -6,6 +6,7 @@ import IntegratedRoom from "./components/IntegratedRoom";
 import { fetchUser } from "@/services/authService";   // <-- import fetchUser
 import { User } from "@/store/authAtom";              // <-- User 인터페이스
 
+
 interface RoomPageProps {
   params: { roomid: string };
 }
