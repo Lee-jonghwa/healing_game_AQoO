@@ -70,9 +70,13 @@ export default function FriendList({ userName, roomId, isHost, participantCount,
   }, [inviteCooldowns]);
 
   return (
-    <div className="mt-6">
-      <h3 className="text-xl font-semibold mb-2">친구 목록 (초대 가능)</h3>
-      {friends.length === 0 ? (
+    <div className="mt-6 h-[350px] overflow-y-auto">
+      {/* 🔹 방장만 친구 수 표시 */}
+      {isHost && <h3 className="text-xl font-semibold mb-2 top-2">친구 {friends.length}</h3>}
+  
+      {!isHost ? (
+        <p className="text-center text-gray-500">방장만 초대할 수 있습니다.</p>
+      ) : friends.length === 0 ? (
         <p>초대 가능한 친구가 없습니다.</p>
       ) : (
         <ul className="space-y-2">

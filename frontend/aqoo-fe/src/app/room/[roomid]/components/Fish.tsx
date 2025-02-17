@@ -9,59 +9,58 @@ interface FishData {
   fishImage: string;
 }
 
-export default function Fish({ fish }: { fish: FishData }) {
+interface FishProps {
+  fish: FishData;
+  message?: string;
+}
+
+export default function Fish({ fish, message }: FishProps) {
   const fishRef = useRef<HTMLImageElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const directionRef = useRef(1);
+  const [showMessage, setShowMessage] = useState(false);
+  const [currentMessage, setCurrentMessage] = useState<string | null>(null);
+  const [fishPosition, setFishPosition] = useState({ x: 0, y: 0 });
 
-  const [containerSize, setContainerSize] = useState({
-    width: 0,
-    height: 0,
-  });
-
-  // 화면 크기 변화에 따른 컨테이너 크기 업데이트
+  // ✅ 말풍선 메시지 처리 (3초 후 사라짐)
   useEffect(() => {
-    const updateContainerSize = () => {
-      if (containerRef.current) {
-        setContainerSize({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
-        });
+    if (message && message.trim() !== '') {
+      setShowMessage(true);
+      setCurrentMessage(message);
+      console.log(`💬 Message updated: "${message}" for ${fish.fishName}`);
+
+      const timer = setTimeout(() => {
+        console.log(`💨 [DEBUG] Message cleared for ${fish.fishName}`);
+        setShowMessage(false);
+        setCurrentMessage(null);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  // ✅ 물고기 위치 추적하여 말풍선이 따라가도록 설정
+  useEffect(() => {
+    if (!fishRef.current) return;
+
+    const updatePosition = () => {
+      const rect = fishRef.current?.getBoundingClientRect();
+      if (rect) {
+        setFishPosition({ x: rect.left, y: rect.top });
       }
     };
 
-    // 윈도우 리사이즈 이벤트 리스너 추가
-    window.addEventListener('resize', updateContainerSize);
-
-    // 컴포넌트가 마운트될 때 초기 크기 설정
-    updateContainerSize();
-
-    // cleanup 함수로 이벤트 리스너 제거
-    return () => {
-      window.removeEventListener('resize', updateContainerSize);
-    };
+    const positionInterval = setInterval(updatePosition, 50); // 50ms마다 위치 업데이트 (부드럽게 따라가도록)
+    return () => clearInterval(positionInterval);
   }, []);
 
-  // 🎯 물고기를 클릭했을 때 축소 애니메이션 효과
-  const handleClick = () => {
-    if (fishRef.current) {
-      gsap.to(fishRef.current, {
-        scale: 0.9,
-        duration: 0.15,
-        ease: 'power1.inOut',
-        yoyo: true,
-        repeat: 1,
-      });
-    }
-  };
-
+  // ✅ 물고기 움직임 유지
   useEffect(() => {
-    // fishRef.current와 containerRef.current가 모두 유효한 경우에만 실행
     if (!fishRef.current || !containerRef.current) return;
 
-    const { width: containerWidth, height: containerHeight } = containerSize;
+    const containerWidth = containerRef.current.offsetWidth;
+    const containerHeight = containerRef.current.offsetHeight;
 
-    // 🎯 물고기의 초기 위치를 컨테이너 내부 랜덤한 곳으로 설정
     const initialX = Math.random() * (containerWidth - 100);
     const initialY = Math.random() * (containerHeight - 100);
     gsap.set(fishRef.current, { x: initialX, y: initialY });
@@ -69,17 +68,13 @@ export default function Fish({ fish }: { fish: FishData }) {
     const moveFish = () => {
       if (!fishRef.current) return;
 
-      // 🎯 속도를 5 ~ 12초 범위에서 랜덤하게 설정
       const randomSpeed = Math.random() * 7 + 5;
-
-      // 🎯 이동 범위를 조정하여 자연스러운 움직임 구현
-      const moveDistanceX = containerWidth * (Math.random() - 0.5); // -50% ~ +50%
-      const moveDistanceY = containerHeight * (0.05 + Math.random() * 0.15); // 5% ~ 20%
+      const moveDistanceX = containerWidth * (Math.random() - 0.5);
+      const moveDistanceY = containerHeight * (0.05 + Math.random() * 0.15);
 
       let newX = parseFloat(gsap.getProperty(fishRef.current, 'x') as string) + moveDistanceX;
       let newY = parseFloat(gsap.getProperty(fishRef.current, 'y') as string) + moveDistanceY;
 
-      // 🎯 컨테이너 내부로 제한
       const leftBoundary = 0;
       const rightBoundary = containerWidth - 100;
       const topBoundary = 0;
@@ -88,40 +83,43 @@ export default function Fish({ fish }: { fish: FishData }) {
       newX = Math.max(leftBoundary, Math.min(newX, rightBoundary));
       newY = Math.max(topBoundary, Math.min(newY, bottomBoundary));
 
-      // 🎯 이동 방향에 따라 물고기 반전
       directionRef.current = moveDistanceX > 0 ? -1 : 1;
 
       gsap.to(fishRef.current, {
         x: newX,
         y: newY,
-        scaleX: directionRef.current,
         duration: randomSpeed,
         ease: 'power2.inOut',
-        onUpdate: () => {
-          const prevX = parseFloat(gsap.getProperty(fishRef.current, 'x') as string);
-          directionRef.current = newX > prevX ? -1 : 1;
-          gsap.set(fishRef.current, { scaleX: directionRef.current });
-        },
         onComplete: moveFish,
       });
     };
 
     moveFish();
-
-    // Cleanup 함수로 애니메이션 정리
-    return () => {
-      if (fishRef.current) {
-        gsap.killTweensOf(fishRef.current);  // 현재 활성화된 모든 gsap 애니메이션을 제거합니다.
-      }
-    };
-  }, [containerSize]); // containerSize가 변경될 때마다 재실행
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      className="absolute w-[1265px] h-[650px] top-[20px] left-[20px] border border-black border-transparent"
-      style={{ pointerEvents: 'none' }} // 클릭 이벤트가 컨테이너에 영향을 주지 않도록 설정
+      className="absolute w-[1265px] h-[650px] top-[20px] left-[20px] border border-transparent"
+      style={{ pointerEvents: 'none' }}
     >
+      {/* 🗨️ 말풍선 (물고기 위치 따라감) */}
+      {showMessage && currentMessage && (
+        <div
+          className="absolute bg-white px-3 py-1 rounded-lg shadow-md text-sm text-gray-900 border border-gray-400"
+          style={{
+            top: fishPosition.y - 30, // 물고기 위에 위치
+            left: fishPosition.x + 25, // 물고기 중앙 정렬
+            transform: 'translate(-50%, -100%)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+          }}
+        >
+          {currentMessage}
+        </div>
+      )}
+
+      {/* 🐟 물고기 이미지 */}
       <img
         ref={fishRef}
         src={fish.fishImage}
@@ -129,11 +127,10 @@ export default function Fish({ fish }: { fish: FishData }) {
         width={100}
         height={100}
         className="absolute"
-        onClick={handleClick} // 물고기를 클릭하면 축소 애니메이션 실행
         style={{
           pointerEvents: 'auto',
           zIndex: 9999,
-        }} // 물고기는 클릭 가능하도록 설정
+        }}
       />
     </div>
   );
