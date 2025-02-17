@@ -217,6 +217,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     }
   };
 
+  // 물고기 말풍선 업데이트
   const handleNewMessage = (sender: string, message: string) => {
     console.log(`🐟 [DEBUG] New Message from "${sender}": "${message}"`);
     
