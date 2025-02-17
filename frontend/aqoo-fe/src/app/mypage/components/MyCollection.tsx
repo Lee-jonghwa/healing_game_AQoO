@@ -86,6 +86,7 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
           rounded-xl border-2 border-[#1c5e8d] bg-[#31a9ff]
           [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.25)_inset]
           flex flex-col items-center
+          
         "
         style={{
           height: "calc(100vh - 150px)", // 화면 높이에서 탭 버튼과 패딩을 뺀 실제 가용 높이

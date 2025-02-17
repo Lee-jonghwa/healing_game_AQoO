@@ -21,13 +21,13 @@ interface ParticipantListProps {
 
 export default function ParticipantList({ users, currentUser, currentIsHost, onKickUser }: ParticipantListProps) {
   return (
-    <div className="bg-white/70 border border-gray-300 rounded-lg shadow-lg p-4 z-10 w-[280px] h-[500px]">
+    <div className="bg-white/70 border border-gray-300 rounded-lg shadow-lg p-4 z-10 w-[300px] h-[170px] overflow-auto custom-scrollbar">
       <h3 className="text-lg font-bold mb-2">참가자 리스트{` `}{users.length}</h3>
       <ul className="space-y-2">
         {users.map((user) => (
           <li key={user.userName} className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50">
             <div className="text-gray-900 font-medium flex items-center space-x-2">
-                <div className='w-10 h-10 bg-300 rounded-full overflow-hidden'>
+                <div className='w-10 h-10 bg-300 rounded-full scrollbar-hide'>
                   <img 
                     src={user.mainFishImage} 
                     alt="참가자대표물고기"  
@@ -35,6 +35,7 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
                   />
                 </div>
                 <div>
+
                   {user.userName} {user.isHost && '(방장)'}
                 </div>
                 
