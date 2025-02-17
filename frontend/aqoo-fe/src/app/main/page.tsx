@@ -65,9 +65,12 @@ export default function MainPage() {
 
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
-  // Electron 환경 감지: navigator.userAgent에 "electron" 문자열이 포함되어 있으면 Electron으로 판단
-  const isElectron = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
+  // MainPage에도 필요하다면 Electron 감지 (추가 기능에 사용 가능)
+  const isElectron =
+    typeof navigator !== "undefined" &&
+    navigator.userAgent.toLowerCase().includes("electron");
 
+  // 메인 페이지에 있던 오버레이 토글 함수 (이제 BottomMenuBar로 전달)
   const handleToggleOverlay = async () => {
     if (!auth.user?.id) {
       console.warn("사용자 정보가 없습니다.");
@@ -76,9 +79,10 @@ export default function MainPage() {
 
     try {
       // 사용자 정보를 API 호출로 가져옵니다.
-      const response: AxiosResponse = await axios.get(`${API_BASE_URL}/users/${auth.user.id}`, {
-        withCredentials: true,
-      });
+      const response: AxiosResponse = await axios.get(
+        `${API_BASE_URL}/users/${auth.user.id}`,
+        { withCredentials: true }
+      );
 
       // API 응답에서 mainFishImage 값을 추출합니다.
       const fishPath = response.data.mainFishImage;
@@ -102,14 +106,18 @@ export default function MainPage() {
         .then((registration: ServiceWorkerRegistration) => {
           console.log("✅ 서비스 워커 등록 완료:", registration);
         })
-        .catch((err: unknown) => console.error("🔥 서비스 워커 등록 실패:", err));
+        .catch((err: unknown) =>
+          console.error("🔥 서비스 워커 등록 실패:", err)
+        );
     }
 
     const fetchIsFirstLogin = async () => {
       if (!auth.user) return; // ✅ auth.user가 없으면 실행 X
 
       try {
-        const response = await axios.get<boolean>(`${API_BASE_URL}/users/isFirst/${auth.user.id}`);
+        const response = await axios.get<boolean>(
+          `${API_BASE_URL}/users/isFirst/${auth.user.id}`
+        );
         console.log("첫 로그인인지 아닌지:", response.data);
         setFirstLoginStatus(response.data); // ✅ true/false 할당
       } catch (error) {
@@ -137,7 +145,9 @@ export default function MainPage() {
     if (!userInfo?.mainAquarium) return;
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/aquariums/${userInfo.mainAquarium}`
+      );
       console.log("✅ 어항 상태 갱신:", response.data);
       setAquariumData(response.data);
     } catch (error) {
@@ -145,7 +155,12 @@ export default function MainPage() {
     }
   };
 
-  const hungrySounds = ["/sounds/hungry_1.mp3", "/sounds/hungry_2.mp3", "/sounds/hungry_3.mp3", "/sounds/hungry_4.mp3"];
+  const hungrySounds = [
+    "/sounds/hungry_1.mp3",
+    "/sounds/hungry_2.mp3",
+    "/sounds/hungry_3.mp3",
+    "/sounds/hungry_4.mp3",
+  ];
 
   const { play, setSrc } = useSFX(hungrySounds[0]); // 초기 소리 설정
 
@@ -156,7 +171,8 @@ export default function MainPage() {
       if (!aquariumData || aquariumData.feedStatus > 3) return;
 
       // ✅ 랜덤한 소리 선택 후 setSrc()로 변경
-      const randomSound = hungrySounds[Math.floor(Math.random() * hungrySounds.length)];
+      const randomSound =
+        hungrySounds[Math.floor(Math.random() * hungrySounds.length)];
       setSrc(randomSound);
       console.log("꼬르륵");
       play();
@@ -184,7 +200,9 @@ export default function MainPage() {
           return;
       }
 
-      const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay) + minDelay);
+      const randomDelay = Math.floor(
+        Math.random() * (maxDelay - minDelay) + minDelay
+      );
       timeoutId = setTimeout(playRandomHungrySound, randomDelay);
     };
 
@@ -215,7 +233,7 @@ export default function MainPage() {
         setLevelUpInfo({
           level: updatedExpData.userLevel,
           expProgress: updatedExpData.expProgress,
-        }); // ✅ 물고기 티켓 증가 API 호출
+        });
 
         playLevelUp();
 
@@ -223,7 +241,7 @@ export default function MainPage() {
         if (updatedFishTicket !== null) {
           setUserInfo((prevUserInfo) => ({
             ...prevUserInfo!,
-            fishTicket: updatedFishTicket, // ✅ 물고기 티켓 업데이트
+            fishTicket: updatedFishTicket,
           }));
         }
       }
@@ -236,7 +254,9 @@ export default function MainPage() {
     if (!auth.user?.id) return;
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/users/${auth.user.id}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/users/${auth.user.id}`
+      );
       console.log("✅ 유저 정보 갱신 완료:", response.data);
       setUserInfo(response.data);
     } catch (error) {
@@ -290,9 +310,7 @@ export default function MainPage() {
         setAquariumData(res.data);
 
         const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
-
         const savedBg = BACKGROUND_BASE_URL + res.data.aquariumBackground;
-
         if (savedBg) {
           setBackground(savedBg);
         }
@@ -302,25 +320,18 @@ export default function MainPage() {
 
   useEffect(() => {
     const checkUnreadNotifications = async () => {
-      if (!auth.user?.id) return; // ✅ 로그인되지 않은 경우 API 호출 안함
+      if (!auth.user?.id) return;
 
-      // ✅ 현재 로그인된 유저의 ID로 알림 가져오기
       axios
         .get(`${API_BASE_URL}/notification/${auth.user.id}`)
         .then((response: AxiosResponse<Notification[]>) => {
           console.log("🔔 알림 데이터:", response.data);
           setNotifications(response.data);
 
-          // ✅ 안 읽은 알림들만 읽음 처리 API 호출
-          const unreadNotifications = response.data.filter((notif) => notif.status === false);
-
-          if (unreadNotifications.length > 0) {
-            console.log("안 읽은 알람 있음");
-            setNewNotifications(true);
-          } else {
-            console.log("안 읽은 알람 없음");
-            setNewNotifications(false);
-          }
+          const unreadNotifications = response.data.filter(
+            (notif) => notif.status === false
+          );
+          setNewNotifications(unreadNotifications.length > 0);
         })
         .catch((error) => {
           console.error("❌ 알림 불러오기 실패", error);
@@ -329,11 +340,11 @@ export default function MainPage() {
         .finally(() => setLoading(false));
     };
     checkUnreadNotifications();
-  }, [auth.user?.id]); // ✅ 로그인한 유저 ID가 바뀌면 다시 호출
+  }, [auth.user?.id]);
 
   useEffect(() => {
     if (newNotifications) {
-      playPush(); // ✅ 푸시 알림 효과음 재생
+      playPush(); // 푸시 알림 효과음 재생
     }
   }, [newNotifications]);
 
@@ -359,32 +370,34 @@ export default function MainPage() {
         유저 정보 불러오는 중...
       </div>
     );
-  if (!aquariumData) return;
-  <div className="absolute inset-0 bg-cover bg-center w-full h-full text-white text-xl text-center flex flex-col items-center justify-center before:absolute before:inset-0 before:bg-white/30 bg-[url(/background-1.png)]">
-    <svg
-      aria-hidden="true"
-      className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 mb-4"
-      viewBox="0 0 100 101"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-        fill="currentColor"
-      />
-      <path
-        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-        fill="currentFill"
-      />
-    </svg>
-    아쿠아리움 정보 로딩 중...
-  </div>;
+  if (!aquariumData)
+    return (
+      <div className="absolute inset-0 bg-cover bg-center w-full h-full text-white text-xl text-center flex flex-col items-center justify-center before:absolute before:inset-0 before:bg-white/30 bg-[url(/background-1.png)]">
+        <svg
+          aria-hidden="true"
+          className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600 mb-4"
+          viewBox="0 0 100 101"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+            fill="currentColor"
+          />
+          <path
+            d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+            fill="currentFill"
+          />
+        </svg>
+        아쿠아리움 정보 로딩 중...
+      </div>
+    );
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <title>AQoO</title>
 
-      {/* ✅ 추방 모달 추가 (URL에 status=kicked가 있으면 모달이 표시됩니다) */}
+      {/* ✅ 추방 모달 */}
       <KickedModal />
 
       {/* 🖼 배경 이미지 */}
@@ -393,27 +406,28 @@ export default function MainPage() {
         style={{ backgroundImage: `url(${background})` }}
       ></div>
 
-      {/* 🖼 상태에 따라 화면 효과 오버레이 */}
+      {/* 🖼 화면 효과 오버레이 */}
       <OverlayEffect aquariumData={aquariumData} />
 
-      {/* 🐠 떠다니는 물고기 렌더링 */}
+      {/* 🐠 떠다니는 물고기 */}
       {fishes.map((fish) => (
         <Fish key={fish.fishId} fish={fish} />
       ))}
 
-      {/* 📌 하단 메뉴 바 */}
+      {/* 📌 하단 메뉴바 (오버레이 토글 버튼은 BottomMenuBar 내부에서 함께 이동) */}
       <BottomMenuBar
         setActiveComponent={setActiveComponent}
-        activeComponent={activeComponent} // 현재 활성화된 컴포넌트 전달
+        activeComponent={activeComponent}
         userInfo={userInfo}
         aquariumData={aquariumData}
         refreshAquariumData={refreshAquariumData}
         onOpenFishModal={() => setShowFishTicketModal(true)}
         handleIncreaseExp={handleIncreaseExp}
         newNotifications={newNotifications}
+        handleToggleOverlay={handleToggleOverlay} // 오버레이 토글 함수 전달
       />
 
-      {/* ✅ CleanComponent를 BottomMenuBar 위에 정확하게 배치 */}
+      {/* ✅ 추가 컴포넌트들 */}
       {activeComponent === "clean" && (
         <div className="absolute bottom-[130px] right-[100px] z-50">
           <CleanComponent
@@ -425,25 +439,23 @@ export default function MainPage() {
         </div>
       )}
 
-      {/* ✅ FriendsList도 같은 방식 적용 */}
       {activeComponent === "friends" && (
         <div className="absolute bottom-[130px] left-[100px] z-50">
           <FriendsList onClose={() => setActiveComponent(null)} userId={userInfo.id} />
         </div>
       )}
 
-      {/* ✅ PushNotifications도 같은 방식 적용 */}
       {activeComponent === "push" && (
         <div className="absolute bottom-[130px] left-[100px] z-50">
           <PushNotifications onClose={() => setActiveComponent(null)} setNewNotifications={setNewNotifications} />
         </div>
       )}
+
       <NotificationComponent
         refreshAquariumData={refreshAquariumData}
-        setNewNotifications={setNewNotifications} // 이 부분 추가
+        setNewNotifications={setNewNotifications}
       />
 
-      {/* 📌 레벨업 모달 */}
       {levelUpInfo && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <LevelUpModal
@@ -454,7 +466,6 @@ export default function MainPage() {
         </div>
       )}
 
-      {/* 첫 로그인 시 뜰 모달 */}
       {firstLoginStatus && firstLoginModal && (
         <FirstLoginModal
           onClose={() => setFirstLoginModal(null)}
@@ -465,25 +476,14 @@ export default function MainPage() {
         />
       )}
 
-      {/* 📌 물고기 뽑기 모달 */}
       {showFishTicketModal && userInfo && (
         <FishTicketModal
           level={userInfo.level}
           fishTicket={userInfo.fishTicket}
           refreshUserInfo={refreshUserInfo}
           onClose={() => setShowFishTicketModal(false)}
-          isFirstLogin={firstLoginStatus ?? false} // ✅ 첫 로그인 여부 전달
+          isFirstLogin={firstLoginStatus ?? false}
         />
-      )}
-
-      {/* Electron 환경일 때만 오버레이 온/오프 버튼 표시 */}
-      {isElectron && (
-        <button
-          onClick={handleToggleOverlay}
-          className="absolute top-96 left-50 mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          오버레이 온/오프
-        </button>
       )}
     </div>
   );
