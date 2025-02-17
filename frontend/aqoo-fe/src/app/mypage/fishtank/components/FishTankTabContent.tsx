@@ -46,7 +46,7 @@ export default function FishTankTabContent({
         <div className="flex-1 bg-gray-50 rounded-xl shadow p-4">
           <p className="flex items-center justify-between text-xl font-[NeoDunggeunmo_Pro] text-[#070707] mb-2">
             <span>
-              {aquariumName} 어항의 물고기 ({tankFishCount}/40) 마리
+              {aquariumName} 어항의 물고기 ({tankFishCount}/40)
             </span>
             <button
               onClick={onSetMainAquarium}
@@ -64,7 +64,7 @@ export default function FishTankTabContent({
         </div>
       </div>
 
-      <div className="mt-6 bg-gray-50 rounded-xl shadow p-4">
+      <div className="mt-6 mb-6 bg-gray-50 rounded-xl shadow p-6 w-[97%] mx-auto">
         <p className="mb-4 text-xl font-[NeoDunggeunmo_Pro] text-[#070707]">어항 배경 선택</p>
         <Suspense fallback={<div>Loading Backgrounds...</div>}>
           <BackgroundList aquariumId={aquariumId} onBackgroundChange={onBackgroundChange} />

@@ -212,63 +212,78 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
     <div className="flex flex-col h-full overflow-hidden mb-2 mt-2 px-4">
       {/* 탭 버튼 영역 */}
       <div className="flex flex-wrap items-end">
-        {tabs.map((tab, idx) => (
-          <div key={tab.id} className="relative w-36 h-10 mr-2">
-            {editingIndex === idx ? (
-              <input
-                type="text"
-                value={editingName}
-                onChange={(e) => setEditingName(e.target.value)}
-                onBlur={handleTabNameUpdate}
-                onKeyDown={handleKeyDown}
-                className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] text-sm"
-                autoFocus
-              />
-            ) : (
-              <button
-                onClick={() => handleTabClick(idx)}
-                className={`
-                  w-full h-full cursor-pointer inline-flex items-center justify-center
-                  rounded-t-xl border-t border-r border-l border-[#1c5e8d]
-                  bg-[#f0f0f0] shadow-inner text-[#070707] text-sm font-[NeoDunggeunmo_Pro]
-                  ${selectedIndex === idx ? "bg-[#31A9FF] text-black border-t-4 border-black hover:bg-[#2b8ac0]" : ""}
-                `}
-                title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
-              >
-                {tab.name}
-              </button>
-            )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteClick(idx);
-              }}
-              className="absolute top-0 right-1 text-gray-800 hover:text-gray-900 text-xl p-1"
-              title="어항 삭제"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-
-        {/* 어항 생성하기 버튼 */}
+      <div className="flex flex-wrap ml-2">
+  {tabs.map((tab, idx) => (
+    <div key={tab.id} className="relative w-40 h-10 mr-2">
+      {editingIndex === idx ? (
+        <input
+          type="text"
+          value={editingName}
+          onChange={(e) => setEditingName(e.target.value)}
+          onBlur={handleTabNameUpdate}
+          onKeyDown={handleKeyDown}
+          className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] text-lg"
+          autoFocus
+        />
+      ) : (
         <button
-          onClick={handleAddTank}
-          className="cursor-pointer inline-flex items-center justify-center w-48 h-10 px-4 py-2 mr-2 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-[#f0f0f0] shadow-inner text-[#070707] text-xl font-[NeoDunggeunmo_Pro]"
-          title="어항 생성하기"
+          onClick={() => handleTabClick(idx)}
+          className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] 
+            ${selectedIndex === idx ? "bg-[#A3D8FF]" : "hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"}`}  // 선택된 탭에는 호버 효과 제거
+          title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
         >
-          어항 생성하기
+          {/* 편집 아이콘을 이름 왼쪽에 배치 (간격 유지) */}
+          {selectedIndex === idx && !editingIndex && (
+            <span className="mr-1 text-[#1c5e8d] hover:text-[#070707] cursor-pointer text-sm">
+              ✎
+            </span>
+          )}
+          {tab.name}
         </button>
+      )}
 
-        {/* 스타일 변경된 뒤로가기 버튼 */}
-        <button
-          onClick={handleGoBack}
-          className="cursor-pointer inline-flex items-center justify-center w-48 h-10 px-4 py-2 mr-2 rounded-t-xl border-t border-r border-l border-red-700 bg-red-500 shadow-inner text-white text-xl font-[NeoDunggeunmo_Pro] hover:bg-red-600"
-          title="뒤로가기"
-        >
-          뒤로가기
-        </button>
-      </div>
+      {/* 삭제 버튼을 탭의 상단 오른쪽에 조금 안쪽으로 배치 */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDeleteClick(idx);
+        }}
+        className="absolute top-[-8px] right-1 text-gray-800 hover:text-gray-900 text-xl p-1"
+        title="어항 삭제"
+      >
+        ×
+      </button>
+    </div>
+  ))}
+</div>
+
+
+
+
+
+
+  {/* 오른쪽 끝에 고정된 버튼들 */}
+  <div className="flex ml-auto mr-2 gap-2">
+    {/* 어항 생성하기 버튼 */}
+    <button
+      onClick={handleAddTank}
+      className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white shadow-inner text-[#070707] text-4xl hover:bg-[#e0e0e0]"
+      title="어항 생성하기"
+    >
+      +
+    </button>
+
+    {/* 체크 아이콘 버튼 */}
+<button
+  onClick={handleGoBack}
+  className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-yellow-300 shadow-inner text-[#070707] text-2xl font-bold hover:bg-[#e0e050]"
+  title="마이페이지로 이동"
+>
+  ✔
+</button>
+  </div>
+</div>
+
 
       {/* 탭 컨텐츠 영역 */}
       <div className="w-full max-w-5xl h-full mx-auto p-0 overflow-hidden rounded-xl border-2 border-[#1c5e8d] bg-[#31a9ff] shadow-inner flex flex-col">
