@@ -164,21 +164,20 @@ export default function TankFishCollection({
   if (!aquariumDetails || aquariumDetails.fishes.length === 0) return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-    <div
-      className="w-full h-full rounded-[30px] p-3 sm:p-4 md:p-6 overflow-y-auto custom-scrollbar"
-      style={{ maxHeight: "300px" }}
-    >
-      <div className="flex flex-wrap gap-4">
-        {aquariumDetails.fishes.map((group) => (
-          <div
-            key={group.fishName}
-            onClick={() => handleFishClick(group)}
-            className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer"
-          >
-            <CollectionItemCard name={group.fishName} count={group.cnt} imageSrc={group.imageSrc} />
-          </div>
-        ))}
-      </div>
+      <div>
+            <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+            <div className="flex flex-wrap justify-start gap-4 ml-7">
+              {aquariumDetails.fishes.map((group) => (
+                  <div
+                    key={group.fishName}
+                    onClick={() => handleFishClick(group)}
+                    className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer m-1"
+                  >
+                    <CollectionItemCard name={group.fishName} count={group.cnt} imageSrc={group.imageSrc} />
+                  </div>
+                ))}
+              </div>
+            </div>
 
       {isModalOpen && selectedFish && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

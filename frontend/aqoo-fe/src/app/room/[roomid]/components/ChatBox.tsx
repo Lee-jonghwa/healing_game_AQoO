@@ -76,7 +76,7 @@ export default function ChatBox({ roomId, userName, onNewMessage }: ChatBoxProps
 
   return (
     <div className="border rounded p-4 mt-6 bg-white w-full">
-      <div className="h-64 overflow-y-auto mb-4">
+      <div className="h-64 overflow-y-auto custom-scrollbar mb-4">
         {messages.map((msg, index) =>
           msg.sender === 'SYSTEM' ? (
             <div key={index} className="mb-2 text-center text-gray-500 italic">
@@ -97,7 +97,7 @@ export default function ChatBox({ roomId, userName, onNewMessage }: ChatBoxProps
       </div>
 
       {/* ✅ 입력 필드와 Send 버튼을 하나의 컨테이너에서 정렬 */}
-      <div className="flex items-center border rounded-lg overflow-hidden">
+      <div className="flex items-center border rounded-lg scrollbar-hide">
         <input
           type="text"
           value={newMessage}
