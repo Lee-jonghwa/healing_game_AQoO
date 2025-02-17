@@ -224,7 +224,7 @@ public class AquariumService {
 
 
     @Transactional
-    public List<AquariumFishResponse> getFriendAquariumFish(String friendId) {
+    public List<FriendAquariumFishResponse> getFriendAquariumFish(String friendId) {
         // getById 대신 findById를 사용하여 안전하게 조회
         User friend = userRepository.findById(friendId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 친구 유저가 존재하지 않습니다."));
@@ -243,15 +243,16 @@ public class AquariumService {
                 .collect(Collectors.toMap(Fish::getId, fish -> fish));
 
         return fishData.stream()
-                .map(row -> new AquariumFishResponse(
+                .map(row -> new FriendAquariumFishResponse(
                         row[2] != null ? (Integer) row[2] : -1,  // aquariumId
                         (Integer) row[0], // fishId
                         (Integer) row[1], // fishTypeId
                         fishTypeMap.get((Integer) row[1]).getFishName(), // fishTypeName
                         imageUtils.toAbsoluteUrl(fishTypeMap.get((Integer) row[1]).getImageUrl()), // fishImage
-                        fishTypeMap.get((Integer) row[1]).getSize()
+                        fishTypeMap.get((Integer) row[1]).getSize(),
+                        fishTypeMap.get((Integer) row[1]).getRarity()
                 ))
-                .sorted(Comparator.comparing(AquariumFishResponse::getFishTypeId))
+                .sorted(Comparator.comparing(FriendAquariumFishResponse::getFishTypeId))
                 .toList();
     }
 

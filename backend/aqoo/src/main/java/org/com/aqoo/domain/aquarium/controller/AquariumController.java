@@ -91,7 +91,7 @@ public class AquariumController {
     public ResponseEntity<?> getAquariumFish(@PathVariable("friendId") String friendId) {
 
         try{
-            List<AquariumFishResponse> response = aquariumService.getFriendAquariumFish(friendId);
+            List<FriendAquariumFishResponse> response = aquariumService.getFriendAquariumFish(friendId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
