@@ -136,7 +136,7 @@ public class PushService {
         return switch (type) {
             case "FRIEND REQUEST" -> sender + "님께서 친구를 요청하였습니다.";
             case "FRIEND ACCEPT" -> sender + "님께서 친구를 수락하였습니다.";
-            case "FRIEND FISH" -> sender + "님께서 당신의 물고기를 선택했습니다. 물고기 티켓 +1!";
+            case "FRIEND FISH" -> sender + "님께서 당신의 물고기를 선택했습니다. 물고기 티켓 획득!";
             case "GAME INVITE" -> sender + "님께서 게임에 초대하였습니다.";
             case "FEED" -> generateFeedMessage(data);
             case "CLEAN" -> generateCleanMessage(data);
