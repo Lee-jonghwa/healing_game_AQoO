@@ -226,10 +226,14 @@ public class AquariumService {
     public GetFriendFishResponseDto getFriendFish(GetFriendFishRequestDto request) {
         // 대상 물고기 조회 (프록시 객체 반환 후 실제 필드 접근 시 DB 호출)
         Fish targetFish = fishRepository.getById(request.getFishTypeId());
-
+        User user = userRepository.getById(request.getUserId());
         // 이미 해당 물고기가 있는지 검사
         if (userFishRepository.existsByUserIdAndFishName(request.getUserId(), request.getFishName())) {
             return new GetFriendFishResponseDto("이미 있는 물고기 입니다.", false);
+        }
+
+        if (user.getFishTicket()<=0) {
+            return new GetFriendFishResponseDto("티켓이 부족합니다.(필요 티켓수 1개이상)", false);
         }
 
         try {
@@ -249,6 +253,12 @@ public class AquariumService {
             userFish.setFishTypeId(fishTypeId);
             userFish.setUserId(request.getUserId());
             userFishRepository.save(userFish);
+
+            user.setFishTicket(user.getFishTicket()-1);
+            userRepository.save(user);
+            User friend = userRepository.getById(request.getFriendId());
+            friend.setFishTicket(friend.getFishTicket()+1);
+            userRepository.save(friend);
 
             return new GetFriendFishResponseDto("가져오기 성공", true);
         } catch (Exception e) {

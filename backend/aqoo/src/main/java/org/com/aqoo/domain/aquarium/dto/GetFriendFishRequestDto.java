@@ -7,6 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class GetFriendFishRequestDto {
     String userId;
+    String friendId;
     int fishTypeId;
     String fishName;
 }
