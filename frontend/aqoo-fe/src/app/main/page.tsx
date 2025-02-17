@@ -126,7 +126,7 @@ function FishOverlayModal({
       `[FishOverlayModal] increment called for ${fish} (max: ${max}). Current totalSelected: ${totalSelected}`
     );
     if (totalSelected >= 5) {
-      alert('전체 최대 5마리까지 선택할 수 있습니다.');
+      alert('최대 5마리까지 선택할 수 있습니다.');
       console.log('[FishOverlayModal] 최대 선택 개수 도달. 증가 불가.');
       return;
     }
@@ -181,11 +181,13 @@ function FishOverlayModal({
           e.stopPropagation();
         }}
       >
-        <h2 className='text-xl font-bold mb-4'>오버레이에 띄울 물고기 선택</h2>
+        <h2 className='text-xl font-bold mb-4'>
+          항상 화면에서 함께 하고픈 물고기를 골라주세요!
+        </h2>
         {loading ? (
           <div>로딩 중...</div>
         ) : (
-          <div className='max-h-60 overflow-y-auto mb-4'>
+          <div className='max-h-60 overflow-y-auto mb-4 custom-scrollbar'>
             {groupedFish.length === 0 ? (
               <div>선택 가능한 물고기가 없습니다.</div>
             ) : (
@@ -194,7 +196,7 @@ function FishOverlayModal({
                 return (
                   <div
                     key={group.fish}
-                    className='flex items-center justify-between mb-2'
+                    className='flex items-center justify-between mb-2 p-2 rounded-lg transition duration-200 hover:bg-gray-100'
                   >
                     <div className='flex items-center space-x-2'>
                       {/* 이미지 표시 */}
@@ -221,7 +223,7 @@ function FishOverlayModal({
                     <div className='flex items-center'>
                       <button
                         onClick={() => decrement(group.fish)}
-                        className='px-2 py-1 bg-gray-300 rounded-l'
+                        className='px-2 py-1 bg-gray-300 rounded-l transition duration-200 hover:bg-gray-400'
                       >
                         -
                       </button>
@@ -230,7 +232,7 @@ function FishOverlayModal({
                       </span>
                       <button
                         onClick={() => increment(group.fish, group.count)}
-                        className='px-2 py-1 bg-gray-300 rounded-r'
+                        className='px-2 py-1 bg-gray-300 rounded-r transition duration-200 hover:bg-gray-400'
                       >
                         +
                       </button>
@@ -250,7 +252,7 @@ function FishOverlayModal({
               console.log('[FishOverlayModal] 취소 버튼 클릭 - onClose 호출.');
               onClose();
             }}
-            className='px-4 py-2 bg-gray-300 rounded'
+            className='px-4 py-2 bg-gray-300 rounded transition duration-200 hover:bg-gray-400'
           >
             취소
           </button>
@@ -263,16 +265,25 @@ function FishOverlayModal({
                   const result = group
                     ? { fishImage: group.fishImage, size: group.size, count }
                     : { fishImage: '', size: '', count };
-                  console.log(`[FishOverlayModal] 선택된 항목 생성:`, result);
                   return result;
                 });
+
+              // 한 마리도 선택하지 않았을 경우 알림 표시 후 종료
+              if (selectedArray.length === 0) {
+                alert('물고기를 한 마리 이상 선택해주세요.');
+                console.log(
+                  '[FishOverlayModal] 선택된 물고기가 없음 - 오버레이 요청 취소.'
+                );
+                return;
+              }
+
               console.log(
                 '[FishOverlayModal] 확인 버튼 클릭 - onConfirm 호출. 선택된 데이터:',
                 selectedArray
               );
               onConfirm(selectedArray);
             }}
-            className='px-4 py-2 bg-blue-600 text-white rounded'
+            className='px-4 py-2 bg-blue-600 text-white rounded transition duration-200 hover:bg-blue-700'
           >
             확인
           </button>
@@ -332,9 +343,9 @@ export default function MainPage() {
     if (overlayActive) {
       (window as any).electronAPI.toggleOverlay();
       setOverlayActive(false);
-      return;
+    } else {
+      setShowOverlayModal(true);
     }
-    setShowOverlayModal(true);
   };
 
   const onOverlayModalConfirm = (
@@ -597,6 +608,7 @@ export default function MainPage() {
         handleIncreaseExp={handleIncreaseExp}
         newNotifications={newNotifications}
         handleToggleOverlay={handleToggleOverlay}
+        overlayActive={overlayActive}
       />
       {/* 추가 컴포넌트들 */}
       {activeComponent === 'clean' && (

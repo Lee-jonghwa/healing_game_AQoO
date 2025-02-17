@@ -19,6 +19,7 @@ interface BottomMenuBarProps {
   onOpenFishModal: () => void;
   newNotifications: boolean;
   handleToggleOverlay: () => void;
+  overlayActive: boolean;
 }
 
 export default function BottomMenuBar({
@@ -31,6 +32,7 @@ export default function BottomMenuBar({
   handleIncreaseExp,
   newNotifications,
   handleToggleOverlay,
+  overlayActive,
 }: BottomMenuBarProps) {
   const router = useRouter();
   const { play: playModal } = useSFX('/sounds/clickeffect-03.mp3');
@@ -112,14 +114,18 @@ export default function BottomMenuBar({
         >
           {isMenuVisible ? '▼' : '▲'}
         </button>
-        {isElectron && (
+        {!isElectron && (
           <button
             onClick={handleToggleOverlay}
-            className={`absolute left-0 transition-all duration-500 px-4 py-2 bg-blue-600 text-white rounded shadow-md ${
-              isMenuVisible ? 'bottom-[100%] mb-1' : 'bottom-2'
-            }`}
+            className={`absolute left-0 transition-all duration-500 px-4 py-2 text-white rounded shadow-md 
+      ${
+        overlayActive
+          ? 'bg-red-600 hover:bg-red-700'
+          : 'bg-blue-600 hover:bg-blue-700'
+      }
+      ${isMenuVisible ? 'bottom-[100%] mb-1' : 'bottom-2'}`}
           >
-            오버레이 온/오프
+            {overlayActive ? '오버레이 끄기' : '오버레이 켜기'}
           </button>
         )}
         <div
