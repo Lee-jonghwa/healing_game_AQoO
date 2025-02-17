@@ -18,6 +18,26 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: "NeoDunggeunmoPro", Arial, Helvetica, sans-serif;
+
+  /* 기본 커서 */
+  cursor: url("https://cur.cursors-4u.net/cursors/cur-2/cur223.cur"), auto;
+}
+
+/* ✅ 버튼, 링크 등에 다른 커서 적용 */
+button,
+a {
+  cursor: url("https://cur.cursors-4u.net/cursors/cur-2/cur223.cur"), pointer;
+}
+
+/* ✅ 입력 필드에서 기본 커서 유지 */
+input,
+textarea {
+  cursor: text;
+}
+
+/* ✅ 스크롤 시에도 커서 유지 */
+html {
+  cursor: url("https://cur.cursors-4u.net/cursors/cur-2/cur223.cur"), auto;
 }
 
 @layer utilities {
