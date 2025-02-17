@@ -87,7 +87,7 @@ public class AquariumController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("friend/{friendId}")
+    @GetMapping("/friend/{friendId}")
     public ResponseEntity<?> getAquariumFish(@PathVariable("friendId") String friendId) {
 
         try{
@@ -99,7 +99,7 @@ public class AquariumController {
         }
     }
 
-    @PostMapping("friendFish")
+    @PostMapping("/friendFish")
     public ResponseEntity<?> getFriendFish(@RequestBody GetFriendFishRequestDto request) {
 
         try{
