@@ -8,11 +8,9 @@ import { increaseFishTicket, increaseUserExp } from "@/services/userService";
 import { useEffect, useState } from "react";
 
 import BottomMenuBar from "@/app/main/BottomMenuBar";
-import CleanComponent from "@/app/main/CleanComponent";
 import FirstLoginModal from "@/app/main/components/FirstLoginModal";
 import Fish from "@/components/Fish";
 import FishTicketModal from "@/components/FishTicketModal"; // 물고기 뽑기 모달
-import FriendsList from "@/app/main/FriendsList";
 import KickedModal from "@/app/main/components/KickedModal";
 import LevelUpModal from "@/components/LevelUpModal"; // 레벨업 모달
 import NotificationComponent from "@/components/NotificationComponent";
@@ -149,25 +147,20 @@ function FishOverlayModal({ aquariumId, onConfirm, onClose }: FishOverlayModalPr
   };
 
   return (
-    // 배경 클릭 시 아무 동작도 하지 않도록 onClick 제거
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-      {/* 모달 내부 클릭 시 전파 차단 없이 단순 로그만 남김 */}
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+      onClick={() => {
+        console.log("[FishOverlayModal] 배경 클릭 - onClose 호출.");
+        onClose();
+      }}
+    >
       <div
         className="bg-white rounded-lg p-6 w-96"
-        onClick={() => {
-          console.log("[FishOverlayModal] 모달 내부 클릭.");
+        onClick={(e) => {
+          console.log("[FishOverlayModal] 모달 내부 클릭 - 이벤트 전파 중지.");
+          e.stopPropagation();
         }}
       >
-        {/* 모달 우측 상단 X 버튼: 클릭 시 onClose 호출하여 오버레이 생성 취소 */}
-        <button
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-          onClick={() => {
-            console.log("[FishOverlayModal] X 버튼 클릭 - onClose 호출.");
-            onClose();
-          }}
-        >
-          X
-        </button>
         <h2 className="text-xl font-bold mb-4">오버레이에 띄울 물고기 선택</h2>
         {loading ? (
           <div>로딩 중...</div>
@@ -181,6 +174,7 @@ function FishOverlayModal({ aquariumId, onConfirm, onClose }: FishOverlayModalPr
                 return (
                   <div key={group.fish} className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
+                      {/* 이미지 표시 */}
                       <img
                         src={group.fishImage}
                         alt={group.fish}
@@ -217,8 +211,8 @@ function FishOverlayModal({ aquariumId, onConfirm, onClose }: FishOverlayModalPr
         <div className="mb-2">
           <span>전체 선택: {totalSelected} / 5</span>
         </div>
+
         <div className="flex justify-end space-x-2">
-          {/* 취소 버튼 클릭 시 오버레이 생성 취소 */}
           <button
             onClick={() => {
               console.log("[FishOverlayModal] 취소 버튼 클릭 - onClose 호출.");
@@ -228,7 +222,6 @@ function FishOverlayModal({ aquariumId, onConfirm, onClose }: FishOverlayModalPr
           >
             취소
           </button>
-          {/* 확인 버튼 클릭 시 onConfirm 호출하여 오버레이 생성 */}
           <button
             onClick={() => {
               const selectedArray = Object.entries(selectedCounts)
@@ -535,6 +528,8 @@ export default function MainPage() {
       {fishes.map((fish) => (
         <Fish key={fish.fishId} fish={fish} />
       ))}
+
+      <NotificationComponent refreshAquariumData={refreshAquariumData} setNewNotifications={setNewNotifications} />
 
       {/* BottomMenuBar에 오버레이 토글 함수 전달 */}
       <BottomMenuBar
