@@ -1,18 +1,21 @@
 "use client";
 
 import "@/lib/firebase"; // Firebase 초기화
-import React, { useEffect, useRef, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import axios, { AxiosResponse } from "axios";
-import Image from "next/image";
-import { gsap } from "gsap";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import CollectionItemCard from "./components/CollectionItemCard"; // 물고기 카드 컴포넌트
+import Fish from "@/components/Fish"; // 물고기 움직임 로직을 포함한 컴포넌트
 
 // 타입 정의
-interface FishInfo {
-  fish: string;
-  cnt: number;
+interface FishData {
+  aquariumId: number;
+  fishId: number;
+  fishTypeId: number;
+  fishName: string;
+  fishImage: string;
+  size: "XS" | "S" | "M" | "L" | "XL";
 }
 
 interface AquariumData {
@@ -26,7 +29,7 @@ interface AquariumData {
   pollutionStatus: number;
   waterStatus: number;
   userId: string;
-  fishes: FishInfo[];
+  // 기존에는 fishes 필드를 포함했으나, 이제 별도 API로 불러옵니다.
 }
 
 interface UserInfo {
@@ -40,7 +43,6 @@ const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 function FriendFishContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  // friendId를 항상 문자열로 처리 (없으면 빈 문자열)
   const friendId = searchParams.get("friendId") || "";
 
   // friendId가 없으면 /main으로 리다이렉트
@@ -50,9 +52,11 @@ function FriendFishContent() {
     }
   }, [friendId, router]);
 
-  // 상태 변수들은 항상 최상위에서 선언
+  // 상태 변수 선언
   const [friendUserInfo, setFriendUserInfo] = useState<UserInfo | null>(null);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
+  // 기존 어항 데이터의 fishes 배열 대신 별도 상태로 관리
+  const [fishes, setFishes] = useState<FishData[]>([]);
   const [background, setBackground] = useState("/background-1.png");
   const [loading, setLoading] = useState(true);
   const [showFishList, setShowFishList] = useState(false);
@@ -93,6 +97,26 @@ function FriendFishContent() {
     }
   }, [friendUserInfo]);
 
+  // 3. 친구의 물고기 데이터 별도 불러오기 (새 엔드포인트 사용)
+  useEffect(() => {
+    if (friendUserInfo?.mainAquarium) {
+      axios
+        .get(`${API_BASE_URL}/aquariums/friend/${friendId}`)
+        .then((res: AxiosResponse<FishData[] | { message: string }>) => {
+          console.log("친구 물고기 데이터:", res.data);
+          if (Array.isArray(res.data)) {
+            setFishes(res.data);
+          } else {
+            console.warn("물고기 데이터가 없습니다.");
+            setFishes([]);
+          }
+        })
+        .catch((err) =>
+          console.error("친구 물고기 데이터 불러오기 실패:", err)
+        );
+    }
+  }, [friendUserInfo?.mainAquarium]);
+
   if (loading) return <div>로딩 중...</div>;
   if (!friendUserInfo || !aquariumData)
     return <div>데이터를 불러오는데 실패했습니다.</div>;
@@ -121,13 +145,9 @@ function FriendFishContent() {
         <p>어항 이름: {aquariumData.aquariumName}</p>
       </div>
 
-      {/* 물고기 아이콘 렌더링 (애니메이션) */}
-      {aquariumData.fishes && aquariumData.fishes.length > 0 ? (
-        aquariumData.fishes.map((fishInfo) =>
-          Array.from({ length: fishInfo.cnt }, (_, i) => (
-            <Fish key={`${fishInfo.fish}-${i}`} fishInfo={fishInfo} />
-          ))
-        )
+      {/* 물고기 아이콘 렌더링 (Fish 컴포넌트를 사용) */}
+      {fishes && fishes.length > 0 ? (
+        fishes.map((fish) => <Fish key={fish.fishId} fish={fish} />)
       ) : (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white">
           물고기가 없습니다.
@@ -147,7 +167,6 @@ function FriendFishContent() {
       {/* 친구 물고기 리스트 모달 */}
       {showFishList && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          {/* 모달: 작고 반응형 (4열 그리드) */}
           <div className="bg-white w-11/12 max-w-sm rounded-lg p-4 overflow-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">친구 물고기 컬렉션</h2>
@@ -158,18 +177,17 @@ function FriendFishContent() {
                 닫기
               </button>
             </div>
-            {/* 4열 그리드 - 각 카드 아래에 가져오기 버튼 추가 (물고기 개수는 표시하지 않음) */}
             <div className="grid grid-cols-4 gap-2">
-              {aquariumData.fishes.map((fishInfo, index) => (
+              {fishes.map((fish, index) => (
                 <div key={index} className="flex flex-col items-center">
                   <CollectionItemCard
-                    name={fishInfo.fish}
+                    name={fish.fishName}
                     count={1}
-                    imageSrc={getFishImageUrl(fishInfo.fish)}
+                    imageSrc={fish.fishImage}
                   />
                   <button
                     onClick={() => {
-                      alert(`${fishInfo.fish}를 가져왔습니다!`);
+                      alert(`${fish.fishName}를 가져왔습니다!`);
                     }}
                     className="mt-1 bg-green-500 text-white px-2 py-1 rounded text-xs"
                   >
@@ -185,113 +203,6 @@ function FriendFishContent() {
   );
 }
 
-// 헬퍼 함수: 물고기 이름 기반 이미지 URL 생성 (실제 경로에 맞게 수정)
-function getFishImageUrl(fishName: string): string {
-  return `https://i12e203.p.ssafy.io/images/${encodeURIComponent(
-    fishName
-  )}.png`;
-}
-
-// 물고기 컴포넌트 (GSAP 애니메이션 포함)
-function Fish({ fishInfo }: { fishInfo: FishInfo }) {
-  const fishRef = useRef<HTMLImageElement | null>(null);
-  const directionRef = useRef(1);
-
-  const handleClick = () => {
-    if (!fishRef.current) return;
-    gsap.to(fishRef.current, {
-      scale: 0.9,
-      duration: 0.15,
-      ease: "power1.inOut",
-      yoyo: true,
-      repeat: 1,
-    });
-  };
-
-  useEffect(() => {
-    if (!fishRef.current) return;
-    const windowWidth = window.innerWidth;
-    const windowHeight = window.innerHeight;
-    const safeMargin = 80;
-    const bottomMargin = 100;
-    const upperLimit = windowHeight * 0.2;
-    const randomStartX =
-      Math.random() * (windowWidth - 2 * safeMargin) + safeMargin;
-    const randomStartY =
-      Math.random() * (windowHeight - bottomMargin - 50) + 50;
-
-    gsap.set(fishRef.current, {
-      x: randomStartX,
-      y: randomStartY,
-      scaleX: -1,
-    });
-
-    const moveFish = () => {
-      if (!fishRef.current) return;
-      const randomSpeed = Math.random() * 7 + 9;
-      const maxMoveX = windowWidth * (0.4 + Math.random() * 0.4);
-      let moveDistanceX = maxMoveX * (Math.random() > 0.5 ? 1 : -1);
-      const currentY = parseFloat(gsap.getProperty(fishRef.current, "y") as string);
-      let moveDistanceY =
-        windowHeight * (0.1 + Math.random() * 0.15) * (Math.random() > 0.65 ? 1 : -1);
-
-      if (currentY < upperLimit) {
-        moveDistanceY = windowHeight * (0.1 + Math.random() * 0.2);
-      }
-
-      let newX =
-        parseFloat(gsap.getProperty(fishRef.current, "x") as string) +
-        moveDistanceX;
-      let newY = currentY + moveDistanceY;
-
-      if (newX < safeMargin) {
-        newX = safeMargin + Math.random() * 50;
-        moveDistanceX = Math.abs(moveDistanceX);
-      }
-      if (newX > windowWidth - safeMargin) {
-        newX = windowWidth - safeMargin - Math.random() * 50;
-        moveDistanceX = -Math.abs(moveDistanceX);
-      }
-      if (newY < 50) newY = 50 + Math.random() * 30;
-      if (newY > windowHeight - bottomMargin)
-        newY = windowHeight - bottomMargin - Math.random() * 30;
-
-      directionRef.current = moveDistanceX > 0 ? -1 : 1;
-
-      gsap.to(fishRef.current, {
-        x: newX,
-        y: newY,
-        scaleX: directionRef.current,
-        duration: randomSpeed,
-        ease: "power2.inOut",
-        onUpdate: () => {
-          const prevX = parseFloat(gsap.getProperty(fishRef.current, "x") as string);
-          directionRef.current = newX > prevX ? -1 : 1;
-          gsap.set(fishRef.current, { scaleX: directionRef.current });
-        },
-        onComplete: moveFish,
-      });
-    };
-
-    moveFish();
-  }, []);
-
-  return (
-    <Image
-      loader={({ src }) => src}
-      ref={fishRef}
-      src={getFishImageUrl(fishInfo.fish)}
-      alt={fishInfo.fish}
-      width={64}
-      height={64}
-      className="absolute"
-      onClick={handleClick}
-      unoptimized
-    />
-  );
-}
-
-// 최상위 컴포넌트: FriendFishContent를 Suspense로 감싼 컴포넌트
 export default function FriendFishPageWithSuspense() {
   return (
     <Suspense fallback={<div>Loading...</div>}>

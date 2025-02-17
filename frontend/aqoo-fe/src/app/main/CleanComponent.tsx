@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Camera } from "@mediapipe/camera_utils"; // 카메라 사용 라이브러리
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
+import { useSFX } from "@/hooks/useSFX";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -24,6 +25,9 @@ export default function CleanComponent({
   aquariumId: number; // ✅ `aquariumId`를 필수 prop으로 설정
 }) {
   const { auth } = useAuth(); // ✅ 로그인한 유저 정보 가져오기
+
+  const { play: playClean } = useSFX("/sounds/창문닦기.mp3");
+  const { play: playClear } = useSFX("/sounds/성공알림-01.mp3");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -196,6 +200,7 @@ export default function CleanComponent({
       if (videoRef.current && videoRef.current.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach((track) => track.stop());
+        videoRef.current.srcObject = null; // ✅ 비디오 스트림 해제
       }
     };
   }, [isMirrored, palmImage]);
@@ -223,8 +228,10 @@ export default function CleanComponent({
     }
 
     if (motionData.current.movedLeft && motionData.current.movedRight) {
+      playClean();
       count.current += 1;
       setMotionCount(count.current);
+
       motionData.current = {
         startX: currentX,
         movedLeft: false,
@@ -234,6 +241,7 @@ export default function CleanComponent({
 
     if (count.current === 3) {
       alert("청소에 성공했어요! 🐟");
+      playClear();
       motionData.current = { startX: null, movedLeft: false, movedRight: false };
       count.current = 0;
       handleCleanSuccess();

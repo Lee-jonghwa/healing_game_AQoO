@@ -8,6 +8,7 @@ interface FishData {
   fishTypeId: number;
   fishTypeName: string;
   fishImage: string;
+  rarity: string;
   cnt: number;
 }
 
