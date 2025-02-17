@@ -1,5 +1,6 @@
 "use client";
 
+import { UserInfo, AquariumData } from "@/types";
 import React, { useEffect, useState, Suspense, useRef } from "react";
 import { useForm, SubmitHandler, UseFormRegister, UseFormSetValue, UseFormHandleSubmit } from "react-hook-form";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +17,8 @@ import DeleteAccountModal from "./DeleteAccountModal";
 import MyFishChangeModal from "./MyFishChangeModal";
 
 import { ProfileFormInputs } from "@/types";
+import axiosInstance from "@/services/axiosInstance";
+import { AxiosResponse } from "axios";
 
 /**
  * Suspense 리소스를 위한 헬퍼 함수
@@ -110,12 +113,57 @@ function EditProfilePage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isMyFishModalOpen, setIsMyFishModalOpen] = useState(false);
+  const [background, setBackground] = useState("/background-1.png");
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
+
   const API_BASE_URL = "https://i12e203.p.ssafy.io";
 
   // userData 리소스: auth.user가 변경될 때마다 최신 데이터를 가져옴
   const userDataResourceRef = useRef<{ read: () => any } | null>(null);
   const [userDataResource, setUserDataResource] = useState<{ read: () => any } | null>(null);
 
+  // 접속 유저의 정보 조회
+  useEffect(() => {
+    if (!auth.user?.id) return; // 로그인한 유저 ID가 없으면 API 호출 안 함
+    axiosInstance
+      .get(`/users/${auth.user.id}`)
+      .then((response: AxiosResponse<UserInfo>) => {
+        console.log("✅ 유저 정보:", response.data);
+        setUserInfo(response.data);
+      })
+      .catch((error) => {
+        console.error("❌ 유저 정보 불러오기 실패", error);
+      });
+  }, [auth.user?.id]);
+
+  // 어항 상세 정보 및 배경 정보 조회
+  useEffect(() => {
+    console.log("Fetching aquarium data...");
+    if (!userInfo?.mainAquarium) return;
+
+    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+
+    axiosInstance
+      .get(`/aquariums/${userInfo.mainAquarium}`)
+      .then((res: AxiosResponse<AquariumData>) => {
+        console.log("✅ 어항 상세 정보:", res.data);
+        setAquariumData(res.data);
+
+        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
+
+        let bgUrl = res.data.aquariumBackground; // API에서 받아온 값
+        if (!bgUrl) return;
+
+        // bgUrl이 전체 URL이 아니라면 BASE_URL을 붙임
+        if (!bgUrl.startsWith("http")) {
+          bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
+        }
+        console.log("Setting background to:", bgUrl);
+        setBackground(bgUrl);
+      })
+      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+  }, [userInfo]);
   useEffect(() => {
     // auth.user?.id가 준비되었고, 아직 리소스가 생성되지 않았다면 생성
     if (auth.user?.id) {
@@ -208,7 +256,9 @@ function EditProfilePage() {
 
   return (
     <div
-      style={{ backgroundImage: `url(${API_BASE_URL}/images/bg1.png)` }}
+      style={{
+        backgroundImage: `linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url(${background})`,
+      }}
       className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
     >
       <div className="absolute top-0 left-0 m-2">
