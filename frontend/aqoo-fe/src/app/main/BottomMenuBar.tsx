@@ -121,7 +121,7 @@ export default function BottomMenuBar({
         {isElectron && (
           <button
             onClick={handleToggleOverlay}
-            className={`absolute left-0 transition-all duration-500 px-4 py-2 text-white rounded shadow-md 
+            className={`absolute left-0 transition-all duration-500 px-4 py-2 text-white rounded shadow-md opacity-80
       ${
         overlayActive
           ? 'bg-red-600 hover:bg-red-700'
