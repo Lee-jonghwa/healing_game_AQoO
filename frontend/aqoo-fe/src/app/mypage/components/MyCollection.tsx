@@ -8,7 +8,7 @@ import { Suspense } from "react";
 
 interface MyCollectionProps {
   allFishList: { id: number; fishName: string; imageUrl: string; rarity: string }[];
-  userFishList: { fishTypeId: number; fishTypeName: string; fishImage: string; cnt: number }[];
+  userFishList: { fishTypeId: number; fishTypeName: string; fishImage: string; rarity: string; cnt: number }[];
   customFishList: { fishTypeId: number; fishTypeName: string; fishImage: string }[];
 }
 
@@ -73,7 +73,6 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
             flex items-center justify-center
             text-[#070707] text-center font-[400] 
             text-2xl sm:text-xl md:text-2xl
-          
           "
         >
           어항관리
@@ -83,20 +82,25 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
       {/* 탭 컨텐츠 영역 */}
       <div
         className="
-          w-full max-w-[1300px] h-screen m-0 p-5
+          w-full max-w-[1300px] m-0 p-5
           rounded-xl border-2 border-[#1c5e8d] bg-[#31a9ff]
           [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.25)_inset]
           flex flex-col items-center
         "
+        style={{
+          height: "calc(100vh - 150px)", // 화면 높이에서 탭 버튼과 패딩을 뺀 실제 가용 높이
+        }}
       >
         <div
-          className="flex-1 overflow-y-scroll scrollbar-none bg-white w-full h-full rounded-[30px]"
+          className="flex-1 min-h-0 overflow-y-auto scrollbar-none bg-white w-full rounded-[30px]"
           style={{
+            maxHeight: "100%", // 부모 높이 안에서 꽉 차도록 설정
+            scrollPaddingBottom: "50px", // 마지막 요소가 보이도록 여유 공간 추가
             msOverflowStyle: "none", // IE, Edge에서 스크롤바 숨기기
             scrollbarWidth: "none", // Firefox에서 스크롤바 숨기기
           }}
         >
-          <div className="bg-white overflow-hidden">
+          <div className="bg-white">
             {selectedTab === "basic" && <BasicCollectionTab allFishList={allFishList} userFishList={userFishList} />}
             {selectedTab === "custom" && <CustomCollectionTab customFishList={customFishList} />}
           </div>

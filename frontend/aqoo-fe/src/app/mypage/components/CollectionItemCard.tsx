@@ -1,6 +1,5 @@
 "use client";
 
-
 // 공통으로 사용할 아이템 카드 컴포넌트
 // name: 아이템 이름 (예: '거북이 1')
 // count: 아이템 수량
@@ -8,15 +7,33 @@
 interface CollectionItemCardProps {
   name: string;
   count?: number;
+  rarity?: string;
   imageSrc: string;
   isModal?: boolean;
   isSelected?: boolean;
   onClick?: () => void;
 }
 
+type Rarity = "COMMON" | "RARE" | "EPIC";
+
+const rarityColors: Record<Rarity, string> = {
+  COMMON: "text-gray-500 bg-gray-200 border-gray-400",
+  RARE: "text-blue-500 bg-blue-200 border-blue-400",
+  EPIC: "text-purple-500 bg-yellow-200 border-yellow-400",
+};
+
+function getRarityColor(rarity: string | undefined): string {
+  if (!rarity) return "";
+  if (rarity === "COMMON" || rarity === "RARE" || rarity === "EPIC") {
+    return rarityColors[rarity as Rarity];
+  }
+  return "";
+}
+
 export default function CollectionItemCard({
   name,
   count,
+  rarity,
   imageSrc,
   isModal = false,
   isSelected = false,
@@ -50,20 +67,26 @@ export default function CollectionItemCard({
           rounded-xl border border-black bg-white
           gap-1
           overflow-hidden
+          relative
         `}
       >
+        {imageSrc !== "https://i12e203.p.ssafy.io/images/미등록이미지.png" &&
+          !isModal &&
+          count !== undefined &&
+          count !== null &&
+          count > 0 && <p className="absolute top-0 right-1 text-[13px] text-gray-500">x {count}</p>}
         <div className="flex-1 flex items-center justify-center w-full h-auto aspect-square overflow-hidden">
           <img src={imageSrc} alt={name} className="object-contain max-w-full max-h-full w-full h-full" />
         </div>
         <div
           className="
-          flex items-end gap-1 text-[15px] text-black
+          flex flex-col items-center gap-1 text-[15px] text-black
         "
         >
-          <p>{name}</p>
-          {imageSrc !== "https://i12e203.p.ssafy.io/images/미등록이미지.png" && !isModal && count !== undefined && count !== null && count > 0 && (
-            <p className="text-[10px] text-gray-500">x {count}</p>
+          {rarity && (
+            <p className={`px-3  mt-2 text-xs font-semibold border rounded-full ${getRarityColor(rarity)}`}>{rarity}</p>
           )}
+          <p>{name}</p>
         </div>
       </div>
       {/* 배율이 120% 이상이면 크기를 줄이는 스타일 */}
@@ -76,4 +99,12 @@ export default function CollectionItemCard({
       `}</style>
     </div>
   );
+}
+
+{
+  /* <span
+className={`px-3  mt-2 text-lg font-semibold border rounded-full ${rarityColors[fish.rarity]}`}
+>
+{fish.rarity}
+</span> */
 }
