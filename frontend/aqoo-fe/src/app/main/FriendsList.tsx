@@ -8,6 +8,7 @@ import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth";
 import { useInput } from "@/hooks/useInput";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -24,15 +25,43 @@ export const fetchFriends = async (userId: string) => {
 };
 
 export default function FriendsList({ onClose, userId }: { onClose: () => void; userId: string }) {
-
   const { auth, fetchUser } = useAuth();
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const router = useRouter();
   const searchInput = useInput("");
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // dummy Friend 객체 (랜덤방문 셀)
+  const dummyFriend: Friend = {
+    friendId: "random",
+    nickname: "???",
+    level: 999,
+    id: 0,
+    mainFishImage: "/default-fish.png", // 기본 이미지 경로 (적절히 수정)
+  };
+
+  // 랜덤방문 버튼 클릭 시: GET /friends/find-non-friend/{userId} 호출
+const handleDummyClick = () => {
+  axios
+    .get(`${API_BASE_URL}/friends/find-non-friend/${userId}`)
+    .then((res: AxiosResponse<string>) => {
+      const randomUserId = res.data; // 응답으로 랜덤한 한 사용자의 id만 반환됨
+      if (randomUserId) {
+        // alert(`랜덤 방문: ${randomUserId} (사용자 ID)`);
+        // 예를 들어 해당 사용자 페이지로 이동할 수도 있습니다.
+        router.push(`/myfriend?friendId=${randomUserId}`);
+      } else {
+        alert("방문할 비친구 사용자가 없습니다.");
+      }
+    })
+    .catch((error) => {
+      console.error("랜덤 방문 요청 실패:", error);
+      alert("랜덤 방문 요청 실패");
+    });
+};
 
   useEffect(() => {
     if (!auth.accessToken) {
@@ -46,13 +75,9 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       } catch (error) {
         console.error("친구 목록 불러오기 실패", error);
       }
-
     };
     fetchAndSetFriends();
-    
-  }, []);
-
-  
+  }, [userId]);
 
   // 친구 추가 함수
   const handleAddFriend = (friendId: string) => {
@@ -64,8 +89,11 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       })
       .then((response: AxiosResponse<{ relationshipId: number }>) => {
         console.log("친구 추가 요청 성공:", response.data);
-
-        setSearchResults((prev) => prev.map((user) => (user.friendId === friendId ? { ...user, isFriend: 1 } : user)));
+        setSearchResults((prev) =>
+          prev.map((user) =>
+            user.friendId === friendId ? { ...user, isFriend: 1 } : user
+          )
+        );
       })
       .catch((error) => {
         alert("친구 추가에 실패했습니다. 다시 시도하세요.");
@@ -92,12 +120,10 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       return;
     }
     console.log("검색할 아이디 : ", searchInput.value);
-
     axios
-      .get(
-        `${API_BASE_URL}/friends/find-users/${searchInput.value}`,
-        { withCredentials: true }
-      )
+      .get(`${API_BASE_URL}/friends/find-users/${searchInput.value}`, {
+        withCredentials: true,
+      })
       .then((response: AxiosResponse<SearchUser[]>) => {
         console.log("사용자 목록 조회:", response.data);
         setSearchResults(response.data);
@@ -127,28 +153,30 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
     <div className="relative w-[400px] h-[600px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col">
-  {/* 헤더 */}
-  <div className="flex justify-between items-center mb-4">
-    <h2 className="text-lg font-bold">
-      친구
-      <span className="ml-3">{myFriends.length}</span> {/* ml-2로 왼쪽 마진 추가 */}
-    </h2>
-    <button
-      onClick={onClose}
-      className="text-xl font-bold hover:text-red-500"
-    >
-      ✖
-    </button>
-  </div>
+      {/* 헤더 */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-bold">
+          친구 <span className="ml-3">{myFriends.length}</span>
+        </h2>
+        <button onClick={onClose} className="text-xl font-bold hover:text-red-500">
+          ✖
+        </button>
+      </div>
 
       {/* 친구 리스트 */}
       <div className="space-y-2 overflow-y-auto scrollbar-hide flex-grow">
+        {/* 맨 첫 칸에 랜덤방문 셀 추가 */}
+        <FriendItem
+          friend={dummyFriend}
+          handleDeleteFriend={() => {}}
+          isDummy={true}
+          onDummyClick={handleDummyClick}
+        />
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
             <FriendItem
@@ -167,11 +195,7 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
         {searchResults.length > 0 && (
           <div className="absolute bottom-full left-0 w-full bg-white border border-black rounded-lg shadow-lg p-3 max-h-[200px] overflow-y-auto scrollbar-hide z-10">
             {searchResults.map((user, index) => (
-              <SearchResultItem
-                key={index}
-                user={user}
-                handleAddFriend={handleAddFriend}
-              />
+              <SearchResultItem key={index} user={user} handleAddFriend={handleAddFriend} />
             ))}
           </div>
         )}
@@ -196,43 +220,64 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   );
 }
 
-// FriendItem 컴포넌트: 친구 항목 클릭 시 해당 친구의 ID를 가지고 /myfriend 페이지로 라우팅
+// FriendItem 컴포넌트: 친구 항목 클릭 시 해당 친구의 ID를 가지고 /myfriend 페이지로 라우팅 또는 dummy일 경우 별도 처리
 function FriendItem({
   friend,
   handleDeleteFriend,
+  isDummy = false,
+  onDummyClick,
 }: {
   friend: Friend;
   handleDeleteFriend: (relationshipId: number) => void;
+  isDummy?: boolean;
+  onDummyClick?: () => void;
 }) {
   const customLoader = ({ src }: { src: string }) => src;
 
   return (
     <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
-      <Link href={`/myfriend?friendId=${friend.friendId}`} className="flex items-center space-x-3 w-full">
-        <div className="w-12 h-12 rounded-full overflow-hidden">
-          <Image
-            loader={customLoader}
-            src={friend.mainFishImage}
-            alt={friend.nickname}
-            width={12}
-            height={12}
-            className="w-full h-full object-contain"
-          />
+      {isDummy ? (
+        <div className="flex items-center space-x-3 w-full">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
+            <span className="text-xs">?</span>
+          </div>
+          <div>
+            <p className="text-xs">Lv. ???</p>
+            <p className="font-bold">랜덤방문</p>
+            <p className="text-sm text-gray-500">@???</p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs">Lv. {friend.level}</p>
-          <p className="font-bold">{friend.nickname}</p>
-          <p className="text-sm text-gray-500">@{friend.friendId}</p>
-        </div>
-      </Link>
+      ) : (
+        <Link href={`/myfriend?friendId=${friend.friendId}`} className="flex items-center space-x-3 w-full">
+          <div className="w-12 h-12 rounded-full overflow-hidden">
+            <Image
+              loader={customLoader}
+              src={friend.mainFishImage}
+              alt={friend.nickname}
+              width={12}
+              height={12}
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <p className="text-xs">Lv. {friend.level}</p>
+            <p className="font-bold">{friend.nickname}</p>
+            <p className="text-sm text-gray-500">@{friend.friendId}</p>
+          </div>
+        </Link>
+      )}
       <button
         onClick={(e) => {
           e.stopPropagation();
-          handleDeleteFriend(friend.id);
+          if (isDummy && onDummyClick) {
+            onDummyClick();
+          } else {
+            handleDeleteFriend(friend.id);
+          }
         }}
         className="absolute right-3 px-3 py-1 bg-red-500 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
       >
-        삭제
+        {isDummy ? "이동" : "삭제"}
       </button>
     </div>
   );
@@ -248,20 +293,18 @@ function SearchResultItem({
 }) {
   const customLoader = ({ src }: { src: string }) => src;
 
-
   return (
     <div className="p-3 bg-white mb-2 rounded-lg border border-black flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
-
         <div className="w-10 h-10 bg-300 rounded-full">
-        <Image
-        loader={customLoader}
-        src={user.mainFishImage}
-        alt={user.nickname}
-        width={10}
-        height={10}
-        className="w-full h-full object-contain"
-        ></Image>
+          <Image
+            loader={customLoader}
+            src={user.mainFishImage}
+            alt={user.nickname}
+            width={10}
+            height={10}
+            className="w-full h-full object-contain"
+          />
         </div>
         <div>
           <p className="text-xs">Lv. {user.level}</p>
@@ -270,22 +313,21 @@ function SearchResultItem({
         </div>
       </div>
       {user.isFriend === 0 ? (
-      <button
-        onClick={() => handleAddFriend(user.friendId)}
-        className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
-      >
-        친구 추가
-      </button>
+        <button
+          onClick={() => handleAddFriend(user.friendId)}
+          className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
+        >
+          친구 추가
+        </button>
       ) : user.isFriend === 1 ? (
-    <button className="px-3 py-1 bg-yellow-400 text-white text-xs rounded-md cursor-default" disabled>
-      대기 중
-    </button>
-    ) : (
-    <button className="px-3 py-1 bg-gray-400 text-white text-xs rounded-md cursor-default" disabled>
-      친구
-    </button>
-    )}
+        <button className="px-3 py-1 bg-yellow-400 text-white text-xs rounded-md cursor-default" disabled>
+          대기 중
+        </button>
+      ) : (
+        <button className="px-3 py-1 bg-gray-400 text-white text-xs rounded-md cursor-default" disabled>
+          친구
+        </button>
+      )}
     </div>
   );
 }
-
