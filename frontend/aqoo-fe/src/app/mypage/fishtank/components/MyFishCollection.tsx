@@ -164,12 +164,12 @@ export default function MyFishCollection({
   return (
     <div>
       <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-        <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap justify-start gap-4 ml-7">
           {myFishList.map((fish) => (
             <div
               key={fish.fishName}
               onClick={() => handleFishClick(fish)}
-              className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer"
+              className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer m-1"
             >
               <CollectionItemCard name={fish.fishName} count={fish.count} imageSrc={fish.imageSrc} />
             </div>
@@ -181,7 +181,7 @@ export default function MyFishCollection({
         <div className=" fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-3/4 md:w-1/2 lg:w-1/3">
             <p className="mb-4 text-lg">
-              활성화 돼있는 <span className="font-bold">{aquariumName}</span> 어항에{" "}
+              <span className="font-bold">{aquariumName}</span> 어항에{" "}
               <span className="font-bold">{selectedFish.fishName}</span>을(를) 넣겠습니까?
             </p>
             <div className="flex justify-end space-x-4">
