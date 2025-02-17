@@ -54,7 +54,7 @@ export default function MyFishTank() {
   return (
     <div
       style={{
-        backgroundImage: `linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url(${background})`,
+        backgroundImage: `url(${background})`,
       }}
       className="
         flex flex-col

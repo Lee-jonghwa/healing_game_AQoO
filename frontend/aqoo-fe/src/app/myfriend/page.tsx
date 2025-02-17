@@ -32,7 +32,6 @@ interface AquariumData {
   pollutionStatus: number;
   waterStatus: number;
   userId: string;
-  // 기존에는 fishes 필드를 포함했으나, 이제 별도 API로 불러옵니다.
 }
 
 interface UserInfo {
@@ -65,7 +64,6 @@ function FriendFishContent() {
   // 상태 변수 선언
   const [friendUserInfo, setFriendUserInfo] = useState<UserInfo | null>(null);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
-  // 기존 어항 데이터의 fishes 배열 대신 별도 상태로 관리
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [background, setBackground] = useState("/background-1.png");
   const [loading, setLoading] = useState(true);
@@ -111,8 +109,6 @@ function FriendFishContent() {
         .then((res: AxiosResponse<FishData[] | { message: string }>) => {
           if (Array.isArray(res.data)) {
             setFishes(res.data);
-            console.log("물고기 데이터 : ", res.data);
-            console.log("현재 유저 아이디 : ", auth.user?.id);
           } else {
             console.warn("물고기 데이터가 없습니다.");
             setFishes([]);
@@ -133,30 +129,48 @@ function FriendFishContent() {
   });
 
   // "가져오기" 버튼 클릭 시 POST 요청 보내는 함수
-const handleGetFish = (fish: FishData) => {
-  // GetFriendFishRequestDto: { userId, fishTypeId, fishName }
-  const payload = {
-    userId: auth.user?.id, // authAtom에서 가져온 현재 로그인한 사용자 ID 사용
-    friendId,
-    fishTypeId: fish.fishTypeId,
-    fishName: fish.fishName,
+  const handleGetFish = (fish: FishData) => {
+    // GetFriendFishRequestDto: { userId, fishTypeId, fishName }
+    const payload = {
+      userId: auth.user?.id, // 현재 로그인한 사용자 ID 사용
+      friendId,
+      fishTypeId: fish.fishTypeId,
+      fishName: fish.fishName,
+    };
+
+    axios
+      .post(`${API_BASE_URL}/aquariums/friendFish`, payload)
+      .then((res: AxiosResponse<GetFriendFishResponseDto>) => {
+        const { message, success } = res.data;
+        alert(message);
+        if (success) {
+          setFishes((prev) => prev.filter((f) => f.fishId !== fish.fishId));
+        }
+      })
+      .catch((error) => {
+        console.error("친구 물고기 가져오기 실패:", error);
+        alert("물고기를 가져오는 데 실패했습니다.");
+      });
   };
 
-  axios
-    .post(`${API_BASE_URL}/aquariums/friendFish`, payload)
-    .then((res: AxiosResponse<GetFriendFishResponseDto>) => {
-      const { message, success } = res.data;
-      alert(message);
-      if (success) {
-        // 성공 시, 이미 가져온 물고기이므로 목록 업데이트 (예: 해당 물고기 제거)
-        setFishes((prev) => prev.filter((f) => f.fishId !== fish.fishId));
-      }
-    })
-    .catch((error) => {
-      console.error("친구 물고기 가져오기 실패:", error);
-      alert("물고기를 가져오는 데 실패했습니다.");
-    });
-};
+  // "친구 추가" 버튼 클릭 시 POST 요청 보내는 함수
+  const handleSendFriendRequest = () => {
+    const payload = {
+      userId: auth.user?.id,
+      friendId: friendId,
+      status: "PENDING",
+    };
+
+    axios
+      .post(`${API_BASE_URL}/friends/request`, payload)
+      .then((res: AxiosResponse<{ relationshipId: number }>) => {
+        alert("친구 요청을 보냈습니다.");
+      })
+      .catch((error) => {
+        console.error("친구 요청 실패:", error);
+        alert("친구 요청에 실패했습니다.");
+      });
+  };
 
   if (loading) return <div>로딩 중...</div>;
   if (!friendUserInfo || !aquariumData)
@@ -180,10 +194,17 @@ const handleGetFish = (fish: FishData) => {
       </div>
 
       {/* 친구 어항정보 헤더 */}
-      <div className="absolute top-32 left-4 z-50 text-white p-2 bg-black/30 rounded">
+      <div className="absolute top-32 left-4 z-50 text-white p-2 bg-black/30 rounded flex flex-col gap-2">
         <h1 className="text-xl font-bold">친구의 아쿠아리움</h1>
         <p>친구 ID: {friendId}</p>
         <p>어항 이름: {aquariumData.aquariumName}</p>
+        {/* 친구 추가 버튼 추가 */}
+        <button
+          onClick={handleSendFriendRequest}
+          className="mt-2 px-4 py-1 bg-blue-500 text-white rounded"
+        >
+          친구 추가
+        </button>
       </div>
 
       {/* 물고기 아이콘 렌더링 (Fish 컴포넌트를 사용) */}
@@ -206,60 +227,53 @@ const handleGetFish = (fish: FishData) => {
       </div>
 
       {/* 친구 물고기 리스트 모달 */}
-{showFishList && (
-  <div
-    className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
-    onClick={() => setShowFishList(false)}  // 외부 클릭 시 모달 닫기
-  >
-    <div
-      className="bg-white w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 max-h-[80vh] rounded-lg p-4 overflow-y-auto"
-      onClick={(e) => e.stopPropagation()} // 내부 클릭 시 전파 차단
-    >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">친구 물고기 컬렉션</h2>
-        <button
+      {showFishList && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setShowFishList(false)}
-          className="text-red-500"
         >
-          닫기
-        </button>
-      </div>
-      <div className="grid grid-cols-4 gap-2">
-        {sortedFishes.map((fish, index) => {
-          // rarity가 COMMON, RARE, EPIC 인 경우 버튼 비활성화
-          const isEnabled = !["COMMON", "RARE", "EPIC"].includes(
-            fish.rarity
-          );
-          return (
-            <div key={index} className="flex flex-col items-center">
-              <CollectionItemCard
-                name={fish.fishName}
-                count={1}
-                imageSrc={fish.fishImage}
-              />
-              <button
-                onClick={() => {
-                  if (isEnabled) {
-                    handleGetFish(fish);
-                  }
-                }}
-                disabled={!isEnabled}
-                className={`mt-1 px-2 py-1 rounded text-xs ${
-                  isEnabled
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-400 text-white cursor-not-allowed"
-                }`}
-              >
-                가져오기
+          <div
+            className="bg-white w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 max-h-[80vh] rounded-lg p-4 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">친구 물고기 컬렉션</h2>
+              <button onClick={() => setShowFishList(false)} className="text-red-500">
+                닫기
               </button>
             </div>
-          );
-        })}
-      </div>
-    </div>
-  </div>
-)}
-
+            <div className="grid grid-cols-4 gap-2">
+              {sortedFishes.map((fish, index) => {
+                const isEnabled = !["COMMON", "RARE", "EPIC"].includes(fish.rarity);
+                return (
+                  <div key={index} className="flex flex-col items-center">
+                    <CollectionItemCard
+                      name={fish.fishName}
+                      count={1}
+                      imageSrc={fish.fishImage}
+                    />
+                    <button
+                      onClick={() => {
+                        if (isEnabled) {
+                          handleGetFish(fish);
+                        }
+                      }}
+                      disabled={!isEnabled}
+                      className={`mt-1 px-2 py-1 rounded text-xs ${
+                        isEnabled
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-400 text-white cursor-not-allowed"
+                      }`}
+                    >
+                      가져오기
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

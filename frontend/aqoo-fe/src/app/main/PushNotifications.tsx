@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"; // ✅ next/navigation에서 import
 import { fetchFriends } from "@/app/main/FriendsList";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
+const customLoader = ({ src }: { src: string }) => src;
 
 export default function PushNotifications({
   onClose,
@@ -167,6 +168,9 @@ function NotificationItem({
         return "/icon/friendIcon.png";
       case "GAME INVITE":
         return "/icon/gameIcon.png";
+      case "FRIEND FISH":
+        console.log(data);
+        return data;
       case "FEED":
         return "/icon/feedIcon.png";
       case "CLEAN":
@@ -214,7 +218,7 @@ function NotificationItem({
         <span className="text-lg font-bold">×</span> {/* 글자 크기도 조금 줄였어 */}
       </button>
       <div className="relative flex items-center">
-        <Image src={getIconSrc(type)} alt={type} width={32} height={32} className="w-8 h-8 " />
+        <Image loader={customLoader} src={getIconSrc(type)} alt={type} width={32} height={32} className="w-8 h-8 object-contain" />
         {!status && <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></div>}
       </div>
 
@@ -290,6 +294,8 @@ const getNotificationLabel = (type: string) => {
       return "친구 수락";
     case "GAME INVITE":
       return "게임 초대";
+    case "FRIEND FISH":
+      return "물고기 거래";
     case "FEED":
       return "어항의 먹이 상태";
     case "CLEAN":
