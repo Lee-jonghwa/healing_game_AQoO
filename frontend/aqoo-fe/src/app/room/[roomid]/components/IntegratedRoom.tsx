@@ -130,7 +130,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
-        fishName: user.nickname ?? user.userName, // 닉네임이 있으면 사용, 없으면 userName 사용
+        fishName: user.nickname, // 닉네임이 있으면 사용, 없으면 userName 사용
         fishImage: user.mainFishImage,
       };
     });
@@ -332,7 +332,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
         <>
           {screen === 'chat' && (
             <div 
-              className="relative w-full h-full min-h-screen flex items-center justify-center bg-gray-100"
+              className="relative w-full h-full min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden"
               style={{ backgroundImage: "url('/chat_images/background.png')", backgroundSize: "cover", backgroundAttachment: "fixed", backgroundPosition: "center" }}
             >
               {/* 물고기 렌더링, 말풍선 표시 */}
