@@ -73,7 +73,6 @@ export default function CleanComponent({
     img.src = PALM_IMAGE_SRC;
     // 이미지 로드가 끝나면 상태에 저장
     img.onload = () => {
-      console.log("손바닥 이미지 로드");
       setPalmImage(img);
     };
     img.onerror = () => {
@@ -301,7 +300,7 @@ export default function CleanComponent({
     const drawX = pxCenterX - drawW / 2;
     const drawY = pxCenterY - drawH / 2;
 
-    console.log("손바닥 오버레이:", { drawX, drawY, drawW, drawH, pxCenterX, pxCenterY });
+    // console.log("손바닥 오버레이:", { drawX, drawY, drawW, drawH, pxCenterX, pxCenterY });
 
     // 실제 그리기
     canvasCtx.drawImage(image, drawX, drawY, drawW, drawH);
@@ -330,7 +329,6 @@ export default function CleanComponent({
         data: "",
       });
 
-      console.log("✅ 어항 청소 성공");
       setMotionCount(0);
       // ✅ 2. 경험치 10 증가 및 레벨업 감지
       await handleIncreaseExp(20);
