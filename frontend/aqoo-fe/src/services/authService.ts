@@ -1,6 +1,7 @@
 // src/services/authService.ts
 import axios from "axios";
 import { User } from "@/store/authAtom";
+import axiosInstance from "./axiosInstance";
 
 const AUTH_API_URL = "https://i12e203.p.ssafy.io/api/v1/auth";
 const USER_API_URL = "https://i12e203.p.ssafy.io/api/v1/users";
@@ -29,7 +30,7 @@ export const login = async (id: string, pw: string): Promise<User> => {
     localStorage.setItem("loggedInUser", userId);
 
     // 추가 사용자 정보가 없다면, 입력받은 id로 User 객체 생성하여 반환합니다.
-    return { id, nickName };
+    return { id, nickname: nickName};
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "로그인 실패");
   }
@@ -71,7 +72,7 @@ export const fetchUser = async (): Promise<User | null> => {
   if (!token || !storedId) return null;
 
   try {
-    const res = await axios.get(`${USER_API_URL}/${storedId}`, {
+    const res = await axiosInstance.get(`users/${storedId}`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });

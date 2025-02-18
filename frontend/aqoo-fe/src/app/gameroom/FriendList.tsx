@@ -2,9 +2,9 @@
 
 import { User, usersState } from "@/store/participantAtom";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
+import axiosInstance from "@/services/axiosInstance";
 
 interface Friend {
   id: string; // 친구 관계 아이디
@@ -22,7 +22,6 @@ export default function FriendList() {
   const [loggedInUser, setLoggedInUser] = useState("");
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [users, setUsers] = useRecoilState(usersState);
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
   // 클라이언트 사이드에서만 localStorage 접근
   useEffect(() => {
@@ -39,8 +38,8 @@ export default function FriendList() {
       console.warn("⚠ userId가 없음. API 요청을 중단합니다.");
       return;
     }
-    axios
-      .get(`${API_BASE_URL}/friends/${loggedInUser}`)
+    axiosInstance
+      .get(`/friends/${loggedInUser}`)
       .then((response) => {
         console.log("loggedInUser", loggedInUser);
         console.log("친구 목록 조회 성공:", response.data);

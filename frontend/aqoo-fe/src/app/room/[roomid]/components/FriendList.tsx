@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import axiosInstance from "@/services/axiosInstance";
 
 interface Friend {
   id: number;
@@ -27,12 +28,12 @@ export default function FriendList({ userName, roomId, isHost, participantCount,
 
   console.log("📢 friendList 데이터:", friendList);
 
-  
   useEffect(() => {
     if (isHost) {
-      fetch(`https://i12e203.p.ssafy.io/api/v1/friends/${encodeURIComponent(userName)}`)
-        .then((response) => response.json())
-        .then((data) => setFriends(data.friends))
+      axiosInstance.get(`/friends/${encodeURIComponent(userName)}`)
+        .then((response) => {
+          setFriends(response.data.friends);
+        })
         .catch((error) => console.error('Error fetching friends:', error));
     }
   }, [isHost, userName]);

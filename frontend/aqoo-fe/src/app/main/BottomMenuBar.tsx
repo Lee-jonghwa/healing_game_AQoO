@@ -7,11 +7,10 @@ import FriendsList from "@/app/main/FriendsList";
 import MenuButton from "./MenuButton";
 import PushNotifications from "@/app/main/PushNotifications";
 import axios from "axios";
+import axiosInstance from "@/services/axiosInstance";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useState } from "react";
-
-const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 interface BottomMenuBarProps {
   userInfo: UserInfo;
@@ -69,22 +68,25 @@ export default function BottomMenuBar({
   };
 
   const handleAquariumUpdate = async (type: "water" | "feed") => {
-    if (!userInfo?.mainAquarium) return;
+    if (!selectedAquariumId) return; // ✅ 선택된 어항 ID가 없으면 return
+
     if ((type === "water" && isWaterMaxed) || (type === "feed" && isFeedMaxed)) {
       alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
       return;
     }
     try {
-      await axios.post(`${API_BASE_URL}/aquariums/update`, {
+      await axiosInstance.post(`/aquariums/update`, {
         aquariumId: userInfo.mainAquarium,
         type,
         data: "",
       });
+
       if (type === "water") {
         playWater();
       } else {
         playFeed();
       }
+
       alert(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`);
       await handleIncreaseExp(10);
       refreshAquariumData();
@@ -161,13 +163,13 @@ export default function BottomMenuBar({
         )}
 
         {/* ✅ 선택된 컴포넌트만 표시 (BottomMenuBar 위에서 반응형 유지) */}
-        {activeComponent === "clean" && (
+        {activeComponent === "clean" && selectedAquariumId !== null && (
           <div className="absolute  absolute bottom-full mb-2 right-0 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-auto z-50">
             <CleanComponent
               onClose={() => setActiveComponent(null)}
               onCleanSuccess={refreshAquariumData}
               handleIncreaseExp={handleIncreaseExp} // ✅ 이 방식이 맞음 (async 함수이므로 그대로 전달 가능)
-              aquariumId={userInfo.mainAquarium}
+              aquariumId={selectedAquariumId}
             />
           </div>
         )}
