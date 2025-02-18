@@ -9,6 +9,7 @@ import CollectionItemCard from "./components/CollectionItemCard"; // 물고기 �
 import Fish from "@/components/Fish"; // 물고기 움직임 로직을 포함한 컴포넌트
 import { authAtom } from "@/store/authAtom";
 import { useRecoilValue } from "recoil";
+import axiosInstance from "@/services/axiosInstance";
 
 // 타입 정의
 interface FishData {
@@ -86,7 +87,7 @@ function FriendFishContent() {
   // 2. 어항 상세 정보 불러오기 (친구의 mainAquarium 사용)
   useEffect(() => {
     if (friendUserInfo?.mainAquarium) {
-      axios
+      axiosInstance
         .get(`${API_BASE_URL}/aquariums/${friendUserInfo.mainAquarium}`)
         .then((res: AxiosResponse<AquariumData>) => {
           setAquariumData(res.data);
@@ -104,7 +105,7 @@ function FriendFishContent() {
   // 3. 친구의 물고기 데이터 별도 불러오기 (새 엔드포인트 사용)
   useEffect(() => {
     if (friendUserInfo?.mainAquarium) {
-      axios
+      axiosInstance
         .get(`${API_BASE_URL}/aquariums/friend/${friendId}`)
         .then((res: AxiosResponse<FishData[] | { message: string }>) => {
           if (Array.isArray(res.data)) {
@@ -138,7 +139,7 @@ function FriendFishContent() {
       fishName: fish.fishName,
     };
 
-    axios
+    axiosInstance
       .post(`${API_BASE_URL}/aquariums/friendFish`, payload)
       .then((res: AxiosResponse<GetFriendFishResponseDto>) => {
         const { message, success } = res.data;
@@ -161,7 +162,7 @@ function FriendFishContent() {
       status: "PENDING",
     };
 
-    axios
+    axiosInstance
       .post(`${API_BASE_URL}/friends/request`, payload)
       .then((res: AxiosResponse<{ relationshipId: number }>) => {
         alert("친구 요청을 보냈습니다.");

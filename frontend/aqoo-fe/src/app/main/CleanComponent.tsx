@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera } from "@mediapipe/camera_utils"; // 카메라 사용 라이브러리
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 import { useSFX } from "@/hooks/useSFX";
+import axiosInstance from "@/services/axiosInstance";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -324,7 +325,7 @@ export default function CleanComponent({
   async function handleCleanSuccess() {
     try {
       // ✅ 1. 어항 청소 API 호출
-      await axios.post(`${API_BASE_URL}/aquariums/update`, {
+      await axiosInstance.post(`${API_BASE_URL}/aquariums/update`, {
         aquariumId: aquariumId,
         type: "clean",
         data: "",
