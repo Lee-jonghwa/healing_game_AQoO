@@ -7,6 +7,7 @@ import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { fetchUser } from "@/services/authService";
 import { useRouter } from "next/navigation";
+import { useSFX } from "@/hooks/useSFX";
 
 interface AquariumTab {
   id: number;
@@ -20,7 +21,7 @@ interface FishTankTabsProps {
 export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) {
   const auth = useRecoilValue(authAtom);
   const router = useRouter();
-
+  const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
   // 탭 배열 (어항 목록)
   const [tabs, setTabs] = useState<AquariumTab[]>([]);
   // 현재 선택된 탭 인덱스
@@ -105,6 +106,7 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
   };
 
   const handleTabClick = (idx: number) => {
+    playModal();
     if (idx === selectedIndex) {
       setEditingIndex(idx);
       setEditingName(tabs[idx].name);
@@ -141,6 +143,7 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
   };
 
   const handleDeleteClick = (idx: number) => {
+    playModal();
     setTabToDelete(tabs[idx]);
     setShowDeleteModal(true);
   };
@@ -231,11 +234,10 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
               ) : (
                 <button
                   onClick={() => handleTabClick(idx)}
-                  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] ${
-                    selectedIndex === idx
-                      ? "!bg-[#A3D8FF]"
-                      : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"
-                  }`}
+                  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] ${selectedIndex === idx
+                    ? "!bg-[#A3D8FF]"
+                    : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"
+                    }`}
                   title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
                 >
                   {selectedIndex === idx && !editingIndex && (
@@ -266,7 +268,10 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
         <div className="flex ml-auto mr-2 gap-2">
           {/* 어항 생성하기 버튼 */}
           <button
-            onClick={handleAddTank}
+            onClick={() => {
+              playModal();
+              handleAddTank();
+            }}
             className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white shadow-inner text-[#070707] text-4xl hover:bg-[#e0e0e0]"
             title="어항 생성하기"
           >
@@ -275,7 +280,10 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
 
           {/* 체크 아이콘 버튼 */}
           <button
-            onClick={handleGoBack}
+            onClick={() => {
+              playModal();
+              handleGoBack();
+            }}
             className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-yellow-300 shadow-inner text-[#070707] text-2xl font-bold hover:bg-[#e0e050]"
             title="마이페이지로 이동"
           >
