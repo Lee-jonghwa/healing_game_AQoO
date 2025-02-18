@@ -132,7 +132,7 @@ export default function BottomMenuBar({
               )}
 
               {/* 일렉트론 전용 버튼 (isElectron이 false면 보임) */}
-              {!isElectron && (
+              {isElectron && (
                 <button
                   onClick={handleToggleOverlay}
                   className={`px-4 py-2 text-white rounded shadow-md opacity-90 transition-all
