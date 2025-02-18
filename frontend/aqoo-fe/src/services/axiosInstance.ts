@@ -21,7 +21,7 @@ const getCookie = (name: string): string | null => {
 
 // 🔹 강제 로그아웃 함수
 const forceLogout = () => {
-  console.error("강제 로그아웃 실행");
+  //console.error("강제 로그아웃 실행");
   localStorage.removeItem("accessToken"); // Access Token 삭제
   document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;"; // Refresh Token 삭제
   window.location.href = "/user/login"; // 로그인 페이지로 리다이렉트
@@ -38,7 +38,6 @@ axiosInstance.interceptors.request.use(
     config.withCredentials = true; // ✅ 모든 요청에 쿠키 포함
     return config;
   },
-  (error) => Promise.reject(error)
 );
 
 // 응답 인터셉터: 응답 데이터를 로깅하고, 401 발생 시 토큰 갱신
@@ -61,23 +60,23 @@ axiosInstance.interceptors.response.use(
       // 🔹 에러 메시지의 구조를 명확히 타입 단언
       const responseData = error.response.data as { error?: string };
       if (responseData.error && responseData.error.includes("JWT 검증 오류")) {
-        console.error("JWT 검증 오류 발생 - 강제 로그아웃");
+        //console.error("JWT 검증 오류 발생 - 강제 로그아웃");
         forceLogout();
-        return Promise.reject(error);
+        return;
       }
     }
 
     // 401 에러 처리 (토큰 갱신)
 if (error.response?.status === 401) {
   if (originalRequest._retry) {
-    return Promise.reject(error);
+    return;
   }
   originalRequest._retry = true;
 
   try {
     console.log("401 발생 - 토큰 갱신 요청");
     // 쿠키에 저장된 refreshToken이 자동으로 전송되도록 withCredentials 옵션 추가
-    console.log("에러 발생 요청" , originalRequest );
+    //console.log("에러 발생 요청" , originalRequest );
     const { data } = await axios.post(
       `${BASE_URL}${REFRESH_URL}`,
       {},
@@ -89,14 +88,14 @@ if (error.response?.status === 401) {
     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
     return axiosInstance(originalRequest);
   } catch (refreshError) {
-    console.error("토큰 갱신 실패:", refreshError);
+    //console.error("토큰 갱신 실패:", refreshError);
     forceLogout();
-    return Promise.reject(refreshError);
+    return;
   }
 }
 
 
-    return Promise.reject(error);
+    return ;
   }
 );
 
