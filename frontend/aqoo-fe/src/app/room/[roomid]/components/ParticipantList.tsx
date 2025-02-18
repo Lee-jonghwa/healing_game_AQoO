@@ -1,6 +1,5 @@
-"use client";
+'use client';
 
-import React from "react";
 import { User } from '@/store/authAtom';
 
 interface Friend {
@@ -25,46 +24,59 @@ interface ParticipantListProps {
   onKickUser: (userName: string) => void;
 }
 
-export default function ParticipantList({ users, friendList, currentUser, currentIsHost, onKickUser }: ParticipantListProps) {
+export default function ParticipantList({
+  users,
+  friendList,
+  currentUser,
+  currentIsHost,
+  onKickUser,
+}: ParticipantListProps) {
   return (
-    <div className="bg-white/70 border border-gray-300 rounded-lg shadow-lg p-4 z-10 w-[370px] h-[170px] overflow-auto custom-scrollbar">
-      <h3 className="text-lg font-bold mb-2">참가자 리스트 {users.length}</h3>
-      <ul className="space-y-2">
+    <div className='bg-white/70 border border-gray-300 rounded-lg shadow-lg p-4 z-10 w-[370px] h-[170px] overflow-auto custom-scrollbar'>
+      <h3 className='text-lg font-bold mb-2'>참가자 리스트 {users.length}</h3>
+      <ul className='space-y-2'>
         {users.map((user) => {
-          let displayName = "";
+          let displayName = '';
           // 현재 사용자이면 authAtom의 nickname 사용
           if (currentUser?.id === user.userName) {
-            displayName = `${currentUser.nickname} (Lv.${currentUser.level})${user.isHost ? " (방장)" : ""}`;
+            displayName = `${currentUser.nickname} (Lv.${currentUser.level})${
+              user.isHost ? ' (방장)' : ''
+            }`;
           } else {
             // 나머지 사용자는 friendList API에서 가져온 값을 우선 사용
             const friend = friendList.find((f) => f.friendId === user.userName);
             if (friend) {
-              displayName = `${friend.nickname} (Lv.${friend.level})${user.isHost ? " (방장)" : ""}`;
+              displayName = `${friend.nickname} (Lv.${friend.level})${
+                user.isHost ? ' (방장)' : ''
+              }`;
             } else {
               // friendList에 없으면 기본값으로 user.nickname 사용
-              displayName = `${user.nickname}${user.isHost ? " (방장)" : ""}`;
+              displayName = `${user.nickname}${user.isHost ? ' (방장)' : ''}`;
             }
           }
 
           return (
-            <li key={user.userName} className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50">
-              <div className="text-gray-900 font-medium flex items-center space-x-2">
-                <div className="w-10 h-10 bg-300 rounded-full overflow-hidden">
-                  <img 
-                    src={user.mainFishImage} 
-                    alt="참가자대표물고기"  
-                    className="w-full h-full object-contain rounded-full"
+            <li
+              key={user.userName}
+              className='flex justify-between items-center px-4 py-2 border rounded bg-gray-50'
+            >
+              <div className='text-gray-900 font-medium flex items-center space-x-2'>
+                <div className='w-10 h-10 bg-300 rounded-full overflow-hidden'>
+                  <img
+                    src={user.mainFishImage}
+                    alt='참가자대표물고기'
+                    className='w-full h-full object-contain rounded-full'
                   />
                 </div>
-                <div>
-                  {displayName}
-                </div>
+                <div>{displayName}</div>
               </div>
-              {user.ready && <span className="text-green-700 font-bold">Ready</span>}
+              {user.ready && (
+                <span className='text-green-700 font-bold'>Ready</span>
+              )}
               {currentIsHost && user.userName !== currentUser?.id && (
                 <button
                   onClick={() => onKickUser(user.userName)}
-                  className="ml-2 px-2 py-1 bg-red-500 text-black rounded bg-white border border-black shadow-sm"
+                  className='ml-2 px-2 py-1 bg-red-500 text-black rounded bg-white border border-black shadow-sm'
                 >
                   추방
                 </button>
