@@ -77,6 +77,7 @@ if (error.response?.status === 401) {
   try {
     console.log("401 발생 - 토큰 갱신 요청");
     // 쿠키에 저장된 refreshToken이 자동으로 전송되도록 withCredentials 옵션 추가
+    console.log("에러 발생 요청" , originalRequest );
     const { data } = await axios.post(
       `${BASE_URL}${REFRESH_URL}`,
       {},

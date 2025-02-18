@@ -88,7 +88,7 @@ function FriendFishContent() {
   useEffect(() => {
     if (friendUserInfo?.mainAquarium) {
       axiosInstance
-        .get(`${API_BASE_URL}/aquariums/${friendUserInfo.mainAquarium}`)
+        .get(`/aquariums/${friendUserInfo.mainAquarium}`)
         .then((res: AxiosResponse<AquariumData>) => {
           setAquariumData(res.data);
           const bgUrl =
@@ -106,7 +106,7 @@ function FriendFishContent() {
   useEffect(() => {
     if (friendUserInfo?.mainAquarium) {
       axiosInstance
-        .get(`${API_BASE_URL}/aquariums/friend/${friendId}`)
+        .get(`/aquariums/friend/${friendId}`)
         .then((res: AxiosResponse<FishData[] | { message: string }>) => {
           if (Array.isArray(res.data)) {
             setFishes(res.data);
@@ -140,7 +140,7 @@ function FriendFishContent() {
     };
 
     axiosInstance
-      .post(`${API_BASE_URL}/aquariums/friendFish`, payload)
+      .post(`/aquariums/friendFish`, payload)
       .then((res: AxiosResponse<GetFriendFishResponseDto>) => {
         const { message, success } = res.data;
         alert(message);
@@ -163,7 +163,7 @@ function FriendFishContent() {
     };
 
     axiosInstance
-      .post(`${API_BASE_URL}/friends/request`, payload)
+      .post(`/friends/request`, payload)
       .then((res: AxiosResponse<{ relationshipId: number }>) => {
         alert("친구 요청을 보냈습니다.");
       })
