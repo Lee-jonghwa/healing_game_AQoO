@@ -3,7 +3,8 @@
 import axiosInstance from '@/services/axiosInstance';
 import { useEffect, useState } from 'react';
 
-interface Friend {
+// API가 반환하는 친구 정보 타입
+export interface Friend {
   id: number;
   friendId: string;
   nickname: string;
@@ -11,13 +12,13 @@ interface Friend {
   mainFishImage: string | null;
 }
 
+// FriendList 컴포넌트의 props 타입
 interface FriendListProps {
   userName: string;
   roomId: string;
   isHost: boolean;
   participantCount: number;
-  users: { userName: string }[]; // 현재 참가자 목록
-  friendList: Friend[];
+  users: { userName: string }[]; // 현재 채팅방에 참여한 사용자 목록 (간단한 형태)
   onInvite: (friendId: string) => void;
 }
 
@@ -27,22 +28,23 @@ export default function FriendList({
   isHost,
   participantCount,
   users,
-  friendList,
   onInvite,
 }: FriendListProps) {
+  // API 호출 결과로 받은 친구 목록
   const [friends, setFriends] = useState<Friend[]>([]);
   const [inviteCooldowns, setInviteCooldowns] = useState<{
     [key: string]: number;
   }>({});
   const [searchQuery, setSearchQuery] = useState('');
 
-  console.log('📢 friendList 데이터:', friendList);
+  console.log('📢 API로부터 받아온 친구 목록:', friends);
 
   useEffect(() => {
     if (isHost) {
       axiosInstance
         .get(`/friends/${encodeURIComponent(userName)}`)
         .then((response) => {
+          // API 응답 형식: { count: number, friends: Friend[] }
           setFriends(response.data.friends);
         })
         .catch((error) => console.error('Error fetching friends:', error));
@@ -59,14 +61,12 @@ export default function FriendList({
       }
       return;
     }
-
     onInvite(friendId);
     setInviteCooldowns((prev) => ({ ...prev, [friendId]: 10 }));
   };
 
   useEffect(() => {
     if (Object.keys(inviteCooldowns).length === 0) return;
-
     const timer = setInterval(() => {
       setInviteCooldowns((prevCooldowns) => {
         const newCooldowns = { ...prevCooldowns };
@@ -79,7 +79,6 @@ export default function FriendList({
         return newCooldowns;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [inviteCooldowns]);
 
@@ -91,12 +90,9 @@ export default function FriendList({
 
   return (
     <div className='relative p-4 bg-transparent w-[300px] h-[500px] flex flex-col'>
-      {/* 친구 목록 헤더 */}
       {isHost && (
         <h3 className='text-xl font-semibold mb-4'>친구 {friends.length}</h3>
       )}
-
-      {/* 친구 리스트 (스크롤 가능) */}
       <div className='flex-grow overflow-y-auto custom-scrollbar'>
         {!isHost ? (
           <p className='text-center text-gray-500'>
@@ -111,14 +107,8 @@ export default function FriendList({
             {filteredFriends.map((friend) => {
               const isJoined = users.some(
                 (user) => user.userName === friend.friendId
-              ); // 현재 방 참가 여부
-              const isInvited = !!inviteCooldowns[friend.friendId]; // 초대중 여부
-              const friendStatus = isJoined
-                ? 'joined'
-                : isInvited
-                ? 'invited'
-                : 'available';
-
+              );
+              const isInvited = !!inviteCooldowns[friend.friendId];
               return (
                 <li
                   key={friend.id}
@@ -149,8 +139,6 @@ export default function FriendList({
           </ul>
         )}
       </div>
-
-      {/* 🔹 검색창: 방장만 보이도록 조건 추가 */}
       {isHost && (
         <div className='mt-4 flex items-center'>
           <input
