@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import CollectionItemCard from "./CollectionItemCard";
 import axiosInstance from "@/services/axiosInstance";
+import {useSFX} from "@/hooks/useSFX"
 
 interface AggregatedFishData {
   fishName: string;
@@ -37,7 +38,7 @@ export default function TankFishCollection({
 
   const [selectedFish, setSelectedFish] = useState<AggregatedFishData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-
+  const {play : fishClick } = useSFX("/sounds/버블-01.mp3");
   const fetchData = useCallback(() => {
     if (!aquariumId) return;
     if (refresh === 0) {
@@ -99,6 +100,7 @@ export default function TankFishCollection({
   }, [aquariumId, refresh, fetchData]);
 
   const handleFishClick = (fishGroup: AggregatedFishData) => {
+    fishClick();
     setSelectedFish(fishGroup);
     setIsModalOpen(true);
   };
