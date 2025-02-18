@@ -77,26 +77,28 @@ public class AuthController {
     }
 
     // 엑세스 토큰 재발급
-//    @PostMapping("/refresh")
-//    public ResponseEntity<RefreshResponse> refreshAccessToken(
-//            @CookieValue(name = "refreshToken", required = false) String refreshToken) {
-//
-//        if (refreshToken == null) {
-//            throw new IllegalArgumentException("Refresh Token is missing");
-//        }
-//
-//        System.out.println("쿠키에 저장된 리프레시 토큰: " + refreshToken);
-//
-//        try {
-//            // 새로운 액세스 토큰 발급
-//            String newAccessToken = authService.refreshToken(refreshToken);
-//            String message = "엑세스 토큰 갱신 성공";
-//            return ResponseEntity.ok(new RefreshResponse(newAccessToken, message));
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.status(401).body(new RefreshResponse("","Invalid or expired refresh token"));
-//        }
-//
-//    }
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponse> refreshAccessToken(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken) {
+
+        if (refreshToken == null) {
+            throw new IllegalArgumentException("Refresh Token is missing");
+        }
+
+        System.out.println("쿠키에 저장된 리프레시 토큰: " + refreshToken);
+
+        try {
+            // 새로운 액세스 토큰 발급
+            String newAccessToken = authService.refreshToken(refreshToken);
+            String message = "엑세스 토큰 갱신 성공";
+            return ResponseEntity.ok(new RefreshResponse(newAccessToken, message));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body(new RefreshResponse("","Invalid or expired refresh token"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
     // 아이디 유효성 검사 (중복 체크)
     @PostMapping("/validate-id")
