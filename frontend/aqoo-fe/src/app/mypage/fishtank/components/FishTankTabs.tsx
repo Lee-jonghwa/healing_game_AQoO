@@ -209,81 +209,80 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden mb-2 mt-2 px-4">
+    <div className="flex flex-col h-full overflow-hidden mb-2 mt-16 px-4">
       {/* 탭 버튼 영역 */}
-      <div className="flex flex-wrap items-end">
-      <div className="flex flex-wrap ml-2">
-  {tabs.map((tab, idx) => (
-    <div key={tab.id} className="relative w-40 h-10 mr-2">
-      {editingIndex === idx ? (
-        <input
-          type="text"
-          value={editingName}
-          onChange={(e) => setEditingName(e.target.value)}
-          onBlur={handleTabNameUpdate}
-          onKeyDown={handleKeyDown}
-          className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] text-lg"
-          autoFocus
-        />
-      ) : (
-        <button
-  onClick={() => handleTabClick(idx)}
-  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro]
-    ${selectedIndex === idx ? "!bg-[#A3D8FF]" : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"}`}
-  title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
->
-  {selectedIndex === idx && !editingIndex && (
-    <span className="mr-1 text-[#1c5e8d] hover:text-[#070707] cursor-pointer text-sm">
-      ✎
-    </span>
-  )}
-  {tab.name}
-</button>
+      <div className="flex items-end">
+        <div className="flex flex-wrap ml-2 w-full">
+          {tabs.map((tab, idx) => (
+            <div
+              key={tab.id}
+              className="relative flex-1 sm:flex-none sm:w-40 h-10 mr-2 min-w-[80px]"
+            >
+              {editingIndex === idx ? (
+                <input
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onBlur={handleTabNameUpdate}
+                  onKeyDown={handleKeyDown}
+                  className="w-full h-full cursor-text inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white text-[#070707] font-[NeoDunggeunmo_Pro] text-lg"
+                  autoFocus
+                />
+              ) : (
+                <button
+                  onClick={() => handleTabClick(idx)}
+                  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] ${
+                    selectedIndex === idx
+                      ? "!bg-[#A3D8FF]"
+                      : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"
+                  }`}
+                  title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
+                >
+                  {selectedIndex === idx && !editingIndex && (
+                    <span className="mr-1 text-[#1c5e8d] hover:text-[#070707] cursor-pointer text-sm">
+                      ✎
+                    </span>
+                  )}
+                  {tab.name}
+                </button>
+              )}
 
-      )}
+              {/* 삭제 버튼 (탭의 상단 오른쪽) */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(idx);
+                }}
+                className="absolute top-[-8px] right-1 text-gray-800 hover:text-gray-900 text-xl p-1"
+                title="어항 삭제"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
 
-      {/* 삭제 버튼을 탭의 상단 오른쪽에 조금 안쪽으로 배치 */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDeleteClick(idx);
-        }}
-        className="absolute top-[-8px] right-1 text-gray-800 hover:text-gray-900 text-xl p-1"
-        title="어항 삭제"
-      >
-        ×
-      </button>
-    </div>
-  ))}
-</div>
+        {/* 오른쪽 끝에 고정된 버튼들 */}
+        <div className="flex ml-auto mr-2 gap-2">
+          {/* 어항 생성하기 버튼 */}
+          <button
+            onClick={handleAddTank}
+            className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white shadow-inner text-[#070707] text-4xl hover:bg-[#e0e0e0]"
+            title="어항 생성하기"
+          >
+            +
+          </button>
 
-
-
-
-
-
-  {/* 오른쪽 끝에 고정된 버튼들 */}
-  <div className="flex ml-auto mr-2 gap-2">
-    {/* 어항 생성하기 버튼 */}
-    <button
-      onClick={handleAddTank}
-      className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-white shadow-inner text-[#070707] text-4xl hover:bg-[#e0e0e0]"
-      title="어항 생성하기"
-    >
-      +
-    </button>
-
-    {/* 체크 아이콘 버튼 */}
-<button
-  onClick={handleGoBack}
-  className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-yellow-300 shadow-inner text-[#070707] text-2xl font-bold hover:bg-[#e0e050]"
-  title="마이페이지로 이동"
->
-  ✔
-</button>
-  </div>
-</div>
-
+          {/* 체크 아이콘 버튼 */}
+          <button
+            onClick={handleGoBack}
+            className="cursor-pointer inline-flex items-center justify-center w-12 h-10 rounded-t-xl border-t border-r border-l border-[#1c5e8d] bg-yellow-300 shadow-inner text-[#070707] text-2xl font-bold hover:bg-[#e0e050]"
+            title="마이페이지로 이동"
+          >
+            ✔
+          </button>
+        </div>
+      </div>
 
       {/* 탭 컨텐츠 영역 */}
       <div className="w-full max-w-5xl h-full mx-auto p-0 overflow-hidden rounded-xl border-2 border-[#1c5e8d] bg-[#31a9ff] shadow-inner flex flex-col">
@@ -299,7 +298,9 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
             onBackgroundChange={onBackgroundChange}
           />
         ) : (
-          <div className="flex justify-center items-center h-full">어항 정보가 없습니다.</div>
+          <div className="flex justify-center items-center h-full">
+            어항 정보가 없습니다.
+          </div>
         )}
       </div>
 
