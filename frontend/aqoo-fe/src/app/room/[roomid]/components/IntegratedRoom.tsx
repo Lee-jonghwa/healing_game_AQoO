@@ -74,6 +74,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const [currentUser, setCurrentUser] = useState<User>(user);
 
   console.log("IntegratedRoom currentUser:", currentUser);
+  console.log("usernickname:", user.nickname);
   // 현재 참가자 수
   const participantCount = users.length;
 
@@ -121,7 +122,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
-        fishName: user.nickname, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
+        fishName: user.nickname ?? user.userName, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
         fishImage: user.mainFishImage,
       }));
     setFishes(fishList);
