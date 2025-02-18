@@ -25,7 +25,13 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
-  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string; nickname: string; }[];
+  users?: { 
+    userName: string; 
+    ready: boolean; 
+    isHost: boolean; 
+    mainFishImage: string; 
+    nickname: string; 
+  }[];
   players?: Player[];
   targetUser?: string;
 }
@@ -42,7 +48,7 @@ interface FishData {
   fishTypeId: number;
   fishName: string;
   fishImage: string;
-  userName: string; // 추가: 원래 userName을 저장
+  userName: string; // 원래 userName 저장
 }
 
 interface Friend {
@@ -55,7 +61,13 @@ interface Friend {
 
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
-  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string; nickname: string; }[]>([]);
+  const [users, setUsers] = useState<{ 
+    userName: string; 
+    ready: boolean; 
+    isHost: boolean; 
+    mainFishImage: string; 
+    nickname: string; 
+  }[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -66,84 +78,83 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
   const authState = useRecoilValue(authAtom);
 
-  // 물고기 밑에 닉네임 띄우기 위해 친구 목록 받아오기
+  // 친구 목록 API (nickname 갱신에 사용)
   const [friendList, setFriendList] = useState<Friend[]>([]);
 
-  // 기존 props의 user 대신 내부 상태로 관리하여 업데이트
+  // 현재 사용자 정보 (authAtom에서 받아온 값)
   const [currentUser, setCurrentUser] = useState<User>(user);
 
   const participantCount = users.length;
 
-  // 사용자 목록 상태 및 displayUsers 선언
+  // displayUsers: 각 사용자에 대해 현재 사용자인지 여부를 확인하여,
+  // 현재 사용자이면 반드시 authAtom의 nickname을 사용하고, 그 외는 friendList API를 우선 사용
   const displayUsers = useMemo(() => {
-    return currentIsHost && !users.some((u) => u.userName === userName)
-      ? [
-          ...users.map((user) => ({
-            ...user,
-            nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.nickname, // ✅ 닉네임 보장
-          })),
-          { 
-            userName, 
-            nickname: currentUser?.nickname, // ✅ 방장 닉네임 추가
-            ready: false, 
-            isHost: true, 
-            mainFishImage: '' 
+    if (currentIsHost && !users.some((u) => u.userName === userName)) {
+      return [
+        ...users.map((user) => {
+          if (user.userName === userName) {
+            return { ...user, nickname: currentUser.nickname };
+          } else {
+            const friend = friendList.find((f) => f.friendId === user.userName);
+            return { ...user, nickname: friend ? friend.nickname : user.nickname };
           }
-        ]
-      : users.map((user) => ({
-          ...user,
-          nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.userName,
-        }));
-  }, [users, friendList, currentIsHost, userName, currentUser?.nickname]);
+        }),
+        {
+          userName,
+          nickname: currentUser.nickname,
+          ready: false,
+          isHost: true,
+          mainFishImage: ''
+        }
+      ];
+    } else {
+      return users.map((user) => {
+        if (user.userName === userName) {
+          return { ...user, nickname: currentUser.nickname };
+        } else {
+          const friend = friendList.find((f) => f.friendId === user.userName);
+          return { ...user, nickname: friend ? friend.nickname : user.nickname };
+        }
+      });
+    }
+  }, [users, friendList, currentIsHost, userName, currentUser]);
 
-  // 친구 목록 조회 (axiosInstance 사용)
+  // 친구 목록 조회
   useEffect(() => {
     axiosInstance.get(`/friends/${encodeURIComponent(userName)}`)
       .then((response) => {
         setFriendList(response.data.friends);
       })
+      .catch((error) => console.error("❌ 친구 목록 불러오기 실패:", error));
   }, [userName]);
 
   // STOMP 연결 활성화
   useEffect(() => {
-    connectStompClient(() => {
-    });
+    connectStompClient(() => {});
   }, []);
 
-  // Fish: 각 물고기에 유저의 닉네임 할당 및 userName도 함께 저장
+  // Fish: 각 물고기에 닉네임 할당 (친구 목록 API를 이용)
   useEffect(() => {
     const fishList: FishData[] = displayUsers.map((user, index) => {
       let computedNickname: string;
-      if (user.isHost) {
-        if (currentUser?.id === user.userName) {
-          computedNickname = `${currentUser.nickname}`;
-        } else {
-          computedNickname = `${user.userName}`;
-        }
+      if (user.userName === userName) {
+        computedNickname = currentUser.nickname;
       } else {
-        const friend = friendList.find(f => f.friendId === user.userName);
-        if (friend) {
-          computedNickname = `${friend.nickname}`;
-        } else {
-          if (currentUser?.id === user.userName) {
-            computedNickname = `${currentUser.nickname}`;
-          } else {
-            computedNickname = user.userName;
-          }
-        }
+        const friend = friendList.find((f) => f.friendId === user.userName);
+        computedNickname = friend ? friend.nickname : user.nickname;
       }
       const fishItem: FishData = {
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
-        fishName: computedNickname,  // computed nickname 적용
+        fishName: computedNickname,
         fishImage: user.mainFishImage,
-        userName: user.userName,       // 원래 userName 추가
+        userName: user.userName,
       };
       return fishItem;
     });
     setFishes(fishList);
-  }, [displayUsers, friendList, currentUser]);
+  }, [displayUsers, friendList, currentUser, userName]);
 
   // join 메시지 전송 및 구독 설정
   useEffect(() => {
@@ -185,7 +196,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     return () => clearInterval(intervalId);
   }, [roomId, userName, router]);
 
-  // 친구 초대 함수 (참가자가 6명 이상이면 초대 불가)
+  // 친구 초대 함수
   const inviteFriend = async (friendUserId: string) => {
     if (participantCount >= 6) {
       alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
@@ -232,16 +243,15 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
       });
     }
     
-      const response = await axiosInstance.get(`/users/${userName}`);
-      if (response.status >= 200 && response.status < 300) {
-        const updatedUser: User = response.data;
-        setCurrentUser(updatedUser);
-      } 
+    const response = await axiosInstance.get(`/users/${userName}`);
+    if (response.status >= 200 && response.status < 300) {
+      const updatedUser: User = response.data;
+      setCurrentUser(updatedUser);
+    }
   };
 
   // 물고기 말풍선 업데이트
   const handleNewMessage = (sender: string, message: string) => {
-    
     // sender는 원래 userName이므로, fishes 배열에서 해당 fish의 computed fishName을 key로 사용
     const fishItem = fishes.find(f => f.userName === sender);
     const key = fishItem ? fishItem.fishName : sender;
