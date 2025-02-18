@@ -3,6 +3,7 @@ package org.com.aqoo.domain.chat.controller;
 import lombok.AllArgsConstructor;
 import org.com.aqoo.domain.chat.dto.ChatRoomDto;
 import org.com.aqoo.domain.chat.dto.InviteRequest;
+import org.com.aqoo.domain.chat.dto.MemberDto;
 import org.com.aqoo.domain.chat.service.ChatRoomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +30,8 @@ public class ChatRoomController {
 
     /** 특정 채팅방 조회 */
     @GetMapping("/{roomId}")
-    public ChatRoomDto getChatRoom(@PathVariable String roomId) {
-        var room = chatRoomService.getRoom(roomId);
-        return new ChatRoomDto(room.getId(), room.getOwnerId(), room.getMembers());
+    public List<MemberDto> getChatRoomMembers(@PathVariable String roomId) {
+        return chatRoomService.getRoomMembers(roomId);
     }
 
     /** 채팅방 생성 */

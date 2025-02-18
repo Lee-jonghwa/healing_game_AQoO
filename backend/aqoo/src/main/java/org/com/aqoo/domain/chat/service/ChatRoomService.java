@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.com.aqoo.domain.auth.dto.UserInfoResponse;
 import org.com.aqoo.domain.auth.service.UserService;
 import org.com.aqoo.domain.chat.dto.InviteRequest;
+import org.com.aqoo.domain.chat.dto.MemberDto;
 import org.com.aqoo.domain.chat.dto.RoomUpdate;
 import org.com.aqoo.domain.chat.model.ChatRoom;
 import org.com.aqoo.domain.push.dto.PushRequest;
 import org.com.aqoo.domain.push.service.PushService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -197,5 +197,30 @@ public class ChatRoomService {
         }
     }
 
+    /**
+     * 특정 채팅방의 멤버 정보를 반환합니다.
+     * 각 멤버는 userId, nickname, mainFishImage, isHost 정보를 포함합니다.
+     *
+     * @param roomId 채팅방 ID
+     * @return List<MemberDto> 채팅방 멤버 정보 목록
+     */
+    public List<MemberDto> getRoomMembers(String roomId) {
+        ChatRoom room = getRoom(roomId);
+        if (room == null) {
+            throw new RuntimeException("채팅방이 존재하지 않습니다. roomId: " + roomId);
+        }
+        // room.getMembers()는 Set<String> (사용자 ID 목록)라고 가정합니다.
+        List<MemberDto> memberDtos = room.getMembers().stream()
+                .map(userId -> {
+                    // userService를 통해 해당 사용자 정보를 조회 (nickname, mainFishImage 등)
+                    UserInfoResponse userInfo = userService.getUserInfo(userId);
+                    String nickname = userInfo.getNickname();
+                    String mainFishImage = userInfo.getMainFishImage();
+                    boolean isHost = userId.equals(room.getOwnerId());
+                    return new MemberDto(userId, nickname, mainFishImage, isHost);
+                })
+                .collect(Collectors.toList());
+        return memberDtos;
+    }
 
 }
