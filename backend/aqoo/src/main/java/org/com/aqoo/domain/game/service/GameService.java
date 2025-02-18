@@ -3,6 +3,7 @@ package org.com.aqoo.domain.game.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.com.aqoo.domain.auth.dto.UserInfoResponse;
 import org.com.aqoo.domain.auth.service.UserService;
 import org.com.aqoo.domain.game.dto.PressMessage;
 import org.com.aqoo.domain.game.dto.RoomResponse;
@@ -54,8 +55,11 @@ public class GameService {
                     .map(e -> {
                         String userName = e.getKey();
                         int score = e.getValue();
-                        String mainFishImage = userService.getUserInfo(userName).getMainFishImage();
-                        return new Player(userName, score, mainFishImage);
+                        // userService에서 해당 사용자의 정보를 가져온 후 mainFishImage와 nickname을 추출
+                        UserInfoResponse userInfo = userService.getUserInfo(userName);
+                        String mainFishImage = userInfo.getMainFishImage();
+                        String nickname = userInfo.getNickname();
+                        return new Player(userName, score, mainFishImage, nickname);
                     })
                     .collect(Collectors.toList());
 
@@ -67,6 +71,7 @@ public class GameService {
             log.error("ChatRoom not found for roomId: {}", roomId);
         }
     }
+
 
     /**
      * 스페이스바 탭 이벤트 처리
@@ -102,12 +107,15 @@ public class GameService {
                 log.info("User {} finished! Finish order: {}", user, finishOrder);
             }
 
+            // Player 객체 생성 시 nickname 포함
             List<Player> players = roomScore.entrySet().stream()
                     .map(e -> {
                         String userName = e.getKey();
                         int score = e.getValue();
-                        String mainFishImage = userService.getUserInfo(userName).getMainFishImage();
-                        return new Player(userName, score, mainFishImage);
+                        UserInfoResponse userInfo = userService.getUserInfo(userName);
+                        String mainFishImage = userInfo.getMainFishImage();
+                        String nickname = userInfo.getNickname();
+                        return new Player(userName, score, mainFishImage, nickname);
                     })
                     .collect(Collectors.toList());
 
@@ -139,12 +147,15 @@ public class GameService {
         log.info("endGame() called for roomId: {}", roomId);
         Map<String, Integer> roomScore = scoreMap.get(roomId);
         if (roomScore != null) {
+            // Player 객체 생성 시 nickname 포함
             List<Player> players = roomScore.entrySet().stream()
                     .map(e -> {
                         String userName = e.getKey();
                         int score = e.getValue();
-                        String mainFishImage = userService.getUserInfo(userName).getMainFishImage();
-                        return new Player(userName, score, mainFishImage);
+                        UserInfoResponse userInfo = userService.getUserInfo(userName);
+                        String mainFishImage = userInfo.getMainFishImage();
+                        String nickname = userInfo.getNickname();
+                        return new Player(userName, score, mainFishImage, nickname);
                     })
                     .collect(Collectors.toList());
 
@@ -171,4 +182,5 @@ public class GameService {
             log.error("No score map found for roomId: {}", roomId);
         }
     }
+
 }

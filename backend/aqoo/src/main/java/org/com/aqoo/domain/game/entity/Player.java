@@ -11,4 +11,5 @@ public class Player {
     private String userName;
     private int totalPressCount;
     private String mainFishImage;
+    private String nickname;
 }
