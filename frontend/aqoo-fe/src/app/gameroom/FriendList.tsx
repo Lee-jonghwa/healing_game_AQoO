@@ -6,6 +6,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
 import axiosInstance from "@/services/axiosInstance";
 
+import { useSFX } from "@/hooks/useSFX";
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+
+
+
 interface Friend {
   id: string; // 친구 관계 아이디
   friendId: string; // 실제 친구의 유저 아이디
@@ -22,6 +27,9 @@ export default function FriendList() {
   const [loggedInUser, setLoggedInUser] = useState("");
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [users, setUsers] = useRecoilState(usersState);
+
+  
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
 
   // 클라이언트 사이드에서만 localStorage 접근
   useEffect(() => {
@@ -101,7 +109,9 @@ export default function FriendList() {
                 </div>
               </div>
               <button
-                onClick={() => handleToggleParticipant(friend)}
+                onClick={() => {
+                  playModal();
+                  handleToggleParticipant(friend)}}
                 disabled={!users.some((u) => u.friendId === friend.friendId) && users.length >= 5}
                 className={`px-3 py-1 text-sm rounded-md border border-black cursor-pointer transition duration-300 ${
                   users.some((u) => u.friendId === friend.friendId)

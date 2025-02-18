@@ -5,6 +5,9 @@ import { User } from '@/store/authAtom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axiosInstance from "@/services/axiosInstance";
 
+import { useSFX } from "@/hooks/useSFX";
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+
 interface GameProps {
   roomId: string;
   userName: string;
@@ -99,6 +102,12 @@ export default function Game({
   const laneAreaTopOffset = (trackDims.height - laneAreaHeight) / 2;
   const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
 
+  // 7)  효과음
+  const { play: pushSpacebar } = useSFX("/sounds/clickeffect-03.mp3"); // 스페이스바누를때
+  const { play: earnedExp} = useSFX("/sounds/짜잔.mp3"); // 게임끝나고 경험치 얻을 때
+  const { play: levelUp} = useSFX("/sounds/levelupRank.mp3"); // 레벨업할때
+
+
   // -----------------------------
   // (A) 트랙 사이즈 측정
   // -----------------------------
@@ -138,6 +147,7 @@ export default function Game({
 
   // (D) 탭(스페이스바 또는 마우스 클릭) 시 호출되는 함수
   const handleTap = useCallback(() => {
+    pushSpacebar();
     if (!hasCountdownFinished || gameEnded) return;
     const me = players.find((p) => p.userName === userName);
     if (me && me.totalPressCount >= 100) {
@@ -295,6 +305,7 @@ export default function Game({
   useEffect(() => {
     if (myExpInfo) {
       setShowExpModal(true);
+      earnedExp();
     }
   }, [myExpInfo]);
 
@@ -306,6 +317,7 @@ export default function Game({
     // 레벨 업이면 모달 열기 + 티켓 +1
     if (myExpInfo.userLevel > prevLevel) {
       setShowLevelUpModal(true);
+      levelUp();
 
       (async () => {
         try {

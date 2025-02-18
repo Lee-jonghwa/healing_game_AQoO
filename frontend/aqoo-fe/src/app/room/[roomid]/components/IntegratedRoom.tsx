@@ -16,6 +16,9 @@ import { useMemo } from 'react';
 
 import axiosInstance from "@/services/axiosInstance";
 
+import { useSFX } from "@/hooks/useSFX";
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+
 // 플레이어 타입 정의
 interface Player {
   userName: string;
@@ -67,6 +70,10 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
   const authState = useRecoilValue(authAtom);
+
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
+  const { play: playGame } = useSFX("/sounds/카운트다운-02.mp3");
+
 
   // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
   const [friendList, setFriendList] = useState<Friend[]>([]);
@@ -347,7 +354,15 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                 {showFriendList && (
                   <div className="w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg">
                     <div className="flex justify-end mb-2">
-                      <button onClick={() => setShowFriendList(false)} className="text-gray-500 hover:text-black">❌</button>
+                      <button 
+                        onClick={() => {
+                          playModal();
+                          setShowFriendList(false);
+                        }} 
+                        className="text-gray-500 hover:text-black"
+                      >
+                        ❌
+                      </button>
                     </div>
                     <FriendList 
                       userName={userName} 
@@ -373,13 +388,16 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                   {/* 친구 초대 & 나가기 버튼 (상단 배치) */}
                   <div className="flex space-x-2 w-full">
                     <button 
-                      onClick={() => setShowFriendList((prev) => !prev)} 
+                      onClick={() => {
+                        playModal();
+                        setShowFriendList((prev) => !prev)}} 
                       className="w-1/2 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
                     >
                       친구 초대
                     </button>
                     <button 
                       onClick={() => {
+                        playModal();
                         const client = getStompClient();
                         if (client && client.connected) {
                           client.publish({
@@ -424,6 +442,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                     {currentIsHost ? (
                       <button 
                         onClick={() => {
+                          playGame();
                           if (!allNonHostReady) return;
                           const client = getStompClient();
                           if (client && client.connected) {
@@ -441,6 +460,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                     ) : (
                       <button 
                         onClick={() => {
+                          playModal();
                           const client = getStompClient();
                           if (client && client.connected) {
                             if (myReady) {

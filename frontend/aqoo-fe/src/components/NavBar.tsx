@@ -1,5 +1,6 @@
 "use client";
 
+
 import { Settings, X } from "lucide-react";
 import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 import { usePathname, useRouter } from "next/navigation";

@@ -4,9 +4,16 @@ import { useEffect, useState } from "react";
 import FriendList from "@/app/gameroom/FriendList";
 import ParticipantList from "@/app/gameroom/ParticipantList";
 import { useRecoilState } from "recoil";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { usersState } from "@/store/participantAtom";
 import axiosInstance from "@/services/axiosInstance";
+
+import { useSFX } from "@/hooks/useSFX";
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+
+
+
+
 
 // localStorage에 안전하게 접근하는 헬퍼 함수
 const getLocalStorageItem = (key: string, defaultValue: string = "guest"): string => {
@@ -21,6 +28,8 @@ export default function GameRoomPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [userName, setUserName] = useState<string | null>(null);
+  
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
 
   // 클라이언트 사이드에서만 localStorage에 접근하여 사용자 이름을 설정
   useEffect(() => {
@@ -141,7 +150,10 @@ export default function GameRoomPage() {
     {/* 버튼 컨테이너 */}
     <div className="flex w-full justify-center md:justify-end mt-6 mb-10">
       <button
-        onClick={handleCreateRoom}
+        onClick={() => {
+          playModal();
+          handleCreateRoom();
+        }}
         className="
           px-5 py-2 
           rounded 
