@@ -9,6 +9,9 @@ import ParticipantList from './ParticipantList';
 import FriendList from './FriendList';
 import Fish from "./Fish";
 import { User } from '@/store/authAtom';
+import { useRecoilValue } from "recoil";
+import { authAtom } from "@/store/authAtom";
+
 
 // 플레이어 타입 정의
 interface Player {
@@ -22,7 +25,7 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
-  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[];
+  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string, nickname: string; }[];
   players?: Player[];
   targetUser?: string;
 }
@@ -41,9 +44,18 @@ interface FishData {
   fishImage: string;
 }
 
+interface Friend {
+  id: number;
+  friendId: string;
+  nickname: string;
+  level: number;
+  mainFishImage: string | null;
+}
+
+
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
-  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[]>([]);
+  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string, nickname: string; }[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -52,19 +64,47 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
+  const authState = useRecoilValue(authAtom);
+
+  // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
+  const [friendList, setFriendList] = useState<Friend[]>([]);
+
 
   // 기존 props의 user 대신 내부 상태로 관리하여 업데이트할 수 있도록 함
   const [currentUser, setCurrentUser] = useState<User>(user);
 
   console.log("IntegratedRoom currentUser:", currentUser);
+  console.log("usernickname:", user.nickname);
   // 현재 참가자 수
   const participantCount = users.length;
 
   // 사용자 목록 상태 및 displayUsers 선언
-  const displayUsers =
-    currentIsHost && !users.some((u) => u.userName === userName)
-      ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
-      : users;
+  const displayUsers = currentIsHost && !users.some((u) => u.userName === userName)
+  ? [
+      ...users.map((user) => ({
+        ...user,
+        nickname: user.nickname ?? user.userName, // ✅ 기존 users 배열에도 nickname 추가
+      })),
+      { 
+        userName, 
+        nickname: currentUser?.nickname ?? userName, // ✅ 방장 닉네임 추가
+        ready: false, 
+        isHost: true, 
+        mainFishImage: '' 
+      }
+    ]
+  : users;
+
+
+  useEffect(() => {
+    fetch(`https://i12e203.p.ssafy.io/api/v1/friends/${encodeURIComponent(userName)}`)
+      .then((response) => response.json())
+      .then((data) => {
+
+        setFriendList(data.friends)
+      })
+      .catch((error) => console.error("❌ 친구 목록 불러오기 실패:", error));
+  }, [userName]);
 
   // STOMP 연결 활성화
   useEffect(() => {
@@ -73,20 +113,21 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     });
   }, []);
 
-  // 참가자 대표 물고기 -> fishes 배열 업데이트
+ // Fish 
+
   useEffect(() => {
     const fishList: FishData[] = displayUsers
-      .filter((user) => user.mainFishImage)
+      .filter((user) => user.mainFishImage) // ✅ mainFishImage가 있는 유저만 필터링
       .map((user, index) => ({
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
-        fishName: user.userName,
+        fishName: user.nickname ?? user.userName, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
         fishImage: user.mainFishImage,
       }));
     setFishes(fishList);
   }, [displayUsers]);
-
+  
   // join 메시지 전송 및 구독 설정
   useEffect(() => {
     const client = getStompClient();
@@ -104,6 +145,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
           console.log('Join room message sent:', joinMessage);
           hasSentJoinRef.current = true;
         }
+        
         const subscription = client.subscribe(`/topic/room/${roomId}`, (message) => {
           const data: RoomUpdate = JSON.parse(message.body);
           console.log('Room update received:', data);
@@ -217,6 +259,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     }
   };
 
+  // 물고기 말풍선 업데이트
   const handleNewMessage = (sender: string, message: string) => {
     console.log(`🐟 [DEBUG] New Message from "${sender}": "${message}"`);
     
@@ -308,6 +351,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                     </div>
                     <FriendList 
                       userName={userName} 
+                      friendList={friendList}
                       roomId={roomId} 
                       isHost={currentIsHost} 
                       participantCount={users.length} 
@@ -324,7 +368,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                 )}
   
                 {/* 오른쪽 기능 패널 (참가자 리스트 포함) */}
-                <div className="flex flex-col space-y-4 w-[300px] items-center">  
+                <div className="flex flex-col space-y-4 w-[370px] items-center">  
   
                   {/* 친구 초대 & 나가기 버튼 (상단 배치) */}
                   <div className="flex space-x-2 w-full">
@@ -353,20 +397,22 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   
                   {/* 참가자 리스트 */}
                   <div>
-                    <ParticipantList 
-                      users={displayUsers} 
-                      currentUser={userName} 
-                      currentIsHost={currentIsHost} 
-                      onKickUser={(target) => {
-                        const client = getStompClient();
-                        if (client && client.connected) {
-                          client.publish({
-                            destination: '/app/chat.kickUser',
-                            body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
-                          });
-                        }
-                      }} 
-                    />
+                  <ParticipantList 
+                    users={displayUsers} 
+                    currentUser={currentUser} 
+                    currentIsHost={currentIsHost} 
+                    friendList={friendList}  // ✅ 친구 목록 전달
+                    onKickUser={(target) => {
+                      const client = getStompClient();
+                      if (client && client.connected) {
+                        client.publish({
+                          destination: '/app/chat.kickUser',
+                          body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
+                        });
+                      }
+                    }} 
+                  />
+
                   </div>
   
                   {/* 채팅창 */}

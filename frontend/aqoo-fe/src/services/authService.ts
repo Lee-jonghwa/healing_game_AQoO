@@ -29,7 +29,7 @@ export const login = async (id: string, pw: string): Promise<User> => {
     localStorage.setItem("loggedInUser", userId);
 
     // 추가 사용자 정보가 없다면, 입력받은 id로 User 객체 생성하여 반환합니다.
-    return { id, nickName };
+    return { id, nickname: nickName};
   } catch (error: any) {
     throw new Error(error.response?.data?.message || "로그인 실패");
   }
