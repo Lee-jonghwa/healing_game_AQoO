@@ -6,9 +6,9 @@ import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils"; // 손
 import { useEffect, useRef, useState } from "react";
 
 import { Camera } from "@mediapipe/camera_utils"; // 카메라 사용 라이브러리
+import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 import { useSFX } from "@/hooks/useSFX";
-import axiosInstance from "@/services/axiosInstance";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -74,7 +74,6 @@ export default function CleanComponent({
     img.src = PALM_IMAGE_SRC;
     // 이미지 로드가 끝나면 상태에 저장
     img.onload = () => {
-      console.log("손바닥 이미지 로드");
       setPalmImage(img);
     };
     img.onerror = () => {
@@ -302,7 +301,7 @@ export default function CleanComponent({
     const drawX = pxCenterX - drawW / 2;
     const drawY = pxCenterY - drawH / 2;
 
-    console.log("손바닥 오버레이:", { drawX, drawY, drawW, drawH, pxCenterX, pxCenterY });
+    // console.log("손바닥 오버레이:", { drawX, drawY, drawW, drawH, pxCenterX, pxCenterY });
 
     // 실제 그리기
     canvasCtx.drawImage(image, drawX, drawY, drawW, drawH);
@@ -325,13 +324,12 @@ export default function CleanComponent({
   async function handleCleanSuccess() {
     try {
       // ✅ 1. 어항 청소 API 호출
-      await axiosInstance.post(`${API_BASE_URL}/aquariums/update`, {
+      await axiosInstance.post(`/aquariums/update`, {
         aquariumId: aquariumId,
         type: "clean",
         data: "",
       });
 
-      console.log("✅ 어항 청소 성공");
       setMotionCount(0);
       // ✅ 2. 경험치 10 증가 및 레벨업 감지
       await handleIncreaseExp(20);

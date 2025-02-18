@@ -246,9 +246,7 @@ export default function MainPage() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/firebase-messaging-sw.js")
-        .then((registration: ServiceWorkerRegistration) => {
-          console.log("✅ 서비스 워커 등록 완료:", registration);
-        })
+        .then((registration: ServiceWorkerRegistration) => {})
         .catch((err: unknown) => console.error("🔥 서비스 워커 등록 실패:", err));
     }
 
@@ -257,7 +255,6 @@ export default function MainPage() {
       if (!auth.user) return;
       try {
         const response = await axiosInstance.get<boolean>(`users/isFirst/${auth.user.id}`);
-        console.log("첫 로그인 여부:", response.data);
         setFirstLoginStatus(response.data);
       } catch (error) {
         console.error("API 호출 중 오류 발생:", error);
@@ -274,12 +271,11 @@ export default function MainPage() {
     }
   }, [firstLoginStatus]);
 
-  // TODO 어항 데이터 및 배경 업데이트 (-> mainAquarium이 아니라 선택된 아쿠아리움 넘버로 조회해야 할 것  )
+  // 페이지에서 정의했던 함수
   const refreshAquariumData = async () => {
-    if (!userInfo?.mainAquarium) return;
+    if (!selectedAquariumId) return; // ✅ selectedAquariumId가 없다면 return
     try {
-      const response = await axiosInstance.get(`aquariums/${userInfo.mainAquarium}`);
-      console.log("어항 상태 갱신:", response.data);
+      const response = await axiosInstance.get(`aquariums/${selectedAquariumId}`); // ✅ 여기서도 selectedAquariumId 사용
       setAquariumData(response.data);
     } catch (error) {
       console.error("어항 상태 불러오기 실패", error);
@@ -296,7 +292,6 @@ export default function MainPage() {
       if (!aquariumData || aquariumData.feedStatus > 3) return;
       const randomSound = hungrySounds[Math.floor(Math.random() * hungrySounds.length)];
       setSrc(randomSound);
-      console.log("꼬르륵");
       play();
       let minDelay, maxDelay;
       switch (aquariumData.feedStatus) {
@@ -338,10 +333,7 @@ export default function MainPage() {
     const updatedExpData = await increaseUserExp(auth.user.id, earnedExp);
 
     if (updatedExpData) {
-      console.log("경험치 증가 API 응답:", updatedExpData);
-
       if (updatedExpData.userLevel > prevLevel) {
-        console.log("레벨업 발생! 새로운 레벨:", updatedExpData.userLevel);
         setLevelUpInfo({
           level: updatedExpData.userLevel,
           expProgress: updatedExpData.expProgress,
@@ -365,34 +357,51 @@ export default function MainPage() {
     if (!auth.user?.id) return;
     try {
       const response = await axiosInstance.get(`users/${auth.user.id}`);
-      console.log("유저 정보 갱신 완료:", response.data);
       setUserInfo(response.data);
-    } catch (error) {
-      console.error("유저 정보 불러오기 실패", error);
-    }
+    } catch (error) {}
   };
 
   // 유저 정보
   useEffect(() => {
+    if (!auth.user?.id) return;
     refreshUserInfo();
   }, [auth.user?.id]);
+
+  useEffect(() => {
+    if (!userInfo) return;
+    if (!auth.user) return;
+
+    axiosInstance.get(`aquariums/all/${auth.user.id}`).then((res) => {
+      setAquariumList(res.data.aquariums);
+      // userInfo.mainAquarium이 있으면 그걸로, 없으면 0번 인덱스
+      const defaultId = userInfo.mainAquarium ?? res.data.aquariums[0]?.id ?? null;
+      setSelectedAquariumId(defaultId);
+    });
+  }, [userInfo]);
 
   // ② 어항 리스트 조회 (유저 정보와 auth.user.id가 준비되면)
   useEffect(() => {
     if (!auth.user?.id) return;
-    axiosInstance
-      .get(`aquariums/all/${auth.user.id}`)
-      .then((response: AxiosResponse<{ count: number; aquariums: AquariumListItem[] }>) => {
-        setAquariumList(response.data.aquariums);
-        // userInfo가 있다면 mainAquarium을 기본 선택, 아니면 첫번째 어항 사용
-        const defaultId =
-          userInfo && response.data.aquariums.find((aq) => aq.id === userInfo.mainAquarium)
-            ? userInfo.mainAquarium
-            : response.data.aquariums[0]?.id;
+    Promise.all([axiosInstance.get(`users/${auth.user.id}`), axiosInstance.get(`aquariums/all/${auth.user.id}`)]).then(
+      ([userRes, aqRes]) => {
+        const newUserInfo = userRes.data;
+        const newAquariums = aqRes.data.aquariums;
+        setUserInfo(newUserInfo);
+        setAquariumList(newAquariums);
+
+        // 여기서 userInfo.mainAquarium를 사용할 수 있음
+        const defaultId = newUserInfo.mainAquarium ?? newAquariums[0]?.id ?? null;
         setSelectedAquariumId(defaultId);
-      })
-      .catch((err) => console.error("어항 리스트 불러오기 실패", err));
-  }, [auth.user?.id, userInfo]);
+      }
+    );
+  }, [auth.user?.id]);
+
+  // 1) userInfo?.mainAquarium, aquariumList 변경 시, 선택 어항을 mainAquarium으로 재설정
+  useEffect(() => {
+    if (userInfo?.mainAquarium && aquariumList.some((aq) => aq.id === userInfo.mainAquarium)) {
+      setSelectedAquariumId(userInfo.mainAquarium);
+    }
+  }, [userInfo?.mainAquarium, aquariumList]);
 
   // ④ 선택된 어항 ID로 물고기 리스트 조회
   useEffect(() => {
@@ -400,11 +409,9 @@ export default function MainPage() {
     axiosInstance
       .get(`aquariums/fish/${selectedAquariumId}`, { withCredentials: true })
       .then((response: AxiosResponse<FishData[] | { message: string }>) => {
-        console.log("내 물고기 목록:", response.data);
         if (Array.isArray(response.data)) {
           setFishes(response.data);
         } else {
-          console.warn("물고기 데이터가 없습니다.");
           setFishes([]);
         }
       })
@@ -417,7 +424,6 @@ export default function MainPage() {
     axiosInstance
       .get(`aquariums/${selectedAquariumId}`)
       .then((res: AxiosResponse<AquariumData>) => {
-        console.log("어항 상세 정보:", res.data);
         setAquariumData(res.data);
         const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
         setBackground(BACKGROUND_BASE_URL + res.data.aquariumBackground);
@@ -432,7 +438,6 @@ export default function MainPage() {
       axiosInstance
         .get(`notification/${auth.user.id}`)
         .then((response: AxiosResponse<Notification[]>) => {
-          console.log("알림 데이터:", response.data);
           setNotifications(response.data);
           const unreadNotifications = response.data.filter((notif) => notif.status === false);
           setNewNotifications(unreadNotifications.length > 0);

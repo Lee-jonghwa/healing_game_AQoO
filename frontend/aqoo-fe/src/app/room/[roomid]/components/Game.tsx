@@ -3,6 +3,7 @@
 import { getStompClient } from '@/lib/stompclient';
 import { User } from '@/store/authAtom';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import axiosInstance from "@/services/axiosInstance";
 
 interface GameProps {
   roomId: string;
@@ -265,23 +266,15 @@ export default function Game({
     const earnedExp = getExpByRank(rank);
     setMyEarnedExp(earnedExp); // ★ 획득 경험치 저장
 
-    // exp-up API 호출
+    // exp-up API 호출 (axiosInstance 사용)
     (async () => {
       try {
-        const response = await fetch(
-          'https://i12e203.p.ssafy.io/api/v1/users/exp-up',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: userName, earnedExp }),
-          }
-        );
-        if (!response.ok) {
-          throw new Error('경험치 지급 실패');
-        }
-        const data: ExpResponse = await response.json();
-        setMyExpInfo(data);
-        console.log('내 경험치 갱신 성공:', data);
+        const response = await axiosInstance.post('/users/exp-up', {
+          userId: userName,
+          earnedExp,
+        });
+        setMyExpInfo(response.data);
+        console.log('내 경험치 갱신 성공:', response.data);
       } catch (err) {
         console.error('경험치 지급 에러:', err);
       }
@@ -316,13 +309,8 @@ export default function Game({
 
       (async () => {
         try {
-          const ticketRes = await fetch(
-            `https://i12e203.p.ssafy.io/api/v1/fish/ticket/${userName}`,
-            { method: 'GET' }
-          );
-          if (!ticketRes.ok) throw new Error('티켓 증가 실패');
-
-          const ticketData: TicketResponse = await ticketRes.json();
+          const ticketRes = await axiosInstance.get(`/fish/ticket/${userName}`);
+          const ticketData: TicketResponse = ticketRes.data;
           setMyTicket(ticketData.fishTicket);
           console.log('티켓 +1 성공:', ticketData.fishTicket);
         } catch (err) {

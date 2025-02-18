@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import axiosInstance from "@/services/axiosInstance";
 
 interface Friend {
   id: number;
@@ -16,22 +17,23 @@ interface FriendListProps {
   isHost: boolean;
   participantCount: number;
   users: { userName: string }[]; // 현재 참가자 목록
+  friendList: Friend[];
   onInvite: (friendId: string) => void;
 }
 
-export default function FriendList({ userName, roomId, isHost, participantCount, users, onInvite }: FriendListProps) {
+export default function FriendList({ userName, roomId, isHost, participantCount, users, friendList, onInvite }: FriendListProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [inviteCooldowns, setInviteCooldowns] = useState<{ [key: string]: number }>({});
   const [searchQuery, setSearchQuery] = useState('');
 
-  console.log("📢 현재 users 데이터:", users); // users가 undefined인지 확인
-
+  console.log("📢 friendList 데이터:", friendList);
 
   useEffect(() => {
     if (isHost) {
-      fetch(`https://i12e203.p.ssafy.io/api/v1/friends/${encodeURIComponent(userName)}`)
-        .then((response) => response.json())
-        .then((data) => setFriends(data.friends))
+      axiosInstance.get(`/friends/${encodeURIComponent(userName)}`)
+        .then((response) => {
+          setFriends(response.data.friends);
+        })
         .catch((error) => console.error('Error fetching friends:', error));
     }
   }, [isHost, userName]);

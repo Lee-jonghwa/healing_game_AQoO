@@ -63,7 +63,7 @@ export const useAuth = () => {
     localStorage.setItem("nickName", nickName);
     setAuth({
       isAuthenticated: true,
-      user: { id: userId, nickName },
+      user: { id: userId, nickname: nickName },
       accessToken,
       loginType: "social", // 소셜 로그인임을 표시
     });
