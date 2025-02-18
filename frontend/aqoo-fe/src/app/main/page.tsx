@@ -594,7 +594,7 @@ export default function MainPage() {
 
       <OverlayEffect aquariumData={aquariumData} />
       {fishes.map((fish) => (
-        <Fish key={fish.fishId} fish={fish} />
+        <Fish key={fish.fishId} fish={fish} handleIncreaseExp={handleIncreaseExp} />
       ))}
 
       <NotificationComponent
