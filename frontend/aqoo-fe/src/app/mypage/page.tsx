@@ -4,6 +4,7 @@ import { UserInfo, AquariumData } from "@/types";
 
 import MyCollection from "./components/MyCollection";
 import Profile from "./components/Profile";
+import HowToPlay from "./components/HowToPlay"
 
 import { useUserFishCollectionTest } from "@/hooks/useUserFishCollection";
 import { useAllFishCollectionTest } from "@/hooks/useAllFishCollection";
@@ -14,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/services/axiosInstance";
 import { AxiosResponse } from "axios";
+
+import { useSFX } from "@/hooks/useSFX";
 
 export default function MyPage() {
   const { auth, logout } = useAuth();
@@ -31,6 +34,9 @@ export default function MyPage() {
   const totalFishCount = userFishList.reduce((acc, fish) => acc + fish.cnt, 0) + customFishList.length;
 
   const [logoWidth, setLogoWidth] = useState<number>(0);
+
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false)
+
 
   // 접속 유저의 정보 조회
   useEffect(() => {
@@ -111,6 +117,14 @@ export default function MyPage() {
         pt-16 sm:pt-12
         "
       >
+        {/* 설정창 테스트 */}
+        {/* <button
+        onClick={() => setIsHowToPlayOpen(true)}
+        className="text-3xl"
+        >
+          ?
+        </button> */}
+        {isHowToPlayOpen && <HowToPlay isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)}/>}
         <Profile fishTotal={totalFishCount} />
         <MyCollection allFishList={allFishList} userFishList={userFishList} customFishList={customFishList} />
       </div>

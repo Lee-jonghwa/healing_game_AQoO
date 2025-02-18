@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import axiosInstance from "@/services/axiosInstance";
+import { useSFX } from "@/hooks/useSFX";
 
 interface UserData {
   id: string;
@@ -23,7 +24,17 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
   const userId = auth.user?.id || "";
   const [confirmId, setConfirmId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
+  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3")
 
+  const wrapOnClick = (originalOnClick?: () => void):React.MouseEventHandler<HTMLButtonElement> => 
+    (event) => {
+      event.preventDefault()
+      playSuccess()
+      if (originalOnClick) {
+      originalOnClick()
+    }
+  }
   useEffect(() => {
     if (confirmId && confirmId !== userId) {
       setErrorMessage("입력하신 아이디가 일치하지 않습니다.");
@@ -33,6 +44,7 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
   }, [confirmId, userId]);
 
   const handleDeleteAccount = async () => {
+    playClick()
     if (confirmId !== userId) return;
 
     try {
@@ -97,7 +109,7 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
         {errorMessage && <p className="text-red-500 text-sm mt-1">{errorMessage}</p>}
       </div>
       <div className="flex justify-end m-4 gap-5">
-        <button className="px-4 py-2 bg-gray-300 rounded w-[200px]" onClick={onClose}>
+        <button className="px-4 py-2 bg-blue-700 rounded w-[200px] text-white" onClick={wrapOnClick(onClose)}>
           다시 한 번 생각한다.
         </button>
         <button

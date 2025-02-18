@@ -19,6 +19,7 @@ import MyFishChangeModal from "./MyFishChangeModal";
 import { ProfileFormInputs } from "@/types";
 import axiosInstance from "@/services/axiosInstance";
 import { AxiosResponse } from "axios";
+import { useSFX } from "@/hooks/useSFX";
 
 /**
  * Suspense 리소스를 위한 헬퍼 함수
@@ -122,6 +123,17 @@ function EditProfilePage() {
   // userData 리소스: auth.user가 변경될 때마다 최신 데이터를 가져옴
   const userDataResourceRef = useRef<{ read: () => any } | null>(null);
   const [userDataResource, setUserDataResource] = useState<{ read: () => any } | null>(null);
+
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
+
+  const wrapOnClick = (originalOnClick?: () => void) => () => {
+    playClick();
+    if (originalOnClick) {
+      originalOnClick()
+    }
+  }
+
+
 
   // 접속 유저의 정보 조회
   useEffect(() => {
@@ -290,7 +302,7 @@ function EditProfilePage() {
             text="대표 물고기 변경"
             isLoading={isLoading}
             color="none"
-            onClick={() => setIsMyFishModalOpen(true)}
+            onClick={wrapOnClick(() => setIsMyFishModalOpen(true))}
             isSpecial={true}
           />
         </div>
@@ -320,13 +332,13 @@ function EditProfilePage() {
                 text="비밀번호변경"
                 isLoading={isLoading}
                 color="blue"
-                onClick={() => setIsPasswordModalOpen(true)}
+                onClick={wrapOnClick(() => setIsPasswordModalOpen(true))}
               />
               <ModalButtons
                 text="회원탈퇴"
                 isLoading={isLoading}
                 color="red"
-                onClick={() => setIsDeleteModalOpen(true)}
+                onClick={wrapOnClick(() => setIsDeleteModalOpen(true))}
               />
             </div>
           </div>

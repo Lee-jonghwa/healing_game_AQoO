@@ -9,6 +9,7 @@ import { useRecoilState } from "recoil";
 import { authAtom } from "@/store/authAtom";
 // 타이틀 밖에 띄우기
 import { createPortal } from "react-dom";
+import { useSFX } from "@/hooks/useSFX";
 
 interface FishData {
   fishTypeId: number;
@@ -94,6 +95,15 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
   const [modalRect, setModalRect] = useState<DOMRect | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3")
+
+  const wrapOnSuccess = (originalOnClick?: () => void) => () => {
+    playSuccess();
+    if (originalOnClick) {
+      originalOnClick()
+    }
+  }
+
   // 내가 가진 fish 정보를 axiosInstance를 통해 불러오고,
   // 현재 대표 물고기와 동일한 fishImage는 필터링합니다.
   useEffect(() => {
@@ -173,7 +183,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
           mainFishImage: selectedFishImage,
         } as any,
       });
-
+      playSuccess()
       alert("대표 물고기 변경 성공!");
       // 서버와 동기화하기 위해 fetchUser()를 호출
       await fetchUser();

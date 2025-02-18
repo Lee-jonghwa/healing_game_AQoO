@@ -5,6 +5,7 @@ import Link from "next/link";
 import BasicCollectionTab from "./BasicCollectionTab";
 import CustomCollectionTab from "./CustomCollectionTab";
 import { Suspense } from "react";
+import { useSFX } from "@/hooks/useSFX";
 
 interface MyCollectionProps {
   allFishList: { id: number; fishName: string; imageUrl: string; rarity: string }[];
@@ -16,10 +17,13 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedTab = searchParams.get("tab") || "basic";
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
+
 
   const handleTabChange = (tabName: string) => {
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set("tab", tabName);
+    playClick()
     router.push(`/mypage?${newParams.toString()}`);
   };
 
@@ -28,7 +32,9 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
       {/* 탭 영역 */}
       <div className="flex items-end mb-0 mt-1 gap-1">
         <button
-          onClick={() => handleTabChange("basic")}
+          onClick={() =>
+            handleTabChange("basic")
+          }
           className={`
             relative left-[10px] sm:left-[30px] 
             cursor-pointer inline-flex items-center justify-center
@@ -66,6 +72,7 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
       {/* 어항관리 버튼 (오른쪽 상단) */}
       <Link href="mypage/fishtank" className="absolute right-0 top-0">
         <button
+          onClick={playClick}
           className="
             min-w-[30px] sm:min-w-[80px]
             h-7 sm:h-10 px-2 
