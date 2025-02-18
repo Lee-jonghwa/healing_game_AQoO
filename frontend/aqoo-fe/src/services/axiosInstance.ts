@@ -68,33 +68,32 @@ axiosInstance.interceptors.response.use(
     }
 
     // 401 에러 처리 (토큰 갱신)
-    if (error.response?.status === 401) {
-      if (originalRequest._retry) {
-        return Promise.reject(error);
-      }
-      originalRequest._retry = true;
+if (error.response?.status === 401) {
+  if (originalRequest._retry) {
+    return Promise.reject(error);
+  }
+  originalRequest._retry = true;
 
-      try {
-        const refreshToken = getCookie("refreshToken");
-        if (!refreshToken) {
-          console.error("리프레시 토큰 없음 - 강제 로그아웃");
-          forceLogout();
-          return Promise.reject(error);
-        }
+  try {
+    console.log("401 발생 - 토큰 갱신 요청");
+    // 쿠키에 저장된 refreshToken이 자동으로 전송되도록 withCredentials 옵션 추가
+    const { data } = await axios.post(
+      `${BASE_URL}${REFRESH_URL}`,
+      {},
+      { withCredentials: true }
+    );
+    const newAccessToken = data.accessToken;
 
-        console.log("401 발생 - 토큰 갱신 요청");
-        const { data } = await axios.post(`${BASE_URL}${REFRESH_URL}`, { refreshToken });
-        const newAccessToken = data.accessToken;
+    localStorage.setItem("accessToken", newAccessToken); // 새로운 토큰 저장
+    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+    return axiosInstance(originalRequest);
+  } catch (refreshError) {
+    console.error("토큰 갱신 실패:", refreshError);
+    forceLogout();
+    return Promise.reject(refreshError);
+  }
+}
 
-        localStorage.setItem("accessToken", newAccessToken); // 새로운 토큰 저장
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return axiosInstance(originalRequest);
-      } catch (refreshError) {
-        console.error("토큰 갱신 실패:", refreshError);
-        forceLogout();
-        return Promise.reject(refreshError);
-      }
-    }
 
     return Promise.reject(error);
   }

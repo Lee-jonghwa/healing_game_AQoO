@@ -1,25 +1,22 @@
 "use client";
 
 import { Friend, SearchUser } from "@/types";
-import Image from "next/image";
 import axios, { AxiosResponse } from "axios";
 import { useEffect, useRef, useState } from "react";
+
+import Image from "next/image";
+import Link from "next/link";
 import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth";
 import { useInput } from "@/hooks/useInput";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 // ✅ 친구 목록을 가져오는 함수 (외부에서도 사용할 수 있도록 분리)
 export const fetchFriends = async (userId: string) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/friends/${userId}`);
-    console.log("✅ 친구 목록 조회 성공:", response.data);
+    const response = await axiosInstance.get(`/friends/${userId}`);
     return response.data.friends;
   } catch (error) {
-    console.error("❌ 친구 목록 불러오기 실패", error);
     return null;
   }
 };
@@ -44,24 +41,24 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   };
 
   // 랜덤방문 버튼 클릭 시: GET /friends/find-non-friend/{userId} 호출
-const handleDummyClick = () => {
-  axios
-    .get(`${API_BASE_URL}/friends/find-non-friend/${userId}`)
-    .then((res: AxiosResponse<string>) => {
-      const randomUserId = res.data; // 응답으로 랜덤한 한 사용자의 id만 반환됨
-      if (randomUserId) {
-        // alert(`랜덤 방문: ${randomUserId} (사용자 ID)`);
-        // 예를 들어 해당 사용자 페이지로 이동할 수도 있습니다.
-        router.push(`/myfriend?friendId=${randomUserId}`);
-      } else {
-        alert("방문할 비친구 사용자가 없습니다.");
-      }
-    })
-    .catch((error) => {
-      console.error("랜덤 방문 요청 실패:", error);
-      alert("랜덤 방문 요청 실패");
-    });
-};
+  const handleDummyClick = () => {
+    axiosInstance
+      .get(`/friends/find-non-friend/${userId}`)
+      .then((res: AxiosResponse<string>) => {
+        const randomUserId = res.data; // 응답으로 랜덤한 한 사용자의 id만 반환됨
+        if (randomUserId) {
+          // alert(`랜덤 방문: ${randomUserId} (사용자 ID)`);
+          // 예를 들어 해당 사용자 페이지로 이동할 수도 있습니다.
+          router.push(`/myfriend?friendId=${randomUserId}`);
+        } else {
+          alert("방문할 비친구 사용자가 없습니다.");
+        }
+      })
+      .catch((error) => {
+        console.error("랜덤 방문 요청 실패:", error);
+        alert("랜덤 방문 요청 실패");
+      });
+  };
 
   useEffect(() => {
     if (!auth.accessToken) {
@@ -81,19 +78,14 @@ const handleDummyClick = () => {
 
   // 친구 추가 함수
   const handleAddFriend = (friendId: string) => {
-    axios
-      .post(`${API_BASE_URL}/friends/request`, {
+    axiosInstance
+      .post(`/friends/request`, {
         userId: userId,
         friendId: friendId,
         status: "PENDING",
       })
       .then((response: AxiosResponse<{ relationshipId: number }>) => {
-        console.log("친구 추가 요청 성공:", response.data);
-        setSearchResults((prev) =>
-          prev.map((user) =>
-            user.friendId === friendId ? { ...user, isFriend: 1 } : user
-          )
-        );
+        setSearchResults((prev) => prev.map((user) => (user.friendId === friendId ? { ...user, isFriend: 1 } : user)));
       })
       .catch((error) => {
         alert("친구 추가에 실패했습니다. 다시 시도하세요.");
@@ -103,12 +95,10 @@ const handleDummyClick = () => {
 
   // 친구 삭제 함수
   const handleDeleteFriend = (relationshipId: number) => {
-    axios
-      .delete(`${API_BASE_URL}/friends/delete`, { data: { relationshipId } })
+    axiosInstance
+      .delete(`/friends/delete`, { data: { relationshipId } })
       .then(() => {
-        setMyFriends((prev) =>
-          prev.filter((friend) => friend.id !== relationshipId)
-        );
+        setMyFriends((prev) => prev.filter((friend) => friend.id !== relationshipId));
       })
       .catch((error) => console.error("친구 삭제 실패", error));
   };
@@ -119,13 +109,11 @@ const handleDummyClick = () => {
       setSearchResults([]);
       return;
     }
-    console.log("검색할 아이디 : ", searchInput.value);
-    axios
-      .get(`${API_BASE_URL}/friends/find-users/${searchInput.value}`, {
+    axiosInstance
+      .get(`/friends/find-users/${searchInput.value}`, {
         withCredentials: true,
       })
       .then((response: AxiosResponse<SearchUser[]>) => {
-        console.log("사용자 목록 조회:", response.data);
         setSearchResults(response.data);
       })
       .catch((error) => {
@@ -145,10 +133,7 @@ const handleDummyClick = () => {
   // 검색창 외부 클릭 시 검색 결과 숨기기
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        searchContainerRef.current &&
-        !searchContainerRef.current.contains(event.target as Node)
-      ) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setSearchResults([]);
       }
     }
@@ -167,23 +152,15 @@ const handleDummyClick = () => {
           ✖
         </button>
       </div>
+      <div className="mb-4 ml-2">친구의 어항이 궁금하다면, 클릭하세요!</div>
 
       {/* 친구 리스트 */}
       <div className="space-y-2 overflow-y-auto scrollbar-hide flex-grow">
         {/* 맨 첫 칸에 랜덤방문 셀 추가 */}
-        <FriendItem
-          friend={dummyFriend}
-          handleDeleteFriend={() => {}}
-          isDummy={true}
-          onDummyClick={handleDummyClick}
-        />
+        <FriendItem friend={dummyFriend} handleDeleteFriend={() => {}} isDummy={true} onDummyClick={handleDummyClick} />
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
-            <FriendItem
-              key={friend.friendId}
-              friend={friend}
-              handleDeleteFriend={handleDeleteFriend}
-            />
+            <FriendItem key={friend.friendId} friend={friend} handleDeleteFriend={handleDeleteFriend} />
           ))
         ) : (
           <p className="text-center text-gray-500">아직 친구가 없습니다.</p>
@@ -237,7 +214,14 @@ function FriendItem({
   return (
     <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
       {isDummy ? (
-        <div className="flex items-center space-x-3 w-full">
+        <div
+          className="flex items-center space-x-3 w-full"
+          onClick={() => {
+            if (isDummy && onDummyClick) {
+              onDummyClick(); // 더미일 때 클릭 시 실행될 함수
+            }
+          }}
+        >
           <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
             <span className="text-xs">?</span>
           </div>
@@ -266,19 +250,17 @@ function FriendItem({
           </div>
         </Link>
       )}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          if (isDummy && onDummyClick) {
-            onDummyClick();
-          } else {
-            handleDeleteFriend(friend.id);
-          }
-        }}
-        className="absolute right-3 px-3 py-1 bg-red-500 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-      >
-        {isDummy ? "이동" : "삭제"}
-      </button>
+      {!isDummy && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteFriend(friend.id); // 삭제 처리
+          }}
+          className="absolute right-3 px-3 py-1 bg-red-500 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        >
+          삭제
+        </button>
+      )}
     </div>
   );
 }

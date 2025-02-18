@@ -29,7 +29,7 @@ export default function FirstLoginModal({
         <p className="mt-4 text-lg font-bold text-black">
           어서 오세요. 처음 오셨군요!
           <br />
-          {auth.user?.nickName} 님과 함께할 첫 물고기를 뽑으러 가보실까요?
+          {auth.user?.nickname} 님과 함께할 첫 물고기를 뽑으러 가보실까요?
         </p>
 
         <div className="flex justify-center space-x-6 mt-6">
