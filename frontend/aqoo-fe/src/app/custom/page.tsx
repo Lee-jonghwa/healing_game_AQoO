@@ -1,49 +1,56 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 
-import Image from "next/image";
-import MenuButton from "../main/MenuButton";
-import axios from "axios";
-import axiosInstance from "@/services/axiosInstance";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useAuth } from '@/hooks/useAuth';
+import axiosInstance from '@/services/axiosInstance';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import MenuButton from '../main/MenuButton';
 
 export default function CustomFishPages() {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
+  const [viewportHeight, setViewportHeight] = useState('100vh');
+
   const [lineMode, setLineMode] = useState(true); // Line 모드 여부
 
   const [isDrawing, setIsDrawing] = useState(false);
-  const [penColor, setPenColor] = useState("black");
+  const [penColor, setPenColor] = useState('black');
   const [penWidth, setPenWidth] = useState(20);
   const [eraserMode, setEraserMode] = useState(false);
   const [fillMode, setFillMode] = useState(false);
-  const [history, setHistory] = useState<string[]>([]);
-  const [redoStack, setRedoStack] = useState<string[]>([]);
-  const [background, setBackground] = useState("/background-1.png");
+  const [history, setHistory] = useState<ImageData[]>([]);
+  const [redoStack, setRedoStack] = useState<ImageData[]>([]);
 
-  const [fishName, setFishName] = useState(""); // 🎨 물고기 이름
-  const [fishSize, setFishSize] = useState("S"); // 기본값을 'M'으로 설정
+  const [background, setBackground] = useState('/background-1.png');
+
+  const [fishName, setFishName] = useState(''); // 🎨 물고기 이름
+  const [fishSize, setFishSize] = useState('S'); // 기본값을 'M'으로 설정
 
   const { auth } = useAuth();
   const userId = auth.user?.id;
 
   useEffect(() => {
-    const savedBg = localStorage.getItem("background");
+    const savedBg = localStorage.getItem('background');
     if (savedBg) setBackground(savedBg);
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const context = canvas.getContext("2d");
+    const context = canvas.getContext('2d');
     if (!context) return;
 
-    context.lineCap = "round";
+    context.lineCap = 'round';
     context.lineWidth = penWidth;
     contextRef.current = context;
+
+    // 🌟 현재 뷰포트 높이를 가져와서 설정
+    const updateHeight = () => {
+      setViewportHeight(`${window.innerHeight}px`);
+    };
 
     // 🌟 리사이징 시 기존 그림 저장 후 복원하는 함수
     const updateCanvasSize = () => {
@@ -74,20 +81,37 @@ export default function CustomFishPages() {
         context.drawImage(img, 0, 0, newWidth, newHeight);
 
         // ✅ 창 크기 변경 후 `penWidth`를 다시 적용하여 동기화
-        context.lineCap = "round";
+        context.lineCap = 'round';
         context.lineWidth = penWidth; // 👈 여기서 `penWidth`를 강제로 적용
-        context.strokeStyle = eraserMode ? "white" : penColor;
+        context.strokeStyle = eraserMode ? 'white' : penColor;
       };
     };
 
-    // 🌟 캔버스 크기 조정 및 초기 히스토리 저장
+    // 🌟 초기 설정 실행
+    updateHeight();
     updateCanvasSize();
     saveToHistory();
 
-    // 🌟 창 크기 변경 감지 → 캔버스 크기 업데이트
-    window.addEventListener("resize", updateCanvasSize);
-    return () => window.removeEventListener("resize", updateCanvasSize);
+    // 🌟 창 크기 변경 감지 → 캔버스 크기 및 높이 업데이트
+    window.addEventListener('resize', updateHeight);
+    window.addEventListener('resize', updateCanvasSize);
+
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      window.removeEventListener('resize', updateCanvasSize);
+    };
   }, []);
+
+  useEffect(() => {
+    const handleTouchMove = (event: TouchEvent) => {
+      if (isDrawing) {
+        // event.preventDefault(); // ✅ 터치 스크롤 방지
+      }
+    };
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => document.removeEventListener('touchmove', handleTouchMove);
+  }, [isDrawing]);
 
   // 펜 굵기 변경 시 `context.lineWidth` 업데이트 (캔버스를 다시 그리지 않음)
   useEffect(() => {
@@ -119,46 +143,54 @@ export default function CustomFishPages() {
 
   const saveToHistory = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const dataURL = canvas.toDataURL();
-    setHistory((prev) => [...prev, dataURL]);
+    if (!canvas || !contextRef.current) return;
+
+    const context = contextRef.current;
+
+    // ✅ 기존 캔버스의 픽셀 데이터를 저장 (투명도 유지됨)
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    setHistory((prev) => [...prev, imageData]); // 🎯 `ImageData` 저장
   };
 
   const undo = () => {
     if (history.length <= 1) return;
+
     const newHistory = [...history];
     const lastState = newHistory.pop();
-    if (!lastState) return; // 🚨 마지막 상태가 undefined이면 return
+    if (!lastState) return;
 
-    setRedoStack((prev) => [...prev, lastState]);
+    setRedoStack((prev) => [...prev, lastState]); // 🚀 Undo한 상태를 Redo 스택에 저장
     setHistory(newHistory);
+
+    // ✅ 저장된 ImageData로 복원
     if (newHistory.length > 0) restoreCanvas(newHistory[newHistory.length - 1]);
   };
 
   const redo = () => {
     if (redoStack.length === 0) return;
+
     const redoState = redoStack.pop();
-    if (!redoState) return; // 🚨 redoState가 undefined일 때 return
+    if (!redoState) return;
 
     setHistory((prev) => [...prev, redoState]);
     restoreCanvas(redoState);
   };
 
-  const restoreCanvas = (dataURL: string) => {
+  const restoreCanvas = (imageData: ImageData) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    if (!canvas || !contextRef.current) return;
 
-    const img = new window.Image(); // ⬅️ `window.Image`로 명확히 지정하여 충돌 방지
-    img.src = dataURL;
-    img.onload = () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(img, 0, 0);
-    };
+    const context = contextRef.current;
+
+    // ✅ 기존 캔버스를 지우고 저장된 ImageData 복원
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.putImageData(imageData, 0, 0);
   };
 
   const startDrawing = (event: React.MouseEvent | React.TouchEvent) => {
+    event.preventDefault(); // 🔹 터치 스크롤 방지
+
     if (fillMode) {
       const { x, y } = getCanvasCoordinates(event.nativeEvent);
       fillArea(x, y);
@@ -174,15 +206,17 @@ export default function CustomFishPages() {
     context.moveTo(x, y);
 
     if (eraserMode) {
-      context.globalCompositeOperation = "destination-out";
-      context.strokeStyle = "rgba(0,0,0,1)";
+      context.globalCompositeOperation = 'destination-out';
+      context.strokeStyle = 'rgba(0,0,0,1)';
     } else {
-      context.globalCompositeOperation = "source-over";
+      context.globalCompositeOperation = 'source-over';
       context.strokeStyle = penColor;
     }
   };
 
   const draw = (event: React.MouseEvent | React.TouchEvent) => {
+    event.preventDefault(); // 🔹 터치할 때 화면 스크롤 방지
+
     if (!isDrawing || !contextRef.current) return;
     const context = contextRef.current;
     const { x, y } = getCanvasCoordinates(event.nativeEvent);
@@ -224,13 +258,26 @@ export default function CustomFishPages() {
 
     if (colorsMatch(targetColor, fillColor)) return; // 같은 색이면 채우지 않음
 
-    floodFill(data, startX, startY, canvas.width, canvas.height, targetColor, fillColor);
+    floodFill(
+      data,
+      startX,
+      startY,
+      canvas.width,
+      canvas.height,
+      targetColor,
+      fillColor
+    );
 
     context.putImageData(imageData, 0, 0);
     saveToHistory();
   };
 
-  const getColorAtPixel = (data: Uint8ClampedArray, x: number, y: number, width: number) => {
+  const getColorAtPixel = (
+    data: Uint8ClampedArray,
+    x: number,
+    y: number,
+    width: number
+  ) => {
     const index = (y * width + x) * 4;
     return [data[index], data[index + 1], data[index + 2], data[index + 3]];
   };
@@ -270,7 +317,12 @@ export default function CustomFishPages() {
 
     const pixelMatches = (x: number, y: number) => {
       const index = (y * width + x) * 4;
-      return colorsMatch(targetColor, [data[index], data[index + 1], data[index + 2], data[index + 3]]);
+      return colorsMatch(targetColor, [
+        data[index],
+        data[index + 1],
+        data[index + 2],
+        data[index + 3],
+      ]);
     };
 
     const setColor = (x: number, y: number) => {
@@ -288,7 +340,14 @@ export default function CustomFishPages() {
       if (visited.has(key)) continue; // 이미 방문한 픽셀이면 건너뜀
       visited.add(key);
 
-      if (px < 0 || py < 0 || px >= width || py >= height || !pixelMatches(px, py)) continue;
+      if (
+        px < 0 ||
+        py < 0 ||
+        px >= width ||
+        py >= height ||
+        !pixelMatches(px, py)
+      )
+        continue;
 
       setColor(px, py);
 
@@ -301,12 +360,22 @@ export default function CustomFishPages() {
   // ✅ API 요청을 위한 `handleSaveDrawing` 함수
   const handleSaveDrawing = async () => {
     if (!fishName.trim()) {
-      alert("물고기 이름을 입력해주세요!");
+      const electronAPI = (window as any).electronAPI;
+      if (electronAPI && electronAPI.showAlert) {
+        electronAPI.showAlert('물고기 이름을 입력해주세요!');
+      } else {
+        alert('물고기 이름을 입력해주세요!');
+      }
       return;
     }
 
     if (!fishSize) {
-      alert("물고기 크기를 선택해주세요!");
+      const electronAPI = (window as any).electronAPI;
+      if (electronAPI && electronAPI.showAlert) {
+        electronAPI.showAlert('물고기 크기를 선택해주세요!');
+      } else {
+        alert('물고기 크기를 선택해주세요!');
+      }
       return;
     }
 
@@ -319,79 +388,164 @@ export default function CustomFishPages() {
 
       const formData = new FormData();
       formData.append(
-        "fishData",
+        'fishData',
         JSON.stringify({
           userId: userId,
           fishName: fishName,
           size: fishSize,
         })
       );
-      formData.append("image", blob, `${fishName}.png`);
+      formData.append('image', blob, `${fishName}.png`);
 
       try {
         // ✅ 2. API 호출 (multipart/form-data)
         const response = await axiosInstance.post(`/fish/painting`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
 
-        console.log("✅ 응답 :", response.data);
+        console.log('✅ 응답 :', response.data);
 
         // 서버에서 중복된 이름일 경우 "이미 존재하는 이름입니다."라는 문자열을 반환하는 경우
-        if (typeof response.data === "string" && response.data.includes("이미 존재하는 이름입니다")) {
-          alert("이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!");
-          setFishName(""); // 기존 입력값 초기화 (선택)
+        if (
+          typeof response.data === 'string' &&
+          response.data.includes('이미 존재하는 이름입니다')
+        ) {
+          const electronAPI = (window as any).electronAPI;
+          if (electronAPI && electronAPI.showAlert) {
+            electronAPI.showAlert(
+              '이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!'
+            );
+          } else {
+            alert('이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!');
+          }
+          setFishName(''); // 기존 입력값 초기화 (선택)
           return;
         }
 
-        alert("그림이 저장되었습니다!");
-        router.push("/mypage/fishtank");
+        const electronAPI = (window as any).electronAPI;
+        if (electronAPI && electronAPI.showAlert) {
+          electronAPI.showAlert('그림이 저장되었습니다!');
+        } else {
+          alert('그림이 저장되었습니다!');
+        }
+        router.push('/mypage/fishtank');
       } catch (error: any) {
-        console.error("🚨 오류:", error);
-        alert("저장 중 오류가 발생했습니다.");
+        console.error('🚨 오류:', error);
+        const electronAPI = (window as any).electronAPI;
+        if (electronAPI && electronAPI.showAlert) {
+          electronAPI.showAlert('저장 중 오류가 발생했습니다.');
+        } else {
+          alert('저장 중 오류가 발생했습니다.');
+        }
       }
-    }, "image/png");
+    }, 'image/png');
   };
 
+  // 색상 팔레트 (사용자 지정 색 추가)
+  const [customColor, setCustomColor] = useState('#ff0000');
+  const colors = [
+    '#FF0000',
+    '#FFA500',
+    '#FFFF00',
+    '#008000',
+    '#0000FF',
+    '#800080',
+    '#FFC0CB',
+    '#808080',
+    '#FFFFFF',
+    '#000000',
+    customColor,
+  ];
+
   return (
-    <div className="relative w-full min-h-screen flex items-center justify-center px-4">
+    <div
+      className='relative w-full flex flex-col items-center justify-center px-4 pb-20
+  lg:h-screen lg:overflow-hidden 
+  sm:min-h-screen sm:overflow-auto'
+    >
       <title>AQoO</title>
 
       {/* 🖼 배경 이미지 */}
       <div
-        className="absolute inset-0 bg-cover bg-center w-full h-full before:absolute before:inset-0 before:bg-white/30"
-        style={{ backgroundImage: `url(${background})` }}
+        className='absolute inset-0 bg-cover bg-center w-full h-full'
+        style={{
+          backgroundImage: `url(${background})`,
+          backgroundSize: 'cover', // ✅ 배경이 뷰포트 전체를 덮도록 설정
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          height: 'auto', // ✅ 컨텐츠 길이에 맞게 자동 조정
+          minHeight: '100vh', // ✅ 최소 높이를 100vh로 설정하여 모바일에서도 유지
+        }}
       ></div>
 
       {/* 🖼 메인 컨테이너 */}
-      <div className="relative flex flex-col items-center bg-white border-[2px] mt-10 border-black rounded-lg p-6 w-full max-w-4xl text-center shadow-lg">
-        {/* 🎨 타이틀 */}
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 min-w-[300px] sm:min-w-[420px] flex items-center justify-center text-center px-6 py-2 bg-white border-[2px] border-black rounded-md shadow-md">
-          <Image src="/icon/paintIcon.png" alt="paint" width={32} height={32} className="mr-2" />
-          <h2 className="text-2xl sm:text-4xl font-bold tracking-widest text-black mx-4">물고기 그리기</h2>
-          <Image src="/icon/paintIcon.png" alt="paint" width={32} height={32} className="ml-2 scale-x-[-1]" />
+      <div className='relative flex flex-col items-center bg-white border-[2px] mt-20 border-black rounded-lg p-6 w-full max-w-lg sm:max-w-4xl text-center justify-center shadow-lg'>
+        {/* 🖌️ 제목 */}
+        <div className='absolute top-[-25px] left-1/2 transform -translate-x-1/2 bg-white border-[2px] border-black rounded-md px-6 py-3 shadow-md flex items-center justify-center w-[250px] sm:w-[250px] md:w-[350px] max-w-full'>
+          <Image
+            src='/icon/paintIcon.png'
+            alt='paint'
+            width={24}
+            height={24}
+            className='mr-2'
+          />
+          <h2 className='text-lg sm:text-3xl font-bold tracking-widest text-black mx-2 whitespace-nowrap'>
+            물고기 그리기
+          </h2>
+          <Image
+            src='/icon/paintIcon.png'
+            alt='paint'
+            width={24}
+            height={24}
+            className='ml-2 scale-x-[-1]'
+          />
         </div>
 
         {/* 🎨 캔버스 영역 */}
-        <div className="flex flex-col md:flex-row w-full  items-center justify-center">
+        <div className='flex flex-col md:flex-row w-full  items-center justify-center mt-10'>
           {/* 🎨 색상 팔레트 */}
-          <div className="grid grid-cols-5 md:flex md:flex-col gap-2 p-2">
-            {["#FF0000", "#FFA500", "#FFFF00", "#008000", "#0000FF", "#800080", "#FFC0CB", "#000000", "#FFFFFF"].map(
-              (color) => (
-                <button
-                  key={color}
-                  onClick={() => setPenColor(color)}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 border border-black rounded-md 
-          ${penColor === color ? "border-8 border-black" : "border"}`}
-                  style={{ backgroundColor: color }}
-                />
-              )
-            )}
+          <div className='grid grid-cols-6 sm:grid-cols-2 gap-2 p-2'>
+            {colors.map((color, index) => (
+              <button
+                key={index}
+                onClick={() => setPenColor(color)}
+                className={`w-10 h-10 sm:w-12 sm:h-12 border rounded-md transition-all
+                  ${
+                    penColor === color
+                      ? 'border-4 border-black'
+                      : 'border border-black'
+                  }`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+            {/* 사용자 지정 색 선택 */}
+            <input
+              type='color'
+              value={customColor}
+              onChange={(e) => {
+                const newColor = e.target.value;
+
+                setCustomColor(newColor);
+                setPenColor(newColor);
+              }}
+              className={`w-10 h-10 sm:w-12 sm:h-12 border rounded-md cursor-pointer transition-all
+                ${
+                  penColor === customColor
+                    ? 'border-4 border-black'
+                    : 'border border-black'
+                }`}
+            />
           </div>
 
           {/* 🖼 캔버스 */}
           <canvas
+            className='border-[3px] border-black bg-gray-100 w-full max-w-lg sm:max-w-[600px] h-[300px] sm:h-[400px]'
             ref={canvasRef}
-            style={{ border: "1px solid black", cursor: fillMode ? "pointer" : "crosshair" }}
+            style={{
+              border: '1px solid black',
+              cursor: fillMode ? 'pointer' : 'crosshair',
+              touchAction: 'none',
+            }}
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
@@ -399,111 +553,124 @@ export default function CustomFishPages() {
             onTouchStart={startDrawing}
             onTouchMove={draw}
             onTouchEnd={stopDrawing}
-            className="border-[3px] border-black bg-gray-100 w-full max-w-[600px] h-[300px] sm:h-[400px]"
           />
 
           {/* 🎨 도구 메뉴 */}
-          <div className="grid grid-cols-3 md:flex md:flex-col gap-4 ml-4">
+          <div className='grid grid-cols-4 sm:grid-cols-3 md:flex md:flex-col gap-2 md:ml-6 mt-6 md:mt-0'>
             {/* ✏️ 펜 굵기 조절 슬라이더 */}
-            <div className="flex flex-col items-center">
-              <span className="text-xs">{penWidth}px</span>
+            <div className='flex flex-col items-center'>
+              <span className='text-xs'>{penWidth}px</span>
               <input
-                type="range"
-                min="10"
-                max="30"
+                type='range'
+                min='10'
+                max='30'
                 value={penWidth}
                 onChange={(e) => {
                   const newWidth = Number(e.target.value);
                   setPenWidth(newWidth);
-                  if (contextRef.current) contextRef.current.lineWidth = newWidth;
+                  if (contextRef.current)
+                    contextRef.current.lineWidth = newWidth;
                 }} // ✅ 여기서 캔버스를 다시 그리지 않음
-                className="w-16 mt-2"
+                className='w-16 mt-2'
               />
             </div>
 
             <MenuButton
-              icon="/icon/drawtool/lineIcon.png"
-              label="Line"
+              icon='/icon/drawtool/lineIcon.png'
+              label='Line'
               onClick={() => {
                 setLineMode(!lineMode);
                 setEraserMode(false);
                 setFillMode(false);
               }}
-              className={`${lineMode ? "bg-gray-300" : "bg-white"} !w-14 !h-14`}
+              className={`${lineMode ? 'bg-gray-300' : 'bg-white'} !w-14 !h-14`}
             />
 
             <MenuButton
-              icon="/icon/drawtool/eraserIcon.png"
-              label="Eraser"
+              icon='/icon/drawtool/eraserIcon.png'
+              label='Eraser'
               onClick={() => {
                 setEraserMode(!eraserMode);
                 setFillMode(false);
                 setLineMode(false);
               }}
-              className={`${eraserMode ? "bg-gray-300" : "bg-white"}  !w-14 !h-14`}
+              className={`${
+                eraserMode ? 'bg-gray-300' : 'bg-white'
+              }  !w-14 !h-14`}
             />
             <MenuButton
-              icon="/icon/drawtool/fillIcon.png"
-              label="Fill"
+              icon='/icon/drawtool/fillIcon.png'
+              label='Fill'
               onClick={() => {
                 setFillMode(!fillMode);
                 setEraserMode(false);
                 setLineMode(false);
               }}
-              className={`${fillMode ? "bg-gray-300" : "bg-white"}  !w-14 !h-14`}
+              className={`${
+                fillMode ? 'bg-gray-300' : 'bg-white'
+              }  !w-14 !h-14`}
             />
             <MenuButton
-              icon="/icon/drawtool/ClearIcon.png"
-              label="Clear"
+              icon='/icon/drawtool/ClearIcon.png'
+              label='Clear'
               onClick={clearCanvas}
-              className={"!w-14 !h-14"}
+              className={'!w-14 !h-14'}
             />
-            <MenuButton icon="/icon/drawtool/undoIcon.png" label="Undo" onClick={undo} className={"!w-14 !h-14"} />
-            <MenuButton icon="/icon/drawtool/redoIcon.png" label="Redo" onClick={redo} className={"!w-14 !h-14"} />
+            <MenuButton
+              icon='/icon/drawtool/undoIcon.png'
+              label='Undo'
+              onClick={undo}
+              className={'!w-14 !h-14'}
+            />
+            <MenuButton
+              icon='/icon/drawtool/redoIcon.png'
+              label='Redo'
+              onClick={redo}
+              className={'!w-14 !h-14'}
+            />
           </div>
         </div>
 
-        {/* ✅ 🐟 물고기 이름 입력 */}
-        <div className="flex  items-center">
-          <div className="flex flex-col items-center mr-4">
-            <label className="font-semibold text-lg">🐟 물고기 이름 입력 </label>
+        {/* ✅ 반응형 정렬 적용 */}
+        <div className='flex flex-col sm:flex-row items-center justify-center w-full gap-4 mt-6'>
+          <div className='flex flex-col items-center w-full sm:w-auto'>
+            <label className='font-semibold text-lg'>🐟 물고기 이름 입력</label>
             <input
-              type="text"
-              placeholder="물고기 이름 입력"
+              type='text'
+              placeholder='물고기 이름 입력'
               value={fishName}
               onChange={(e) => setFishName(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md text-lg w-56 h-12 text-center"
+              className='px-4 py-2 border border-gray-300 rounded-md text-lg w-full sm:w-56 h-12 text-center'
             />
           </div>
 
-          {/* 🐟 물고기 크기 선택 (Select Box) */}
-          <div className="flex flex-col items-center">
-            <label className="font-semibold text-lg">🐟 크기 선택</label>
+          <div className='flex flex-col items-center w-full sm:w-auto'>
+            <label className='font-semibold text-lg'>🐟 크기 선택</label>
             <select
               value={fishSize}
               onChange={(e) => setFishSize(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md text-xl w-56 h-12 text-center"
+              className='px-4 py-2 border border-gray-300 rounded-md text-lg w-full sm:w-56 h-12 text-center'
             >
-              <option value="XS">XS</option>
-              <option value="S">기본</option>
-              <option value="M">M</option>
-              <option value="L">L</option>
-              <option value="XL">XL</option>
+              <option value='XS'>XS</option>
+              <option value='S'>기본</option>
+              <option value='M'>M</option>
+              <option value='L'>L</option>
+              <option value='XL'>XL</option>
             </select>
           </div>
         </div>
 
         {/* 🏁 버튼 */}
-        <div className="flex flex-col items-center justify-center sm:flex-row gap-4 mt-6 w-full">
+        <div className='flex flex-col items-center justify-center sm:flex-row gap-4 mt-6 sm:mt-4 w-full'>
           <button
             onClick={() => router.back()}
-            className="px-6 py-3 bg-gray-400 text-white rounded-lg shadow-md w-full sm:w-auto ml-6"
+            className='px-4 py-2 sm:px-6 sm:py-3 bg-gray-400 text-white rounded-lg shadow-md w-full sm:w-auto'
           >
             취소하기
           </button>
           <button
             onClick={handleSaveDrawing}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md w-full sm:w-auto"
+            className='px-4 py-2 sm:px-6 sm:py-3 bg-blue-500 text-white rounded-lg shadow-md w-full sm:w-auto'
           >
             그리기 완료
           </button>
