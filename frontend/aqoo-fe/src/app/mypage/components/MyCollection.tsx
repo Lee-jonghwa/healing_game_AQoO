@@ -17,9 +17,8 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedTab = searchParams.get("tab") || "basic";
+  const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
   const { play: playClick } = useSFX("/sounds/pop-01.mp3")
-
-
   const handleTabChange = (tabName: string) => {
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set("tab", tabName);
@@ -70,9 +69,11 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
       </div>
 
       {/* 어항관리 버튼 (오른쪽 상단) */}
-      <Link href="mypage/fishtank" className="absolute right-0 top-0">
+      <Link onClick={() => {
+        playModal();
+      }}
+        href="mypage/fishtank" className="absolute right-0 top-0">
         <button
-          onClick={playClick}
           className="
             min-w-[30px] sm:min-w-[80px]
             h-7 sm:h-10 px-2 

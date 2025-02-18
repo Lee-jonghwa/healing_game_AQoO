@@ -71,7 +71,7 @@ function fetchUserData(userId: string): Promise<any> {
  */
 function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal: number }) {
   const API_BASE_URL = "https://i12e203.p.ssafy.io";
-  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
+  const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
 
   return (
     <div
@@ -175,7 +175,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
       <div className="self-end sm:self-start mb-2 sm:m-2 mr-5">
         <Link
           href="/mypage/edit"
-          onClick={playClick}
+          onClick={playModal}
           className="
             min-w-[30px] sm:min-w-[80px] h-7 sm:h-10 px-2
             rounded-lg sm:rounded-xl border border-[#040303] bg-white 

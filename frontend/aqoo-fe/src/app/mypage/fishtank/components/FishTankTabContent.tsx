@@ -5,6 +5,7 @@ import TankFishCollection from "./TankFishCollection";
 import BackgroundList from "./BackgroundList";
 import { Suspense } from "react";
 import { useState } from "react";
+import { useSFX } from "@/hooks/useSFX";
 
 interface FishTankTabContentProps {
   aquariumId: number;
@@ -30,7 +31,7 @@ export default function FishTankTabContent({
   // 상태로 현재 내 물고기 수와 어항의 물고기 수를 저장합니다.
   const [myFishCount, setMyFishCount] = useState(0);
   const [tankFishCount, setTankFishCount] = useState(0);
-
+  const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
   return (
     <div className="w-full h-full flex flex-col m-0 p-0">
       <div className="flex flex-col md:flex-row gap-4 p-4 overflow-hidden">
@@ -49,7 +50,11 @@ export default function FishTankTabContent({
               {aquariumName} 어항의 물고기 ({tankFishCount}/40)
             </span>
             <button
-              onClick={onSetMainAquarium}
+              onClick={() => {
+                playModal();
+                onSetMainAquarium();
+              }}
+
               className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
             >
               대표어항설정
