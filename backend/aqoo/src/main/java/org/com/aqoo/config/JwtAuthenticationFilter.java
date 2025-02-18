@@ -52,7 +52,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
 
                 }
-
             } catch (Exception e) {
                 // JWT가 유효하지 않은 경우
                 System.out.println("Invalid JWT: " + e.getMessage());

@@ -73,6 +73,11 @@ public class UserService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        // 경험치 입력값 체크 (30 이상이면 에러 처리)
+        if (request.getEarnedExp() >= 30) {
+            throw new IllegalArgumentException("비정상적인 경험치 획득 시도");
+        }
+
         int level = user.getLevel();
         int expToNextLevel = level * 20;  // 현재 레벨업을 위한 경험치 필요량
 
