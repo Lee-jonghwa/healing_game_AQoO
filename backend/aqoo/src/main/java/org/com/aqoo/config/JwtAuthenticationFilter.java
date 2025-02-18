@@ -46,13 +46,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                     }
                 }
+                else{
+                    System.out.println("액세스 토큰 만료됨. 리프레시 토큰을 요청하세요.");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 응답 반환
+                    return;
 
-            } catch (ExpiredJwtException e) {
-                System.out.println("액세스 토큰 만료됨. 리프레시 토큰을 요청하세요.");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 응답 반환
-                return;
-            }
-            catch (Exception e) {
+                }
+
+            } catch (Exception e) {
                 // JWT가 유효하지 않은 경우
                 System.out.println("Invalid JWT: " + e.getMessage());
             }
