@@ -494,12 +494,15 @@ export default function MainPage() {
     );
 
   return (
-    <div className="relative w-full overflow-hidden" style={{ height: viewportHeight }}>
+    <div className="fixed w-full min-h-full overflow-hidden" style={{ height: viewportHeight }}>
       <title>AQoO</title>
       <KickedModal />
       <div
         className="absolute inset-0 bg-cover bg-center w-full h-full"
-        style={{ backgroundImage: `url(${background})` }}
+        style={{
+          backgroundImage: `url(${background})`,
+          height: viewportHeight, // 👈 여기서 강제 적용!
+        }}
       ></div>
 
       <OverlayEffect aquariumData={aquariumData} />
