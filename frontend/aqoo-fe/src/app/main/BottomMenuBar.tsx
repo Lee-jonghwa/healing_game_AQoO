@@ -12,8 +12,6 @@ import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useState } from "react";
 
-const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
-
 interface BottomMenuBarProps {
   userInfo: UserInfo;
   aquariumData?: AquariumData;

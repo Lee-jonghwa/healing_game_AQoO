@@ -1,16 +1,15 @@
 "use client";
 
+import { Friend, Notification } from "@/types";
 import axios, { AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
 
 import Image from "next/image";
-import { Notification, Friend } from "@/types";
+import axiosInstance from "@/services/axiosInstance";
+import { fetchFriends } from "@/app/main/FriendsList";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation"; // ✅ next/navigation에서 import
-import { fetchFriends } from "@/app/main/FriendsList";
-import axiosInstance from "@/services/axiosInstance";
 
-const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 const customLoader = ({ src }: { src: string }) => src;
 
 interface FriendRequest {
@@ -39,7 +38,7 @@ export default function PushNotifications({
 
     // 삭제 요청 보내기
     axiosInstance
-      .post(`${API_BASE_URL}/notification/delete`, { notificationId: id })
+      .post(`/notification/delete`, { notificationId: id })
       .then((response) => {
         console.log(response.data.message); // 삭제 성공 메시지 출력
         // 여기에서 알림 삭제 후 UI 업데이트 (예: 삭제된 알림을 상태에서 제거)
@@ -70,7 +69,7 @@ export default function PushNotifications({
 
     // ✅ 현재 로그인된 유저의 ID로 알림 가져오기
     axiosInstance
-      .get(`${API_BASE_URL}/notification/${auth.user.id}`)
+      .get(`/notification/${auth.user.id}`)
       .then((response: AxiosResponse<Notification[]>) => {
         console.log("🔔 알림 데이터:", response.data);
         setNotifications(response.data);
@@ -97,7 +96,7 @@ export default function PushNotifications({
 
     try {
       await Promise.all(
-        unreadNotifs.map((notif) => axiosInstance.post(`${API_BASE_URL}/notification/read`, { notificationId: notif.id }))
+        unreadNotifs.map((notif) => axiosInstance.post(`/notification/read`, { notificationId: notif.id }))
       );
       console.log("✅ 알림 읽음 처리 완료");
 
@@ -355,7 +354,7 @@ function FriendRequestModal({
     console.log("친구 수락 코드 : ", relationshipId);
 
     axiosInstance
-      .post(`${API_BASE_URL}/friends/accept`, { relationshipId: relationshipId })
+      .post(`/friends/accept`, { relationshipId: relationshipId })
       .then(() => {
         console.log("✅ 친구 요청 수락 성공");
         handleDelete(notificationId);
