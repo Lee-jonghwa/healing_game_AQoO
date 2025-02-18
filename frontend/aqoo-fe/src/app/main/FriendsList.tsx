@@ -144,7 +144,23 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   }, []);
 
   return (
-    <div className="relative w-[400px] h-[600px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col">
+    <div
+      className="
+    relative
+    /* 모바일 기본값 */
+    w-[300px] h-[350px]
+    /* sm: 640px 이상일 때 적용할 값 */
+    sm:w-[400px] sm:h-[600px]
+    bg-white bg-opacity-70
+    border border-black
+    rounded-lg
+    shadow-lg
+    p-4
+    flex
+    flex-col
+  "
+    >
+      {" "}
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">
@@ -154,8 +170,7 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
           ✖
         </button>
       </div>
-      <div className="mb-4 ml-2">친구의 어항이 궁금하다면, 클릭하세요!</div>
-
+      <div className="mb-4 ml-2 text-sm sm:text-base">친구의 어항이 궁금하다면, 클릭하세요!</div>
       {/* 친구 리스트 */}
       <div className="space-y-2 overflow-y-auto scrollbar-hide flex-grow">
         {/* 맨 첫 칸에 랜덤방문 셀 추가 */}
@@ -165,10 +180,9 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
             <FriendItem key={friend.friendId} friend={friend} handleDeleteFriend={handleDeleteFriend} />
           ))
         ) : (
-          <p className="text-center text-gray-500">아직 친구가 없습니다.</p>
+          <p className="text-sm sm:text-base text-center text-gray-500">아직 친구가 없습니다.</p>
         )}
       </div>
-
       {/* 검색창 + 버튼 + 검색 결과 리스트 */}
       <div className="relative mt-4" ref={searchContainerRef}>
         {searchResults.length > 0 && (
@@ -214,7 +228,7 @@ function FriendItem({
   const customLoader = ({ src }: { src: string }) => src;
 
   return (
-    <div className="relative p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
+    <div className="relative p-2 sm:p-3 bg-white rounded-lg border border-black flex items-center space-x-3 cursor-pointer hover:bg-gray-100 group">
       {isDummy ? (
         <div
           className="flex items-center space-x-3 w-full"
@@ -224,18 +238,19 @@ function FriendItem({
             }
           }}
         >
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
             <span className="text-xs">?</span>
           </div>
           <div>
-            <p className="text-xs">Lv. ???</p>
-            <p className="font-bold">랜덤방문</p>
-            <p className="text-sm text-gray-500">@???</p>
+            <p className="text-xs sm:text-sm">Lv. ???</p>
+            <p className="text-sm sm:text-base font-bold">랜덤방문</p>
+            <p className="text-xs sm:text-s text-gray-500">@???</p>
           </div>
         </div>
       ) : (
+
         <Link href={`/myfriend?friendId=${friend.friendId}&isFriendExist=true`} className="flex items-center space-x-3 w-full">
-          <div className="w-12 h-12 rounded-full overflow-hidden">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden">
             <Image
               loader={customLoader}
               src={friend.mainFishImage}
@@ -247,8 +262,8 @@ function FriendItem({
           </div>
           <div>
             <p className="text-xs">Lv. {friend.level}</p>
-            <p className="font-bold">{friend.nickname}</p>
-            <p className="text-sm text-gray-500">@{friend.friendId}</p>
+            <p className="text-sm sm:text-base font-bold">{friend.nickname}</p>
+            <p className="text-xs sm:text-sm text-gray-500">@{friend.friendId}</p>
           </div>
         </Link>
       )}
@@ -280,7 +295,7 @@ function SearchResultItem({
   return (
     <div className="p-3 bg-white mb-2 rounded-lg border border-black flex items-center justify-between space-x-3">
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-300 rounded-full">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-300 rounded-full">
           <Image
             loader={customLoader}
             src={user.mainFishImage}
@@ -292,14 +307,14 @@ function SearchResultItem({
         </div>
         <div>
           <p className="text-xs">Lv. {user.level}</p>
-          <p className="font-bold">{user.nickname}</p>
-          <p className="text-sm text-gray-500">@{user.friendId}</p>
+          <p className="text-sm sm:text-base font-bold">{user.nickname}</p>
+          <p className="text-xs sm:text-sm text-gray-500">@{user.friendId}</p>
         </div>
       </div>
       {user.isFriend === 0 ? (
         <button
           onClick={() => handleAddFriend(user.friendId)}
-          className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
+          className="py-1 sm:px-3 px-2 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
         >
           친구 추가
         </button>

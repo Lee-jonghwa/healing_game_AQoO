@@ -34,8 +34,8 @@ export default function ModalButton({
       disabled={isLoading}
       className={`${
         isSpecial
-          ? "m-1 p-1 min-w-[240px] min-h-[40px] px-2 flex items-center justify-center rounded-xl border border-[#040303] bg-white  [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] text-[#070707] text-center font-[400] text-xl"
-          : "w-full flex items-center justify-center gap-2 p-3 rounded-lg transition"
+          ? "m-1 p-1 px-2 min-w-[100px] sm:min-w-[240px] sm:min-h-[40px] flex items-center justify-center rounded-xl border border-[#040303] bg-white  [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] text-[#070707] text-center font-[400] text-lg sm:text-xl"
+          : "text-sm sm:text-lg w-full sm:w-full flex items-center justify-center sm:gap-2 p-[5px] sm:p-3 rounded-lg transition"
       } ${colorClasses[color]} ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       {icon && <span>{icon}</span>}
