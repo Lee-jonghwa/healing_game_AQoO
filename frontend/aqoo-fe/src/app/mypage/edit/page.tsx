@@ -68,16 +68,16 @@ function ProfileForm({
   } | null;
   onSubmit: SubmitHandler<ProfileFormInputs>;
   isLoading: boolean;
-  register: UseFormRegister<ProfileFormInputs>; // ✅ 올바른 타입 지정
-  setValue: UseFormSetValue<ProfileFormInputs>; // ✅ 올바른 타입 지정
+  register: UseFormRegister<ProfileFormInputs>;
+  setValue: UseFormSetValue<ProfileFormInputs>;
   handleSubmit: UseFormHandleSubmit<ProfileFormInputs>;
 }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
-      <div className="flex flex-col gap-4 ">
+      <div className="flex flex-col gap-1 sm:gap-4 ">
         <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
         <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
-        <div className="flex items-end justify-between gap-4 relative">
+        <div className="flex items-end justify-between sm:gap-4 relative">
           <div className="relative w-full">
             <InputField
               label="닉네임"
@@ -125,11 +125,11 @@ function EditProfilePage() {
 
   // 접속 유저의 정보 조회
   useEffect(() => {
-    if (!auth.user?.id) return; // 로그인한 유저 ID가 없으면 API 호출 안 함
+    if (!auth.user?.id) return;
     axiosInstance
       .get(`/users/${auth.user.id}`)
       .then((response: AxiosResponse<UserInfo>) => {
-        console.log("✅ 유저 정보:", response.data);
+        // console.log("✅ 유저 정보:", response.data);
         setUserInfo(response.data);
       })
       .catch((error) => {
@@ -147,15 +147,14 @@ function EditProfilePage() {
     axiosInstance
       .get(`/aquariums/${userInfo.mainAquarium}`)
       .then((res: AxiosResponse<AquariumData>) => {
-        console.log("✅ 어항 상세 정보:", res.data);
+        // console.log("✅ 어항 상세 정보:", res.data);
         setAquariumData(res.data);
 
         const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
 
-        let bgUrl = res.data.aquariumBackground; // API에서 받아온 값
+        let bgUrl = res.data.aquariumBackground;
         if (!bgUrl) return;
 
-        // bgUrl이 전체 URL이 아니라면 BASE_URL을 붙임
         if (!bgUrl.startsWith("http")) {
           bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
         }
@@ -164,27 +163,24 @@ function EditProfilePage() {
       })
       .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
   }, [userInfo]);
+
+  // userData 리소스 생성: auth.user?.id가 준비되면 axiosInstance로 데이터 가져오기
   useEffect(() => {
-    // auth.user?.id가 준비되었고, 아직 리소스가 생성되지 않았다면 생성
     if (auth.user?.id) {
       const token = localStorage.getItem("accessToken");
       const resource = wrapPromise(
-        fetch(`${API_BASE_URL}/api/v1/users/${auth.user.id}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }).then((response) => {
-          if (!response.ok) {
-            throw new Error("유저 정보를 불러오는데 실패했습니다.");
-          }
-          return response.json();
-        })
+        axiosInstance
+          .get(`/users/${auth.user.id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => response.data)
       );
       setUserDataResource(resource);
     }
-  }, [auth.user]); // auth.user가 변경될 때마다 리소스 재생성
+  }, [auth.user]);
 
   // Suspense 내부에서 호출 (리소스가 준비되지 않았다면 Promise를 throw하여 fallback 표시)
   // 렌더 시점에 바로 읽기
@@ -202,37 +198,32 @@ function EditProfilePage() {
       console.log("닉네임 입력값:", data.nickname);
       const token = localStorage.getItem("accessToken");
 
-      const parsedImageName = "/" + userData?.mainFishImage.split("/").pop() || "";
+      const parsedImageName = "/" + (userData?.mainFishImage.split("/").pop() || "");
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/users`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await axiosInstance.post(
+        `/users`,
+        {
           userId: userData?.id || "",
           userNickName: data.nickname,
           mainFishImage: parsedImageName,
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      const responseData = await response.json();
       console.log("API 응답 상태:", response.status);
-      console.log("API 응답 데이터:", responseData);
+      console.log("API 응답 데이터:", response.data);
 
-      if (!response.ok) {
-        throw new Error(`회원 정보 수정 실패: ${responseData.message || "알 수 없는 오류"}`);
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(`회원 정보 수정 실패: ${response.data.message || "알 수 없는 오류"}`);
       }
 
       // 최신 유저데이터를 불러와서 recoil 상태 업데이트
       await fetchUser();
-      // optimistic update: 전역 auth 상태에서 nickname 변경
-
-      // Recoil의 상태 업데이트 방식은 비동기적(Asynchronous)이며, 최신 상태를 보장하지 않음
-      // 즉, setAuthState(authState => { ...authState, user: { ...authState.user, nickName: data.nickname } })를 호출해도
-      // authState가 최신 상태가 아닐 가능성이 있음
-      // 기존 값이 덮어씌워지는 경우가 발생할 수 있음
       setAuthState(
         (prevState) =>
           ({
@@ -259,16 +250,27 @@ function EditProfilePage() {
       style={{
         backgroundImage: `url(${background})`,
       }}
-      className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
+      className="
+        bg-cover bg-center bg-no-repeat
+        h-screen w-screen overflow-hidden
+        relative"
     >
       <div className="absolute bottom-5 right-5">
         <Buttons text="BACK" />
       </div>
 
-      <div className="flex justify-center items-center h-screen w-screen bg-cover bg-center">
-        <div className="flex-1 flex flex-col items-center">
-          <div className="w-[250px] h-[250px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
-            <div className="overflow-hidden w-[220px] h-[220px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
+      {/* 전체 감싸기 */}
+      <div className="mt-20 sm:mt-0 flex flex-col sm:flex-row justify-center items-center h-screen w-screen">
+        {/* 대표물고기 이미지 */}
+        <div className="sm:mt-0 sm:flex-1 flex flex-col items-center">
+          <div
+            className="w-1/2 sm:w-[250px] h-auto aspect-square
+          flex-shrink-0 flex items-center justify-center
+          rounded-xl border border-black bg-white
+          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+          mb-2 sm:mb-10"
+          >
+            <div className="overflow-hidden w-[90%] h-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
               {userData?.mainFishImage ? (
                 <img
                   src={
@@ -295,36 +297,35 @@ function EditProfilePage() {
           />
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 w-[80%] mt-5 sm:mt-0">
           <div
             className="
-            bg-white p-8 rounded-2xl
-            w-[450px] min-h-[55vh]
+            bg-white p-5 sm:p-8 rounded-2xl
+            w-full sm:w-[450px]
+            min-h-[45vh] sm:min-h-[60vh]
             flex flex-col
             items-center justify-center
-            p-5
             "
             style={{ gap: "calc(60vh * 0.03)" }}
           >
-            <h2 className="text-center text-4xl mb-6">회원정보 수정</h2>
+            <h2 className="text-center text-xl sm:text-4xl sm:mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}
-              // ***문제***
               onSubmit={onSubmit}
               isLoading={isLoading}
               register={register}
               setValue={setValue}
               handleSubmit={handleSubmit}
             />
-            <div className="w-full flex justify-between gap-4 mt-4">
+            <div className="w-full flex justify-between gap-1 sm:gap-4 sm:mt-4">
               <ModalButtons
-                text="비밀번호 변경"
+                text="비밀번호변경"
                 isLoading={isLoading}
                 color="blue"
                 onClick={() => setIsPasswordModalOpen(true)}
               />
               <ModalButtons
-                text="회원 탈퇴"
+                text="회원탈퇴"
                 isLoading={isLoading}
                 color="red"
                 onClick={() => setIsDeleteModalOpen(true)}
@@ -333,7 +334,6 @@ function EditProfilePage() {
           </div>
         </div>
       </div>
-
       {isPasswordModalOpen && <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />}
       {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} userData={userData} />}
       {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} userData={userData} />}

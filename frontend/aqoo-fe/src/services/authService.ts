@@ -1,6 +1,7 @@
 // src/services/authService.ts
 import axios from "axios";
 import { User } from "@/store/authAtom";
+import axiosInstance from "./axiosInstance";
 
 const AUTH_API_URL = "https://i12e203.p.ssafy.io/api/v1/auth";
 const USER_API_URL = "https://i12e203.p.ssafy.io/api/v1/users";
@@ -71,7 +72,7 @@ export const fetchUser = async (): Promise<User | null> => {
   if (!token || !storedId) return null;
 
   try {
-    const res = await axios.get(`${USER_API_URL}/${storedId}`, {
+    const res = await axiosInstance.get(`users/${storedId}`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true,
     });

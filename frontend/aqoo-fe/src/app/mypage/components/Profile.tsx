@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Fish } from "lucide-react";
+import axiosInstance from "@/services/axiosInstance"; // axiosInstance import
 
 interface UserData {
   id: string;
@@ -44,27 +45,24 @@ function wrapPromise<T>(promise: Promise<T>): { read(): T } {
 }
 
 /**
- * API에서 유저 정보를 불러오는 함수
+ * API에서 유저 정보를 불러오는 함수 (axiosInstance 사용)
  */
 function fetchUserData(userId: string): Promise<any> {
   const token = localStorage.getItem("accessToken");
-  const API_BASE_URL = "https://i12e203.p.ssafy.io";
-  // const IMAGE_API_BASE_URL = "https://i12e203.p.ssafy.io/images";
-  return fetch(`${API_BASE_URL}/api/v1/users/${userId}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  }).then((response) => {
-    if (!response.ok) {
+  return axiosInstance
+    .get(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+    .then((response) => {
+      console.log("Fetched user data:", response.data);
+      return response.data;
+    })
+    .catch((error) => {
       throw new Error("유저 정보를 불러오는데 실패했습니다.");
-    }
-    return response.json().then((data) => {
-      console.log("Fetched user data:", data);
-      return data;
     });
-  });
 }
 
 /**
@@ -75,21 +73,24 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
   return (
     <div
       className="
-        m-2 w-full max-w-[90%] md:max-w-[1100px] lg:max-w-[1300px] 
-        border-2 border-[#1c5e8d] rounded-[30px] bg-[#fffdfd]
+        m-1 sm:m-2
+        w-full md:max-w-[1100px] lg:max-w-[1300px] 
+        border-2 border-[#1c5e8d] rounded-xl sm:rounded-[30px] bg-[#fffdfd]
         [box-shadow:-2px_-2px_0px_2px_rgba(0,0,0,0.25)_inset]
-        flex justify-between items-center
-        scale-90 sm:scale-95 md:scale-100
+        flex flex-col sm:flex-row
+        justify-between items-center
         transition-transform duration-300
+        md:aspect-[6.5/1]
       "
-      style={{ aspectRatio: "6.5 / 1" }}
+      // style={{ aspectRatio: "6.5 / 1" }}
     >
       {/* 좌측: 초상화 + 레벨/닉네임/정보 */}
-      <div className="flex gap-2 justify-center ml-2 p-3">
+      {/* 모바일에서는 위쪽 */}
+      <div className="flex gap-1 sm:gap-2 items-center justify-center sm:ml-2 p-1 sm:p-3">
         {/* 초상화 컨테이너 */}
         <div
           className="
-            w-[160px] md:max-w-[150px] lg:max-w-[170px]
+            w-[100px] sm:w-[160px] md:max-w-[150px] lg:max-w-[170px]
             aspect-square flex-shrink-0
             flex items-center justify-center
             rounded-xl border border-black bg-white
@@ -118,17 +119,17 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
         </div>
 
         {/* 레벨/닉네임/총 물고기 등 텍스트 */}
-        <div className="mx-3 flex flex-col justify-center w-full">
+        <div className="mx-1 sm:mx-3 flex flex-col justify-center w-2/3 sm:w-full">
           <p
             className="
-              px-4 flex items-center
-              min-w-[300px] md:min-w-[280px] lg:min-w-[330px]
-              h-10 md:h-9 lg:h-11
-              flex-shrink-0 mt-2 mb-2 
+              px-2 sm:px-4 flex items-center
+              w-full sm:min-w-[300px] md:min-w-[280px] lg:min-w-[330px]
+              h-7 md:h-9 lg:h-11
+              flex-shrink-0 mb-1 sm:mt-2 sm:mb-2 
               text-[#070707] text-center
               font-[400] leading-normal
-              text-2xl sm:text-xl md:text-2xl
-              rounded-xl border-[3px] border-black bg-white
+              text-base sm:text-lg md:text-xl lg:text-2xl
+              rounded-lg sm:rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
@@ -136,10 +137,14 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
           </p>
           <p
             className="
-              min-w-[300px] md:min-w-[280px] lg:min-w-[330px] h-10 md:h-9 lg:h-11
-              flex-shrink-0 mb-2 px-4 flex items-center
-              text-[#070707] text-center text-2xl sm:text-xl md:text-2xl font-[400] leading-normal
-              rounded-xl border-[3px] border-black bg-white
+              px-2 sm:px-4 flex items-center
+              sm:min-w-[300px] md:min-w-[280px] lg:min-w-[330px]
+              h-7 md:h-9 lg:h-11
+              flex-shrink-0 mb-1 sm:mt-2 sm:mb-2
+              text-[#070707] text-center
+              font-[400] leading-normal
+              text-base sm:text-lg md:text-xl lg:text-2xl
+              rounded-lg sm:rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
@@ -147,29 +152,33 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
           </p>
           <p
             className="
-              min-w-[300px] md:min-w-[280px] lg:min-w-[330px] h-10 md:h-9 lg:h-11
-              flex-shrink-0 mb-2 px-4
-              flex items-center
-              text-[#070707] text-center text-2xl sm:text-xl md:text-2xl font-[400] leading-normal
-              rounded-xl border-[3px] border-black bg-white
+              px-2 flex items-center
+              sm:min-w-[300px] md:min-w-[280px] lg:min-w-[330px]
+              h-7 md:h-9 lg:h-11
+              flex-shrink-0 mb-1 sm:mt-2 sm:mb-2
+              text-[#070707] text-center
+              font-[400] leading-normal
+              text-base sm:text-lg md:text-xl lg:text-2xl
+              rounded-lg sm:rounded-xl border-[3px] border-black bg-white
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
-            총 물고기 갯수: {fishTotal} 마리
+            총 물고기: {fishTotal} 마리
           </p>
         </div>
       </div>
 
       {/* 우측: 회원정보수정 버튼 */}
-      <div className="self-start m-2 mr-5">
+      <div className="self-end sm:self-start mb-2 sm:m-2 mr-5">
         <Link
           href="/mypage/edit"
           className="
-            min-w-[80px] h-10 px-2
-            rounded-xl border border-[#040303] bg-white 
-            [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+            min-w-[30px] sm:min-w-[80px] h-7 sm:h-10 px-2
+            rounded-lg sm:rounded-xl border border-[#040303] bg-white 
+            [box-shadow:-1px_-1px_0px_1px_rgba(0,0,0,0.5)_inset]
+            sm:[box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
             flex items-center justify-center
-            text-[#070707] text-center font-[400] text-2xl sm:text-xl md:text-2xl
+            text-[#070707] text-center font-[400] text-base sm:text-2xl sm:text-xl md:text-2xl
           "
         >
           회원정보수정
