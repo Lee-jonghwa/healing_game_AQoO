@@ -107,9 +107,9 @@ export default function MyPage() {
       {/* 메인 컨테이너 (내 정보 & 도감) */}
       <div
         className="
-        relative z-10 h-screen w-[70%] max-w-8xl mx-auto
+        relative h-screen w-[90%] sm:w-[70%] max-w-8xl mx-auto
         flex flex-col items-center overflow-hidden
-        pt-12
+        pt-16 sm:pt-12
         "
       >
         <Profile fishTotal={totalFishCount} />

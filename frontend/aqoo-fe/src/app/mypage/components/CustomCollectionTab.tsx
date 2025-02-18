@@ -14,9 +14,9 @@ export default function CustomCollectionTab({ customFishList }: CustomCollection
   return (
     <div
       className="
-        w-full h-screen gap-3
-        pb-[50px] sm:pb-[120px] md:pb-[120px] lg:pb-[120px]
-        pl-1 pr-1
+        w-full h-screen gap-1 sm:gap-3
+        pb-[100px] sm:pb-[120px] md:pb-[120px] lg:pb-[120px]
+        sm:pl-1 pr-1
         grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
         flex flex-wrap items-start
         overflow-y-scroll max-h-[520px]
