@@ -39,7 +39,7 @@ const InputField: React.FC<InputFieldProps> = ({
 
   return (
     <div>
-      <label className="block text-gray-700 text-base sm:text-lg sm:font-medium mb-1">{label}</label>
+      <label className="block text-gray-700 text-[13px] sm:text-lg sm:font-medium sm:mb-1">{label}</label>
 
       <div className="relative">
         {/* 입력 필드 */}
@@ -50,8 +50,8 @@ const InputField: React.FC<InputFieldProps> = ({
           disabled={disabled}
           {...(register && variant !== "nickname" ? register : { onChange: nicknameEdit.handleChange })}
           className={`
-          w-full px-3 py-2
-          border border-gray-300 rounded-md
+          w-full px-[8px] sm:px-3 py-[4px] sm:py-2
+          border border-gray-300 rounded-md text-[15px] sm:text-xl
           focus:outline-none focus:ring focus:ring-blue-200
           ${variantClasses[variant]}`}
         />
@@ -67,7 +67,7 @@ const InputField: React.FC<InputFieldProps> = ({
               }
             }}
             className="absolute top-1/2 right-1 -translate-y-1/2 
-                     z-10 bg-white px-3 py-1 border rounded-md shadow"
+                     z-10 text-[10px] bg-white px-1 sm:px-3 py-1 sm:py-1 border rounded-md shadow"
           >
             완료
           </button>

@@ -74,7 +74,7 @@ function ProfileForm({
 }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
-      <div className="flex flex-col sm:gap-4 ">
+      <div className="flex flex-col gap-1 sm:gap-4 ">
         <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
         <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
         <div className="flex items-end justify-between sm:gap-4 relative">
@@ -271,8 +271,14 @@ function EditProfilePage() {
       {/* 전체 감싸기 */}
       <div className="mt-20 sm:mt-0 flex flex-col sm:flex-row justify-center items-center h-screen w-screen">
         {/* 대표물고기 이미지 */}
-        <div className="sm:mt-0 flex-1 flex flex-col items-center">
-          <div className="w-1/2 sm:w-[250px] h-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
+        <div className="sm:mt-0 sm:flex-1 flex flex-col items-center">
+          <div
+            className="w-1/2 sm:w-[250px] h-auto aspect-square
+          flex-shrink-0 flex items-center justify-center
+          rounded-xl border border-black bg-white
+          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+          mb-2 sm:mb-10"
+          >
             <div className="overflow-hidden w-[90%] h-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
               {userData?.mainFishImage ? (
                 <img
@@ -300,36 +306,35 @@ function EditProfilePage() {
           />
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 w-[80%] mt-5 sm:mt-0">
           <div
             className="
             bg-white p-5 sm:p-8 rounded-2xl
             w-full sm:w-[450px]
-            h-[40vh] sm:min-h-[60vh]
+            min-h-[45vh] sm:min-h-[60vh]
             flex flex-col
             items-center justify-center
             "
             style={{ gap: "calc(60vh * 0.03)" }}
           >
-            <h2 className="text-center text-xl sm:text-4xl mb-6">회원정보 수정</h2>
+            <h2 className="text-center text-xl sm:text-4xl sm:mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}
-              // ***문제***
               onSubmit={onSubmit}
               isLoading={isLoading}
               register={register}
               setValue={setValue}
               handleSubmit={handleSubmit}
             />
-            <div className="w-full flex justify-between gap-4 mt-4">
+            <div className="w-full flex justify-between gap-1 sm:gap-4 sm:mt-4">
               <ModalButtons
-                text="비밀번호 변경"
+                text="비밀번호변경"
                 isLoading={isLoading}
                 color="blue"
                 onClick={() => setIsPasswordModalOpen(true)}
               />
               <ModalButtons
-                text="회원 탈퇴"
+                text="회원탈퇴"
                 isLoading={isLoading}
                 color="red"
                 onClick={() => setIsDeleteModalOpen(true)}

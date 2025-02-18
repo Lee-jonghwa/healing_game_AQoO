@@ -165,7 +165,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
               [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.5)_inset]
             "
           >
-            총 물고기 갯수: {fishTotal} 마리
+            총 물고기: {fishTotal} 마리
           </p>
         </div>
       </div>
