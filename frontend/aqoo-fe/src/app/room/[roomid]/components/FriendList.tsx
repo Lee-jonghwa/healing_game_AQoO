@@ -112,7 +112,7 @@ export default function FriendList({
               return (
                 <li
                   key={friend.id}
-                  className='flex items-center justify-between px-4 py-2 border rounded bg-gray-100'
+                  className='flex items-center justify-between px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200 transition-colors'
                 >
                   <div>
                     <p className='text-sm font-semibold'>
