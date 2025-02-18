@@ -47,12 +47,12 @@ interface GetFriendFishResponseDto {
   success: boolean;
 }
 
-
 function FriendFishContent() {
   const auth = useRecoilValue(authAtom);
   const searchParams = useSearchParams();
   const router = useRouter();
   const friendId = searchParams.get("friendId") || "";
+  const isFriendExist = searchParams.get("isFriendExist") === "true"; // 문자열 'true'일 경우 true로 변환
 
   // friendId가 없으면 /main으로 리다이렉트
   useEffect(() => {
@@ -186,25 +186,21 @@ function FriendFishContent() {
         style={{ backgroundImage: `url(${background})` }}
       ></div>
 
-      {/* 뒤로가기 버튼 */}
-      <div className="absolute top-16 left-4 z-50">
-        <Link href="/main">
-          <button className="bg-black text-white p-2 rounded">뒤로가기</button>
-        </Link>
-      </div>
-
       {/* 친구 어항정보 헤더 */}
-      <div className="absolute top-32 left-4 z-50 text-white p-2 bg-black/30 rounded flex flex-col gap-2">
+      <div className="absolute top-20 left-10 z-50 text-white p-2 px-5 bg-black/30 rounded flex flex-col gap-2">
         <h1 className="text-xl font-bold">친구의 아쿠아리움</h1>
         <p>친구 ID: {friendId}</p>
+
         <p>어항 이름: {aquariumData.aquariumName}</p>
         {/* 친구 추가 버튼 추가 */}
-        <button
-          onClick={handleSendFriendRequest}
-          className="mt-2 px-4 py-1 bg-blue-500 text-white rounded"
-        >
-          친구 추가
-        </button>
+        {!isFriendExist && (
+          <button
+            onClick={handleSendFriendRequest}
+            className="mt-2 px-4 py-1 bg-blue-500 text-white rounded"
+          >
+            친구 추가
+          </button>
+        )}
       </div>
 
       {/* 물고기 아이콘 렌더링 (Fish 컴포넌트를 사용) */}
@@ -237,40 +233,60 @@ function FriendFishContent() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">친구 물고기 컬렉션</h2>
-              <button onClick={() => setShowFishList(false)} className="text-red-500">
+              <h2 className="text-xl font-bold">친구의 커스텀 물고기</h2>
+              <button
+                onClick={() => setShowFishList(false)}
+                className="text-red-500"
+              >
                 닫기
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-2">
-              {sortedFishes.map((fish, index) => {
-                const isEnabled = !["COMMON", "RARE", "EPIC"].includes(fish.rarity);
-                return (
-                  <div key={index} className="flex flex-col items-center">
-                    <CollectionItemCard
-                      name={fish.fishName}
-                      count={1}
-                      imageSrc={fish.fishImage}
-                    />
-                    <button
-                      onClick={() => {
-                        if (isEnabled) {
-                          handleGetFish(fish);
-                        }
-                      }}
-                      disabled={!isEnabled}
-                      className={`mt-1 px-2 py-1 rounded text-xs ${
-                        isEnabled
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-400 text-white cursor-not-allowed"
-                      }`}
-                    >
-                      가져오기
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+            {/* 커스텀 물고기가 없는 경우 문구 출력 */}
+            {sortedFishes.every((fish) =>
+              ["COMMON", "RARE", "EPIC"].includes(fish.rarity)
+            ) ? (
+              <div className="text-center text-gray-500">
+                커스텀 물고기가 없습니다.
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                {sortedFishes.map((fish, index) => {
+                  const isEnabled = !["COMMON", "RARE", "EPIC"].includes(
+                    fish.rarity
+                  );
+
+                  // 희귀도가 COMMON, RARE, EPIC인 경우 렌더링하지 않음
+                  if (["COMMON", "RARE", "EPIC"].includes(fish.rarity)) {
+                    return null; // 해당 물고기는 렌더링하지 않음
+                  }
+
+                  return (
+                    <div key={index} className="flex flex-col items-center">
+                      <CollectionItemCard
+                        name={fish.fishName}
+                        count={1}
+                        imageSrc={fish.fishImage}
+                      />
+                      <button
+                        onClick={() => {
+                          if (isEnabled) {
+                            handleGetFish(fish);
+                          }
+                        }}
+                        disabled={!isEnabled}
+                        className={`mt-1 px-2 py-1 rounded text-xs ${
+                          isEnabled
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-400 text-white cursor-not-allowed"
+                        }`}
+                      >
+                        가져오기
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}
