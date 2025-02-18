@@ -110,9 +110,8 @@ export default function BottomMenuBar({
       <div className="relative w-full max-w-[1400px] ,">
         <button
           onClick={toggleMenuBar}
-          className={`absolute left-1/2 transform -translate-x-1/2 px-3 py-1 bg-white/80 rounded-full shadow-md transition-all duration-500 ${
-            isMenuVisible ? "bottom-[100%] mb-1" : "bottom-2"
-          }`}
+          className={`absolute left-1/2 transform -translate-x-1/2 px-3 py-1 bg-white/80 rounded-full shadow-md transition-all duration-500 ${isMenuVisible ? "bottom-[100%] mb-1" : "bottom-2"
+            }`}
         >
           {isMenuVisible ? "▼" : "▲"}
         </button>
@@ -165,7 +164,7 @@ export default function BottomMenuBar({
 
         {activeComponent === "push" && (
           <div className="absolute  bottom-full left-0 mb-2 bg-white/50 border border-gray-400 rounded-lg shadow-lg overflow-auto z-50">
-            <PushNotifications onClose={() => setActiveComponent(null)} setNewNotifications={() => {}} />
+            <PushNotifications onClose={() => setActiveComponent(null)} setNewNotifications={() => { }} />
           </div>
         )}
 
@@ -182,12 +181,14 @@ export default function BottomMenuBar({
         )}
 
         <div
-          className={`w-full bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md transition-all duration-500 ${
-            isMenuVisible ? "opacity-100" : "opacity-0 translate-y-12 pointer-events-none"
-          } relative`}
+          className={`w-full bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md transition-all duration-500 ${isMenuVisible ? "opacity-100" : "opacity-0 translate-y-12 pointer-events-none"
+            } relative`}
         >
           <div className="flex space-x-2 md:space-x-4">
-            <MenuButton icon="/icon/icon-fishTank.png" label="MyPage" onClick={() => router.push("/mypage")} />
+            <MenuButton icon="/icon/icon-fishTank.png" label="MyPage" onClick={() => {
+              playModal();
+              router.push("/mypage");
+            }} />
             <MenuButton
               icon="/icon/friendIcon.png"
               label="Friends"
@@ -293,9 +294,8 @@ function StatusBar({ icon, label, value, color }: { icon: string; label: string;
         {Array.from({ length: segmentCount }).map((_, index) => (
           <div
             key={index}
-            className={`flex-1 border-l border-black ${index < activeSegments ? color : "bg-white"} ${
-              index === 0 ? "rounded-l-full" : ""
-            } ${index === segmentCount - 1 ? "rounded-r-full" : ""}`}
+            className={`flex-1 border-l border-black ${index < activeSegments ? color : "bg-white"} ${index === 0 ? "rounded-l-full" : ""
+              } ${index === segmentCount - 1 ? "rounded-r-full" : ""}`}
           />
         ))}
       </div>
