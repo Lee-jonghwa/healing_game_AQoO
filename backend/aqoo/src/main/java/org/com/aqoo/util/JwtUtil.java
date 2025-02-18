@@ -15,7 +15,8 @@ public class JwtUtil {
 
     private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256); // 안전한 키 생성
     //    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60; // 1시간
-    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 30; // 테스트용, 30초
+//    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 30; // 테스트용, 30초
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 3; // 3분
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
 
     //토큰 생성 메서드
