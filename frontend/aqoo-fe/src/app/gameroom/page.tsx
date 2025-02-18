@@ -83,36 +83,80 @@ export default function GameRoomPage() {
   };
 
   return (
-    <div
-      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/chat_images/background.png')" }}
-    >
-      {/* 배경 */}
-      <div className="absolute inset-0 bg-white opacity-20"></div>
-  
-      {/* 전체 컨테이너 */}
-      <div className="relative z-10 flex flex-col items-center">
-        {/* '방 만들기' 박스를 감싸는 컨테이너 */}
-        <div className="relative">
-          {/* 친구 리스트 + 참가자 리스트 감싸는 네모 박스 */}
-          <div className="relative flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px]">
-            <FriendList />
-            <ParticipantList />
-            {/* 방 만들기 제목 */}
-            <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 px-6 py-2 bg-white border border-black rounded-lg shadow-lg">
-              <h1 className="text-3xl font-bold text-black text-center">🎮 방 만들기 🕹️</h1>
-            </div>
-          </div>
-          {/* '만들기' 버튼 - 방 만들기 박스의 바깥쪽 우측 하단 */}
-          <button
-            onClick={handleCreateRoom}
-            className="absolute bottom-[-50px] right-0 px-5 py-2 rounded border border-black bg-white text-xl hover:bg-blue-500 hover:text-white transition duration-300"
-          >
-            방 만들기
-          </button>
-  
-        </div>
+<div
+  className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
+  style={{ backgroundImage: "url('/chat_images/background.png')" }}
+>
+  {/* 배경 */}
+  <div className="absolute inset-0 bg-white opacity-20"></div>
+
+  {/* 전체 컨테이너 */}
+  <div className="relative z-10 flex flex-col items-center p-4">
+    {/* 모바일: 방 만들기 제목
+    <div className="mt-16 mb-4 block md:hidden">
+      <h1 className="text-3xl font-bold text-black text-center bg-white border border-black rounded-lg shadow-lg px-6 py-2">
+        🎮 방 만들기 🕹️
+      </h1>
+    </div> */}
+
+    {/* 데스크탑: 친구 리스트와 참가자 리스트를 감싼 박스 */}
+    <div className="hidden md:flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px] relative">
+      {/* 데스크탑: 절대 위치로 방 만들기 제목 */}
+      <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 px-6 py-2 bg-white border border-black rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-black text-center">🎮 방 만들기 🕹️</h1>
+      </div>
+      <FriendList />
+      <ParticipantList />
+    </div>
+
+    {/* 모바일 전용 박스 (md:hidden) */}
+    <div className="block md:hidden relative mt-16">
+      {/* 박스 자체 */}
+      <div className="relative bg-white bg-opacity-30 border border-black rounded-lg shadow-lg p-6">
+        {/* 타이틀을 absolute로 겹쳐서 배치 */}
+        <h1
+          className="
+            text-xl md:text-3xl           /* 모바일은 작은 글씨, 데스크탑은 큰 글씨 */
+            font-bold 
+            text-black 
+            text-center 
+            bg-white 
+            border border-black 
+            rounded-lg 
+            shadow-lg
+            w-40 h-12                /* 모바일에서의 너비와 높이 */
+            md:w-64 md:h-20          /* 데스크탑에서의 너비와 높이 */
+            flex items-center justify-center /* 텍스트를 가운데 정렬 */
+          "
+        >
+          🎮 방 만들기 🕹️
+        </h1>
+
+        {/* 박스 내부에 친구 리스트와 참가자 리스트 */}
+        <FriendList />
+        <ParticipantList />
       </div>
     </div>
+
+    {/* 버튼 컨테이너 */}
+    <div className="flex w-full justify-center md:justify-end mt-6 mb-10">
+      <button
+        onClick={handleCreateRoom}
+        className="
+          px-5 py-2 
+          rounded 
+          border border-black 
+          bg-white 
+          text-xl 
+          hover:bg-blue-500 hover:text-white 
+          transition duration-300
+        "
+      >
+        방 만들기
+      </button>
+    </div>
+  </div>
+</div>
+
   );
 }
