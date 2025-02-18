@@ -36,7 +36,7 @@ export default function ParticipantList({ users, friendList, currentUser, curren
   console.log("현재 로그인한 사용자:", currentUser);
 
   return (
-    <div className="bg-white/70 border border-gray-300 rounded-lg shadow-lg p-4 z-10 w-[300px] h-[170px] overflow-auto custom-scrollbar">
+    <div className="bg-white/70 border border-gray-300 rounded-lg shadow-lg p-4 z-10 w-[370px] h-[170px] overflow-auto custom-scrollbar">
       <h3 className="text-lg font-bold mb-2">참가자 리스트 {users.length}</h3>
       <ul className="space-y-2">
         {users.map((user) => {

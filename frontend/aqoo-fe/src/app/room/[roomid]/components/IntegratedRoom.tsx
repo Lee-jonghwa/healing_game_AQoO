@@ -45,6 +45,7 @@ interface FishData {
 }
 
 interface Friend {
+  id: number;
   friendId: string;
   nickname: string;
   level: number;
@@ -354,7 +355,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                 )}
   
                 {/* 오른쪽 기능 패널 (참가자 리스트 포함) */}
-                <div className="flex flex-col space-y-4 w-[300px] items-center">  
+                <div className="flex flex-col space-y-4 w-[370px] items-center">  
   
                   {/* 친구 초대 & 나가기 버튼 (상단 배치) */}
                   <div className="flex space-x-2 w-full">
@@ -385,7 +386,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                   <div>
                   <ParticipantList 
                     users={displayUsers} 
-                    currentUser={userName} 
+                    currentUser={currentUser} 
                     currentIsHost={currentIsHost} 
                     friendList={friendList}  // ✅ 친구 목록 전달
                     onKickUser={(target) => {

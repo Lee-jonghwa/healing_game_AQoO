@@ -152,18 +152,18 @@ export default function Fish({ fish, message }: FishProps) {
         />
   
         {/* ✅ 물고기 아래 닉네임 추가 (물고기 위치 따라감) */}
-        {/* <div
-          className="absolute text-xl font-medium text-gray-900 bg-white/80 px-2 py-1 rounded-md shadow"
+        <div
+          className="absolute text-xl font-medium text-gray-900 px-2 py-1 rounded-md"
           style={{
             top: fishPosition.y + 50, // 물고기 아래 위치
-            left: fishPosition.x, // 물고기 중앙 정렬
+            left: fishPosition.x + 25, // 물고기 중앙 정렬
             transform: 'translate(-50%, 0%)',
             zIndex: 9999,
             whiteSpace: 'nowrap', // 닉네임 줄바꿈 방지
           }}
         >
           {fish.fishName}
-        </div> */}
+        </div>
       </div>
     </div>
   );
