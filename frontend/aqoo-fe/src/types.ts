@@ -69,3 +69,9 @@ export interface GotchaFish {
   rarity: "COMMON" | "RARE" | "EPIC";
   imageUrl: string;
 }
+
+export interface AquariumListItem {
+  id: number;
+  aquariumName: string;
+  // 필요에 따라 추가 정보(예, 기본 배경 URL 등)를 포함할 수 있음.
+}
