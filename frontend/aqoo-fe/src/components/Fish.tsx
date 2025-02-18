@@ -15,9 +15,10 @@ export interface FishData {
 
 interface FishProps {
   fish: FishData;
+  handleIncreaseExp?: (earnedExp: number) => Promise<void>;
 }
 
-export default function Fish({ fish }: FishProps) {
+export default function Fish({ fish, handleIncreaseExp, }: FishProps) {
   const fishRef = useRef<HTMLImageElement | null>(null);
   const directionRef = useRef(1);
   const [isHovered, setIsHovered] = useState(false);
@@ -27,7 +28,14 @@ export default function Fish({ fish }: FishProps) {
     height: window.innerHeight,
   });
 
-  const handleClick = () => {
+  const handleClick = ({ clientX, clientY }: React.MouseEvent)  => {
+
+    if (!fishRef.current) return;
+
+    //sound
+    play();
+
+    //animation
     if (!fishRef.current) return;
     gsap.to(fishRef.current, {
       scale: 0.9,
@@ -36,7 +44,37 @@ export default function Fish({ fish }: FishProps) {
       yoyo: true,
       repeat: 1,
     });
-    play();
+
+    if(handleIncreaseExp){
+      // 경험치 이펙트 추가
+      createExpEffect(clientX, clientY);
+
+      //exp
+      handleIncreaseExp(1);
+    }
+  };
+
+  const createExpEffect = (x: number, y: number) => {
+    const expDiv = document.createElement("div");
+    expDiv.innerText = "+1 EXP";
+    expDiv.style.position = "absolute";
+    expDiv.style.left = `${x}px`;
+    expDiv.style.top = `${y}px`;
+    expDiv.style.fontSize = "16px";
+    expDiv.style.fontWeight = "bold";
+    expDiv.style.color = "#FFD700"; // 금색 계열
+    expDiv.style.pointerEvents = "none";
+    document.body.appendChild(expDiv);
+
+    gsap.to(expDiv, {
+      y: -30,
+      opacity: 0,
+      duration: 1.2,
+      ease: "power1.out",
+      onComplete: () => {
+        document.body.removeChild(expDiv);
+      },
+    });
   };
 
   useEffect(() => {
