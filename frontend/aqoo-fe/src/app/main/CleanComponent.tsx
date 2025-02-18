@@ -10,7 +10,6 @@ import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 import { useSFX } from "@/hooks/useSFX";
 
-const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 const PALM_IMAGE_SRC = "/cleanIcon.png";
 

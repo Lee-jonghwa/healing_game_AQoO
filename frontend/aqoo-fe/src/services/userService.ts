@@ -2,8 +2,6 @@ import { User } from "@/store/authAtom";
 import axios from "axios";
 import axiosInstance from "@/services/axiosInstance";
 
-const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
-
 /**
  * 🔹 유저 경험치 증가 함수
  * @param userId 유저 ID
