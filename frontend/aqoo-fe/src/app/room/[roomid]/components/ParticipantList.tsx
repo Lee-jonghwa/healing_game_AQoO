@@ -40,11 +40,22 @@ export default function ParticipantList({ users, friendList, currentUser, curren
       <h3 className="text-lg font-bold mb-2">참가자 리스트 {users.length}</h3>
       <ul className="space-y-2">
         {users.map((user) => {
-          // ✅ `friendList`에서 참가자(user.userName)와 일치하는 닉네임 & 레벨 찾기
-          const friend = friendList.find((f) => f.friendId === user.userName);
-          const displayName = friend 
-            ? `${friend.nickname} (Lv.${friend.level})`
-            : (currentUser?.id === user.userName ? `${currentUser.nickName} (Lv.${currentUser.level})` : user.userName);
+          let displayName;
+
+          // ✅ `authAtom`의 User에서 직접 닉네임 가져오기
+          if (user.isHost) {
+            displayName = (currentUser?.id === user.userName) 
+              ? `${currentUser.nickname} (Lv.${currentUser.level}) (방장)` 
+              : `${user.userName} (방장)`;
+          } else {
+            // ✅ 일반 참가자는 `friendList`에서 가져오되, 없으면 `authAtom`에서 가져오기
+            const friend = friendList.find((f) => f.friendId === user.userName);
+            displayName = friend 
+              ? `${friend.nickname} (Lv.${friend.level})` 
+              : (currentUser?.id === user.userName 
+                ? `${currentUser.nickname} (Lv.${currentUser.level})` 
+                : user.userName);
+          }
 
           return (
             <li key={user.userName} className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50">
@@ -57,7 +68,7 @@ export default function ParticipantList({ users, friendList, currentUser, curren
                   />
                 </div>
                 <div>
-                  {displayName} {user.isHost && "(방장)"}
+                  {displayName}
                 </div>
               </div>
               {user.ready && <span className="text-green-700 font-bold">Ready</span>}
