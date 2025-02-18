@@ -117,12 +117,11 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
 
   useEffect(() => {
     const fishList: FishData[] = displayUsers
-      .filter((user) => user.mainFishImage) // ✅ mainFishImage가 있는 유저만 필터링
       .map((user, index) => ({
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
-        fishName: user.nickname ?? user.userName, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
+        fishName: user.nickname, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
         fishImage: user.mainFishImage,
       }));
     setFishes(fishList);
