@@ -4,7 +4,7 @@ import { UserInfo, AquariumData } from "@/types";
 
 import MyCollection from "./components/MyCollection";
 import Profile from "./components/Profile";
-import HowToPlay from "./components/HowToPlay"
+import HowToPlay from "./components/HowToPlayMy"
 
 import { useUserFishCollectionTest } from "@/hooks/useUserFishCollection";
 import { useAllFishCollectionTest } from "@/hooks/useAllFishCollection";
@@ -118,12 +118,12 @@ export default function MyPage() {
         "
       >
         {/* 설정창 테스트 */}
-        {/* <button
+        <button
         onClick={() => setIsHowToPlayOpen(true)}
         className="text-3xl"
         >
           ?
-        </button> */}
+        </button>
         {isHowToPlayOpen && <HowToPlay isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)}/>}
         <Profile fishTotal={totalFishCount} />
         <MyCollection allFishList={allFishList} userFishList={userFishList} customFishList={customFishList} />

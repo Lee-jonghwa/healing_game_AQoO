@@ -495,7 +495,7 @@ export default function MainPage() {
       {fishes.map((fish) => (
         <Fish key={fish.fishId} fish={fish} handleIncreaseExp={handleIncreaseExp} />
       ))}
-
+      
       <NotificationComponent refreshAquariumData={refreshAquariumData} setNewNotifications={setNewNotifications} />
 
       {/* BottomMenuBar에 오버레이 토글 함수 전달 */}
