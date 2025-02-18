@@ -134,20 +134,38 @@ export default function Fish({ fish, message }: FishProps) {
           {currentMessage}
         </div>
       )}
-
-      {/* 🐟 물고기 이미지 */}
-      <img
-        ref={fishRef}
-        src={fish.fishImage}
-        alt={fish.fishName}
-        width={100}
-        height={100}
-        className="absolute"
-        style={{
-          pointerEvents: 'auto',
-          zIndex: 9999,
-        }}
-      />
+  
+      {/* 물고기 및 닉네임을 포함하는 컨테이너 */}
+      <div>
+        {/* 🐟 물고기 이미지 */}
+        <img
+          ref={fishRef}
+          src={fish.fishImage}
+          alt={fish.fishName}
+          width={100}
+          height={100}
+          className="relative"
+          style={{
+            pointerEvents: 'auto',
+            zIndex: 9999,
+          }}
+        />
+  
+        {/* ✅ 물고기 아래 닉네임 추가 (물고기 위치 따라감) */}
+        <div
+          className="absolute text-xl font-medium text-gray-900 px-2 py-1 rounded-md"
+          style={{
+            top: fishPosition.y + 50, // 물고기 아래 위치
+            left: fishPosition.x + 25, // 물고기 중앙 정렬
+            transform: 'translate(-50%, 0%)',
+            zIndex: 9999,
+            whiteSpace: 'nowrap', // 닉네임 줄바꿈 방지
+          }}
+        >
+          {fish.fishName}
+        </div>
+      </div>
     </div>
   );
+  
 }
