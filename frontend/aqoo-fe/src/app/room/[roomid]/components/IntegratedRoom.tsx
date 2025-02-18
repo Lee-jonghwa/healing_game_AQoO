@@ -29,6 +29,7 @@ interface RoomUpdate {
     isHost: boolean;
     mainFishImage: string;
     nickname: string;
+    level: number;
   }[];
   players?: Player[];
   targetUser?: string;
@@ -49,12 +50,14 @@ interface FishData {
   userName: string; // 원래 userId (여기서는 userName로 사용)
 }
 
-interface Friend {
-  id: number;
-  friendId: string;
+// 채팅방 멤버 정보 타입 (API에서 받아오는 형태)
+export interface Member {
+  userName: string;
   nickname: string;
+  mainFishImage: string;
+  isHost: boolean;
+  ready: boolean;
   level: number;
-  mainFishImage: string | null;
 }
 
 export default function IntegratedRoom({
@@ -63,16 +66,8 @@ export default function IntegratedRoom({
   user,
 }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
-  // 백엔드 API에서 받아올 채팅방 멤버 정보: userName, nickname, mainFishImage, isHost, ready (기본 false)
-  const [users, setUsers] = useState<
-    {
-      userName: string;
-      nickname: string;
-      mainFishImage: string;
-      isHost: boolean;
-      ready: boolean;
-    }[]
-  >([]);
+  // API에서 받아올 채팅방 멤버 정보
+  const [users, setUsers] = useState<Member[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -84,34 +79,26 @@ export default function IntegratedRoom({
     {}
   );
 
-  // 친구 목록은 여전히 별도로 조회 (현재 사용자가 친구인 경우 nickname 갱신 용도)
-  const [friendList, setFriendList] = useState<Friend[]>([]);
+  // 현재 사용자 정보 (authAtom에서 받아온 값) → 로컬 상태로 관리
   const [currentUser, setCurrentUser] = useState<User>(user);
 
   const participantCount = users.length;
 
-  // [1] 채팅방 멤버 정보 조회: 백엔드 API (/chatrooms/{roomId})를 호출하여 멤버 정보를 받아옴
-  // API 응답은 아래와 같은 배열 형식으로 가정:
-  // [
-  //   { "userId": "user1", "nickname": "Alice", "mainFishImage": "이미지경로", "isHost": true },
-  //   { "userId": "user2", "nickname": "Bob", "mainFishImage": "이미지경로", "isHost": false },
-  //   { "userId": "user3", "nickname": "Charlie", "mainFishImage": "이미지경로", "isHost": false }
-  // ]
+  // [1] 채팅방 멤버 정보 조회: 백엔드 API 호출 (/chatrooms/{roomId})
   useEffect(() => {
     axiosInstance
       .get(`/chatrooms/${roomId}`)
       .then((response) => {
-        console.log('api호출 완료: ', response);
-        const members = Array.isArray(response.data.members)
-          ? response.data.members
-          : Array.from(response.data.members);
-        const updatedUsers = members.map((member: any) => ({
+        console.log('API 호출 완료: ', response);
+        // 응답이 바로 배열 형태로 전달됨: [ { "userId": "user1", "nickname": "Alice", ... }, ... ]
+        const updatedUsers = response.data.map((member: any) => ({
           userName: member.userId,
-          nickname: member.nickname, // 백엔드가 nickname을 제공
+          nickname: member.nickname, // 백엔드가 nickname 제공
           mainFishImage: member.mainFishImage || '',
           isHost: member.isHost,
           ready: false,
         }));
+        console.log('updatedUsers:', updatedUsers);
         setUsers(updatedUsers);
       })
       .catch((error) =>
@@ -119,17 +106,7 @@ export default function IntegratedRoom({
       );
   }, [roomId]);
 
-  // [2] 친구 목록 조회 (기존 방식)
-  useEffect(() => {
-    axiosInstance
-      .get(`/friends/${encodeURIComponent(userName)}`)
-      .then((response) => {
-        setFriendList(response.data.friends);
-      })
-      .catch((error) => console.error('❌ 친구 목록 불러오기 실패:', error));
-  }, [userName]);
-
-  // [3] STOMP 연결 활성화 및 채팅방 관련 메시지 구독
+  // [2] STOMP 연결 활성화 및 채팅방 관련 메시지 구독
   useEffect(() => {
     connectStompClient(() => {});
   }, []);
@@ -137,7 +114,6 @@ export default function IntegratedRoom({
   useEffect(() => {
     const client = getStompClient();
     if (!client) return;
-
     const intervalId = setInterval(() => {
       if (client.connected) {
         setIsConnected(true);
@@ -162,8 +138,8 @@ export default function IntegratedRoom({
               if (data.targetUser === userName) {
                 router.replace('/main?status=kicked');
               } else {
-                setUsers((prevUsers) =>
-                  prevUsers.filter((u) => u.userName !== data.targetUser)
+                setUsers((prev) =>
+                  prev.filter((u) => u.userName !== data.targetUser)
                 );
               }
             }
@@ -176,39 +152,26 @@ export default function IntegratedRoom({
     return () => clearInterval(intervalId);
   }, [roomId, userName, router]);
 
-  // [4] displayUsers: 현재 사용자는 authAtom의 nickname을, 다른 사용자는 friendList가 있으면 해당 값을 사용
-  const displayUsers = useMemo(() => {
-    return users.map((userObj) => {
-      if (userObj.userName === userName) {
-        return { ...userObj, nickname: currentUser.nickname };
-      } else {
-        const friend = friendList.find((f) => f.friendId === userObj.userName);
-        return {
-          ...userObj,
-          nickname: friend ? friend.nickname : userObj.nickname,
-        };
-      }
-    });
-  }, [users, friendList, userName, currentUser]);
+  // [3] displayUsers: API에서 받아온 사용자 정보를 그대로 사용.
+  console.log('채팅방의 users', users);
+  const displayUsers = useMemo(() => users, [users]);
+  console.log('채팅방의 displayUsers:', displayUsers);
 
-  // [5] Fish 리스트 생성: displayUsers를 바탕으로 물고기 데이터 생성
+  // [4] Fish 리스트 생성: displayUsers를 바탕으로 물고기 데이터 생성
   useEffect(() => {
-    const fishList: FishData[] = displayUsers.map((userObj, index) => {
-      const computedNickname = userObj.nickname;
-      return {
-        aquariumId: 0,
-        fishId: index,
-        fishTypeId: 0,
-        fishName: computedNickname,
-        fishImage: userObj.mainFishImage,
-        userName: userObj.userName,
-      };
-    });
+    const fishList: FishData[] = displayUsers.map((member, index) => ({
+      aquariumId: 0,
+      fishId: index,
+      fishTypeId: 0,
+      fishName: member.nickname,
+      fishImage: member.mainFishImage,
+      userName: member.userName,
+    }));
     setFishes(fishList);
   }, [displayUsers]);
 
-  // [6] 친구 초대 함수 (기존 그대로)
-  const inviteFriend = async (friendUserId: string) => {
+  // [5] 친구 초대 함수 (기존 방식 유지)
+  const inviteFriend = async (memberId: string) => {
     if (participantCount >= 6) {
       const electronAPI = (window as any).electronAPI;
       if (electronAPI && electronAPI.showAlert) {
@@ -221,22 +184,22 @@ export default function IntegratedRoom({
     try {
       const response = await axiosInstance.post('/chatrooms/invite', {
         hostId: userName,
-        guestId: friendUserId,
+        guestId: memberId,
         roomId,
       });
       if (response.status >= 200 && response.status < 300) {
         const electronAPI = (window as any).electronAPI;
         if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert(`${friendUserId}님을 초대했습니다.`);
+          electronAPI.showAlert(`${memberId}님을 초대했습니다.`);
         } else {
-          alert(`${friendUserId}님을 초대했습니다.`);
+          alert(`${memberId}님을 초대했습니다.`);
         }
       } else {
         const electronAPI = (window as any).electronAPI;
         if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert(`${friendUserId} 초대에 실패했습니다.`);
+          electronAPI.showAlert(`${memberId} 초대에 실패했습니다.`);
         } else {
-          alert(`${friendUserId} 초대에 실패했습니다.`);
+          alert(`${memberId} 초대에 실패했습니다.`);
         }
       }
     } catch (error) {
@@ -249,13 +212,13 @@ export default function IntegratedRoom({
     }
   };
 
-  // [7] 현재 사용자의 방장 여부 갱신
+  // [6] 현재 사용자의 방장 여부 갱신
   useEffect(() => {
     const me = users.find((u) => u.userName === userName);
     setCurrentIsHost(me ? me.isHost : false);
   }, [users, userName]);
 
-  // [8] ready / start 관련 상태 계산
+  // [7] ready / start 관련 상태 계산
   const myReady = users.find((u) => u.userName === userName)?.ready;
   const nonHostUsers = currentIsHost
     ? users.filter((u) => u.userName !== userName)
@@ -263,7 +226,7 @@ export default function IntegratedRoom({
   const allNonHostReady =
     nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
 
-  // [9] 게임 종료 후 대기 화면 복귀 콜백
+  // [8] 게임 종료 후 대기 화면 복귀 콜백
   const handleResultConfirmed = async () => {
     setScreen('chat');
     const client = getStompClient();
@@ -280,7 +243,7 @@ export default function IntegratedRoom({
     }
   };
 
-  // [10] 물고기 말풍선 업데이트
+  // [9] 물고기 말풍선 업데이트
   const handleNewMessage = (sender: string, message: string) => {
     const fishItem = fishes.find((f) => f.userName === sender);
     const key = fishItem ? fishItem.fishName : sender;
@@ -357,8 +320,17 @@ export default function IntegratedRoom({
 
               {/* 오른쪽 패널 */}
               <div className='absolute top-24 right-16 flex space-x-4'>
+                {/* 친구 목록 오버레이 */}
                 {showFriendList && (
-                  <div className='w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg'>
+                  <div
+                    className='w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg'
+                    style={{
+                      zIndex: 10000,
+                      position: 'absolute',
+                      right: '100%',
+                      top: 0,
+                    }}
+                  >
                     <div className='flex justify-end mb-2'>
                       <button
                         onClick={() => setShowFriendList(false)}
@@ -369,12 +341,11 @@ export default function IntegratedRoom({
                     </div>
                     <FriendList
                       userName={userName}
-                      friendList={friendList}
                       roomId={roomId}
                       isHost={currentIsHost}
                       participantCount={users.length}
                       users={displayUsers}
-                      onInvite={(friendId) => {
+                      onInvite={(memberId) => {
                         if (users.length >= 6) {
                           const electronAPI = (window as any).electronAPI;
                           if (electronAPI && electronAPI.showAlert) {
@@ -388,7 +359,7 @@ export default function IntegratedRoom({
                           }
                           return;
                         }
-                        inviteFriend(friendId);
+                        inviteFriend(memberId);
                       }}
                     />
                   </div>
@@ -424,7 +395,6 @@ export default function IntegratedRoom({
                       users={displayUsers}
                       currentUser={currentUser}
                       currentIsHost={currentIsHost}
-                      friendList={friendList}
                       onKickUser={(target) => {
                         const client = getStompClient();
                         if (client && client.connected) {
@@ -444,8 +414,8 @@ export default function IntegratedRoom({
                   <div className='p-3 bg-white/70 rounded shadow-md w-full'>
                     <ChatBox
                       roomId={roomId}
-                      userName={userName}
-                      friendList={friendList}
+                      users={displayUsers}
+                      currentUser={currentUser}
                       onNewMessage={handleNewMessage}
                     />
                   </div>
