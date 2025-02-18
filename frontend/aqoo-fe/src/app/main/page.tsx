@@ -255,7 +255,7 @@ export default function MainPage() {
     const fetchIsFirstLogin = async () => {
       if (!auth.user) return;
       try {
-        const response = await axiosInstance.get<boolean>(`users/isFirst/${auth.user.id}`);
+        const response = await axiosInstance.get<boolean>(`/users/isFirst/${auth.user.id}`);
         setFirstLoginStatus(response.data);
       } catch (error) {
         console.error("API 호출 중 오류 발생:", error);
@@ -276,7 +276,7 @@ export default function MainPage() {
   const refreshAquariumData = async () => {
     if (!selectedAquariumId) return; // ✅ selectedAquariumId가 없다면 return
     try {
-      const response = await axiosInstance.get(`aquariums/${selectedAquariumId}`); // ✅ 여기서도 selectedAquariumId 사용
+      const response = await axiosInstance.get(`/aquariums/${selectedAquariumId}`); // ✅ 여기서도 selectedAquariumId 사용
       setAquariumData(response.data);
     } catch (error) {
       console.error("어항 상태 불러오기 실패", error);
@@ -357,7 +357,7 @@ export default function MainPage() {
   const refreshUserInfo = async () => {
     if (!auth.user?.id) return;
     try {
-      const response = await axiosInstance.get(`users/${auth.user.id}`);
+      const response = await axiosInstance.get(`/users/${auth.user.id}`);
       setUserInfo(response.data);
     } catch (error) {}
   };
@@ -383,20 +383,21 @@ export default function MainPage() {
   // ② 어항 리스트 조회 (유저 정보와 auth.user.id가 준비되면)
   useEffect(() => {
     if (!auth.user?.id) return;
-    Promise.all([axiosInstance.get(`users/${auth.user.id}`), axiosInstance.get(`aquariums/all/${auth.user.id}`)]).then(
-      ([userRes, aqRes]) => {
-        const newUserInfo = userRes.data;
-        const newAquariums = aqRes.data.aquariums;
-        setUserInfo(newUserInfo);
-        setAquariumList(newAquariums);
+    Promise.all([
+      axiosInstance.get(`/users/${auth.user.id}`),
+      axiosInstance.get(`/aquariums/all/${auth.user.id}`),
+    ]).then(([userRes, aqRes]) => {
+      const newUserInfo = userRes.data;
+      const newAquariums = aqRes.data.aquariums;
+      setUserInfo(newUserInfo);
+      setAquariumList(newAquariums);
 
-        // 만약 selectedAquariumId가 아직 null이면, mainAquarium (또는 0번)을 기본값으로
-        if (selectedAquariumId === null) {
-          const defaultId = newUserInfo.mainAquarium ?? newAquariums[0]?.id ?? null;
-          setSelectedAquariumId(defaultId);
-        }
+      // 만약 selectedAquariumId가 아직 null이면, mainAquarium (또는 0번)을 기본값으로
+      if (selectedAquariumId === null) {
+        const defaultId = newUserInfo.mainAquarium ?? newAquariums[0]?.id ?? null;
+        setSelectedAquariumId(defaultId);
       }
-    );
+    });
   }, [auth.user?.id]);
 
   // 최종 형태 (단 하나의 effect만 존재)
@@ -414,7 +415,7 @@ export default function MainPage() {
   useEffect(() => {
     if (!selectedAquariumId) return;
     axiosInstance
-      .get(`aquariums/fish/${selectedAquariumId}`, { withCredentials: true })
+      .get(`/aquariums/fish/${selectedAquariumId}`, { withCredentials: true })
       .then((response: AxiosResponse<FishData[] | { message: string }>) => {
         if (Array.isArray(response.data)) {
           setFishes(response.data);
@@ -429,7 +430,7 @@ export default function MainPage() {
   useEffect(() => {
     if (!selectedAquariumId) return;
     axiosInstance
-      .get(`aquariums/${selectedAquariumId}`)
+      .get(`/aquariums/${selectedAquariumId}`)
       .then((res: AxiosResponse<AquariumData>) => {
         setAquariumData(res.data);
         const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
@@ -443,7 +444,7 @@ export default function MainPage() {
     const checkUnreadNotifications = async () => {
       if (!auth.user?.id) return;
       axiosInstance
-        .get(`notification/${auth.user.id}`)
+        .get(`/notification/${auth.user.id}`)
         .then((response: AxiosResponse<Notification[]>) => {
           setNotifications(response.data);
           const unreadNotifications = response.data.filter((notif) => notif.status === false);

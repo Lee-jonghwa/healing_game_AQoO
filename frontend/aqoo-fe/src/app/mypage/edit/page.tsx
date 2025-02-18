@@ -2,7 +2,13 @@
 
 import { UserInfo, AquariumData } from "@/types";
 import React, { useEffect, useState, Suspense, useRef } from "react";
-import { useForm, SubmitHandler, UseFormRegister, UseFormSetValue, UseFormHandleSubmit } from "react-hook-form";
+import {
+  useForm,
+  SubmitHandler,
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormHandleSubmit,
+} from "react-hook-form";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -68,15 +74,23 @@ function ProfileForm({
   } | null;
   onSubmit: SubmitHandler<ProfileFormInputs>;
   isLoading: boolean;
-  register: UseFormRegister<ProfileFormInputs>; // ✅ 올바른 타입 지정
-  setValue: UseFormSetValue<ProfileFormInputs>; // ✅ 올바른 타입 지정
+  register: UseFormRegister<ProfileFormInputs>;
+  setValue: UseFormSetValue<ProfileFormInputs>;
   handleSubmit: UseFormHandleSubmit<ProfileFormInputs>;
 }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
       <div className="flex flex-col gap-4 ">
-        <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
-        <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
+        <InputField
+          label="아이디"
+          placeholder={userData?.id || "로딩 중..."}
+          variant="static"
+        />
+        <InputField
+          label="이메일"
+          placeholder={userData?.email || "로딩 중..."}
+          variant="static"
+        />
         <div className="flex items-end justify-between gap-4 relative">
           <div className="relative w-full">
             <InputField
@@ -125,7 +139,7 @@ function EditProfilePage() {
 
   // 접속 유저의 정보 조회
   useEffect(() => {
-    if (!auth.user?.id) return; // 로그인한 유저 ID가 없으면 API 호출 안 함
+    if (!auth.user?.id) return;
     axiosInstance
       .get(`/users/${auth.user.id}`)
       .then((response: AxiosResponse<UserInfo>) => {
@@ -152,10 +166,9 @@ function EditProfilePage() {
 
         const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
 
-        let bgUrl = res.data.aquariumBackground; // API에서 받아온 값
+        let bgUrl = res.data.aquariumBackground;
         if (!bgUrl) return;
 
-        // bgUrl이 전체 URL이 아니라면 BASE_URL을 붙임
         if (!bgUrl.startsWith("http")) {
           bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
         }
@@ -164,27 +177,24 @@ function EditProfilePage() {
       })
       .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
   }, [userInfo]);
+
+  // userData 리소스 생성: auth.user?.id가 준비되면 axiosInstance로 데이터 가져오기
   useEffect(() => {
-    // auth.user?.id가 준비되었고, 아직 리소스가 생성되지 않았다면 생성
     if (auth.user?.id) {
       const token = localStorage.getItem("accessToken");
       const resource = wrapPromise(
-        fetch(`${API_BASE_URL}/api/v1/users/${auth.user.id}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }).then((response) => {
-          if (!response.ok) {
-            throw new Error("유저 정보를 불러오는데 실패했습니다.");
-          }
-          return response.json();
-        })
+        axiosInstance
+          .get(`/users/${auth.user.id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => response.data)
       );
       setUserDataResource(resource);
     }
-  }, [auth.user]); // auth.user가 변경될 때마다 리소스 재생성
+  }, [auth.user]);
 
   // Suspense 내부에서 호출 (리소스가 준비되지 않았다면 Promise를 throw하여 fallback 표시)
   // 렌더 시점에 바로 읽기
@@ -202,47 +212,42 @@ function EditProfilePage() {
       console.log("닉네임 입력값:", data.nickname);
       const token = localStorage.getItem("accessToken");
 
-      const parsedImageName = "/" + userData?.mainFishImage.split("/").pop() || "";
+      const parsedImageName =
+        "/" + (userData?.mainFishImage.split("/").pop() || "");
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/users`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await axiosInstance.post(
+        `/users`,
+        {
           userId: userData?.id || "",
           userNickName: data.nickname,
           mainFishImage: parsedImageName,
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      const responseData = await response.json();
       console.log("API 응답 상태:", response.status);
-      console.log("API 응답 데이터:", responseData);
+      console.log("API 응답 데이터:", response.data);
 
-      if (!response.ok) {
-        throw new Error(`회원 정보 수정 실패: ${responseData.message || "알 수 없는 오류"}`);
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(
+          `회원 정보 수정 실패: ${response.data.message || "알 수 없는 오류"}`
+        );
       }
 
       // 최신 유저데이터를 불러와서 recoil 상태 업데이트
       await fetchUser();
-      // optimistic update: 전역 auth 상태에서 nickname 변경
-
-      // Recoil의 상태 업데이트 방식은 비동기적(Asynchronous)이며, 최신 상태를 보장하지 않음
-      // 즉, setAuthState(authState => { ...authState, user: { ...authState.user, nickName: data.nickname } })를 호출해도
-      // authState가 최신 상태가 아닐 가능성이 있음
-      // 기존 값이 덮어씌워지는 경우가 발생할 수 있음
-      setAuthState(
-        (prevState) =>
-          ({
-            ...prevState,
-            user: {
-              ...prevState.user,
-              nickName: data.nickname,
-            },
-          } as any)
-      );
+      setAuthState((prevState) => ({
+        ...prevState,
+        user: {
+          ...prevState.user,
+          nickName: data.nickname,
+        },
+      }) as any);
 
       alert("회원 정보 수정 성공!");
       router.push("/mypage/edit");
@@ -309,7 +314,6 @@ function EditProfilePage() {
             <h2 className="text-center text-4xl mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}
-              // ***문제***
               onSubmit={onSubmit}
               isLoading={isLoading}
               register={register}
@@ -334,9 +338,15 @@ function EditProfilePage() {
         </div>
       </div>
 
-      {isPasswordModalOpen && <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />}
-      {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} userData={userData} />}
-      {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} userData={userData} />}
+      {isPasswordModalOpen && (
+        <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />
+      )}
+      {isDeleteModalOpen && (
+        <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} userData={userData} />
+      )}
+      {isMyFishModalOpen && (
+        <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} userData={userData} />
+      )}
     </div>
   );
 }
