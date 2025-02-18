@@ -95,9 +95,7 @@ export default function FriendList({
       )}
       <div className='flex-grow overflow-y-auto custom-scrollbar'>
         {!isHost ? (
-          <p className='text-center text-gray-500'>
-            방장만 초대할 수 있습니다.
-          </p>
+          <p className='text-center text-gray-500'>초대 권한이 없습니다.</p>
         ) : filteredFriends.length === 0 ? (
           <p className='text-center text-gray-500'>
             초대 가능한 친구가 없습니다.
