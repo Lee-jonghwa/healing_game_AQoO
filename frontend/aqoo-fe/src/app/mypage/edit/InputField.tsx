@@ -39,7 +39,7 @@ const InputField: React.FC<InputFieldProps> = ({
 
   return (
     <div>
-      <label className="block text-gray-700 font-medium mb-1">{label}</label>
+      <label className="block text-gray-700 text-base sm:text-lg sm:font-medium mb-1">{label}</label>
 
       <div className="relative">
         {/* 입력 필드 */}

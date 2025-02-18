@@ -74,10 +74,10 @@ function ProfileForm({
 }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
-      <div className="flex flex-col gap-4 ">
+      <div className="flex flex-col sm:gap-4 ">
         <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
         <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
-        <div className="flex items-end justify-between gap-4 relative">
+        <div className="flex items-end justify-between sm:gap-4 relative">
           <div className="relative w-full">
             <InputField
               label="닉네임"
@@ -259,16 +259,21 @@ function EditProfilePage() {
       style={{
         backgroundImage: `url(${background})`,
       }}
-      className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
+      className="
+        bg-cover bg-center bg-no-repeat
+        h-screen w-screen overflow-hidden
+        relative"
     >
       <div className="absolute bottom-5 right-5">
         <Buttons text="BACK" />
       </div>
 
-      <div className="flex justify-center items-center h-screen w-screen bg-cover bg-center">
-        <div className="flex-1 flex flex-col items-center">
-          <div className="w-[250px] h-[250px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
-            <div className="overflow-hidden w-[220px] h-[220px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
+      {/* 전체 감싸기 */}
+      <div className="mt-20 sm:mt-0 flex flex-col sm:flex-row justify-center items-center h-screen w-screen">
+        {/* 대표물고기 이미지 */}
+        <div className="sm:mt-0 flex-1 flex flex-col items-center">
+          <div className="w-1/2 sm:w-[250px] h-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
+            <div className="overflow-hidden w-[90%] h-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
               {userData?.mainFishImage ? (
                 <img
                   src={
@@ -298,15 +303,15 @@ function EditProfilePage() {
         <div className="flex-1">
           <div
             className="
-            bg-white p-8 rounded-2xl
-            w-[450px] min-h-[55vh]
+            bg-white p-5 sm:p-8 rounded-2xl
+            w-full sm:w-[450px]
+            h-[40vh] sm:min-h-[60vh]
             flex flex-col
             items-center justify-center
-            p-5
             "
             style={{ gap: "calc(60vh * 0.03)" }}
           >
-            <h2 className="text-center text-4xl mb-6">회원정보 수정</h2>
+            <h2 className="text-center text-xl sm:text-4xl mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}
               // ***문제***
@@ -333,7 +338,6 @@ function EditProfilePage() {
           </div>
         </div>
       </div>
-
       {isPasswordModalOpen && <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />}
       {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} userData={userData} />}
       {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} userData={userData} />}
