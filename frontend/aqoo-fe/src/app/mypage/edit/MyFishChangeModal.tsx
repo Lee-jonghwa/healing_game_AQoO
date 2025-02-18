@@ -41,9 +41,15 @@ function ModalTitlePortal({ title, containerRect }: ModalTitlePortalProps) {
   const offset = 11;
   // 타이틀의 높이를 대략 50px로 가정 (필요시 조절)
   const titleHeight = 50;
-  const top = containerRect.top - offset - titleHeight;
-  const left = containerRect.left + containerRect.width / 2;
 
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+
+  // const top = containerRect.top - offset - titleHeight;
+  // const left = containerRect.left + containerRect.width / 2;
+
+  const top = scrollY + containerRect.top - offset - titleHeight;
+  const left = scrollX + containerRect.left + containerRect.width / 2;
   return createPortal(
     <div
       style={{
@@ -56,8 +62,8 @@ function ModalTitlePortal({ title, containerRect }: ModalTitlePortalProps) {
     >
       <h1
         className="
-        text-3xl font-bold text-black
-        bg-white px-6 py-2
+        text-md sm:text-3xl font-bold text-black
+        bg-white px-2 py-1 sm:px-6 sm:py-2
         border border-black
         rounded-lg shadow-lg"
       >
@@ -203,11 +209,11 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
         className="
         flex flex-col items-center justify-center
         overflow-hidden
-        min-w-[60%] p-6
-        min-h-[70%]
+        min-w-[70%] sm:min-w-[60%] sm:p-6
+        h-[60%] sm:min-h-[70%]
         relative"
       >
-        {/* 모달 내부의 콘텐츠 래퍼에 ref를 부여 */}
+        {/* 모달 내부의 콘텐츠 래퍼 ref를 부여 */}
         <div ref={modalContentRef} className="pb-3">
           {isLoading && <p>로딩 중...</p>}
           {!isLoading && (
