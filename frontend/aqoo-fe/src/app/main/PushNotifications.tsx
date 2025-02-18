@@ -242,7 +242,7 @@ function NotificationItem({
           height={40}
           className="object-contain"
         />
-        {!status && <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></div>}
+        {!status && <div className="absolute top-2 left-2 w-3 h-3 bg-yellow-400 rounded-full"></div>}
       </div>
 
       {/* ✅ GAME INVITE일 때 입장 버튼 포함 */}

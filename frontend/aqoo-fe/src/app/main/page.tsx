@@ -187,6 +187,18 @@ export default function MainPage() {
   const [aquariumList, setAquariumList] = useState<AquariumListItem[]>([]);
   const [selectedAquariumId, setSelectedAquariumId] = useState<number | null>(null);
 
+  const [viewportHeight, setViewportHeight] = useState("100vh");
+
+  useEffect(() => {
+    const updateHeight = () => {
+      setViewportHeight(`${window.innerHeight}px`);
+    };
+
+    updateHeight(); // 초기 적용
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
   const [levelUpInfo, setLevelUpInfo] = useState<{
     level: number;
     expProgress: number;
@@ -372,7 +384,6 @@ export default function MainPage() {
   //   if (!userInfo) return;
   //   if (!auth.user) return;
 
-
   //   axiosInstance.get(`aquariums/all/${auth.user.id}`).then((res) => {
   //     setAquariumList(res.data.aquariums);
   //     // userInfo.mainAquarium이 있으면 그걸로, 없으면 0번 인덱스
@@ -483,12 +494,15 @@ export default function MainPage() {
     );
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="fixed w-full min-h-full overflow-hidden" style={{ height: viewportHeight }}>
       <title>AQoO</title>
       <KickedModal />
       <div
         className="absolute inset-0 bg-cover bg-center w-full h-full"
-        style={{ backgroundImage: `url(${background})` }}
+        style={{
+          backgroundImage: `url(${background})`,
+          height: viewportHeight, // 👈 여기서 강제 적용!
+        }}
       ></div>
 
       <OverlayEffect aquariumData={aquariumData} />

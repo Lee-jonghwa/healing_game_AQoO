@@ -7,6 +7,7 @@ import axiosInstance from "@/services/axiosInstance";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import MenuButton from "../main/MenuButton";
+import GuideModal from "@/app/custom/GuideModal";
 
 export default function CustomFishPages() {
   const router = useRouter();
@@ -32,6 +33,8 @@ export default function CustomFishPages() {
 
   const { auth } = useAuth();
   const userId = auth.user?.id;
+
+  const [isGuideOpen, setIsGuideOpen] = useState(false); // ✅ 가이드 모달 상태
 
   useEffect(() => {
     const savedBg = localStorage.getItem("background");
@@ -466,8 +469,21 @@ export default function CustomFishPages() {
           <Image src="/icon/paintIcon.png" alt="paint" width={24} height={24} className="ml-2 scale-x-[-1]" />
         </div>
 
+        <div className="w-full flex justify-end">
+          {/* ✅ 가이드라인 버튼 */}
+          <button
+            onClick={() => setIsGuideOpen(true)}
+            className="px-4 py-2 bg-white border-gray border-[1px] rounded-lg shadow-md"
+          >
+            그리기 가이드
+          </button>
+
+          {/* ✅ 가이드 모달 */}
+          <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+        </div>
+
         {/* 🎨 캔버스 영역 */}
-        <div className="flex flex-col md:flex-row w-full  items-center justify-center mt-10">
+        <div className="flex flex-col md:flex-row w-full  items-center justify-center mt-4">
           {/* 🎨 색상 팔레트 */}
           <div className="grid grid-cols-6 sm:grid-cols-2 gap-2 p-2">
             {colors.map((color, index) => (
