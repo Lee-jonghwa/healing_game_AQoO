@@ -16,6 +16,6 @@ const firebaseConfig: FirebaseOptions = {
 // 중복 초기화 방지 (중요)
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-console.log("✅ Firebase 앱 초기화 완료:", app);
+// console.log("✅ Firebase 앱 초기화 완료:", app);
 
 export { app };

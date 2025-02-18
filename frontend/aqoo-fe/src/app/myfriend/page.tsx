@@ -47,7 +47,6 @@ interface GetFriendFishResponseDto {
   success: boolean;
 }
 
-const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
 function FriendFishContent() {
   const auth = useRecoilValue(authAtom);
@@ -73,8 +72,8 @@ function FriendFishContent() {
   // 1. 친구 유저 정보 불러오기
   useEffect(() => {
     if (friendId) {
-      axios
-        .get(`${API_BASE_URL}/users/${friendId}`)
+      axiosInstance
+        .get(`/users/${friendId}`)
         .then((res: AxiosResponse<UserInfo>) => {
           setFriendUserInfo(res.data);
         })

@@ -26,7 +26,7 @@ export function useAllFishCollectionTest() {
       try {
         const data = await fetchAllFishCollectionTest();
 
-        console.log("🟢 useAllFishCollectionTest: API 응답 데이터", data); // ✅ API 응답 로그
+        // console.log("🟢 useAllFishCollectionTest: API 응답 데이터", data); // ✅ API 응답 로그
 
         if (data) {
           setFishList(data);
