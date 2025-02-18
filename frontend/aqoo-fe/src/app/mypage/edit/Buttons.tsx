@@ -1,5 +1,6 @@
 "use client";
 
+import { useSFX } from "@/hooks/useSFX";
 import { useRouter } from "next/navigation";
 
 interface ButtonsProps {
@@ -8,9 +9,10 @@ interface ButtonsProps {
 
 export default function Buttons({ text }: ButtonsProps) {
   const router = useRouter();
-
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
   // 버튼 클릭 시 이동할 경로 결정
   const handleNavigation = () => {
+    playClick()
     if (text === "BACK") {
       router.push("/mypage");
     } else if (text === "완료") {

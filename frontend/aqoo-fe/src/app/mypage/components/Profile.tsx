@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Fish } from "lucide-react";
 import axiosInstance from "@/services/axiosInstance"; // axiosInstance import
+import { useSFX } from "@/hooks/useSFX";
 
 interface UserData {
   id: string;
@@ -57,7 +58,7 @@ function fetchUserData(userId: string): Promise<any> {
       },
     })
     .then((response) => {
-      console.log("Fetched user data:", response.data);
+      // console.log("Fetched user data:", response.data);
       return response.data;
     })
     .catch((error) => {
@@ -70,6 +71,8 @@ function fetchUserData(userId: string): Promise<any> {
  */
 function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal: number }) {
   const API_BASE_URL = "https://i12e203.p.ssafy.io";
+  const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
+
   return (
     <div
       className="
@@ -172,6 +175,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
       <div className="self-end sm:self-start mb-2 sm:m-2 mr-5">
         <Link
           href="/mypage/edit"
+          onClick={playModal}
           className="
             min-w-[30px] sm:min-w-[80px] h-7 sm:h-10 px-2
             rounded-lg sm:rounded-xl border border-[#040303] bg-white 
@@ -204,8 +208,8 @@ function Profile({ fishTotal }: { fishTotal: number }) {
   }, [userId, resource]);
 
   if (!auth.user || !resource) {
-    console.log(`auth.user: ${auth.user}`);
-    console.log(`resource: ${resource}`);
+    // console.log(`auth.user: ${auth.user}`);
+    // console.log(`resource: ${resource}`);
     return <div>로딩 중...</div>;
   }
 
