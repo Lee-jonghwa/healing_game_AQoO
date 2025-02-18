@@ -17,6 +17,7 @@ interface Player {
   userName: string;
   mainFishImage: string;
   totalPressCount: number;
+  nickname: string;
 }
 
 type ScreenState = 'chat' | 'game';
@@ -463,10 +464,12 @@ export default function IntegratedRoom({
 
                   {/* 드롭다운과 게임 시작 버튼 영역 */}
                   <div className='w-full flex flex-col items-center space-y-2'>
-                    {currentIsHost && (
+                    <>
                       <select
                         value={selectedGame}
-                        onChange={(e) => setSelectedGame(e.target.value)}
+                        onChange={(e) =>
+                          currentIsHost && setSelectedGame(e.target.value)
+                        }
                         className='w-full px-4 py-2 border rounded'
                         disabled={!currentIsHost}
                       >
@@ -474,28 +477,47 @@ export default function IntegratedRoom({
                         <option value='gameA'>Game A</option>
                         <option value='gameB'>Game B</option>
                       </select>
-                    )}
-                    <button
-                      onClick={() => {
-                        const client = getStompClient();
-                        if (client && client.connected) {
-                          const destination = getGameDestination(selectedGame);
-                          client.publish({
-                            destination,
-                            body: JSON.stringify({
-                              roomId,
-                              gameType: selectedGame,
-                            }),
-                          });
-                        }
-                      }}
-                      className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
-                        allNonHostReady ? '' : 'opacity-50 cursor-not-allowed'
-                      }`}
-                      disabled={!allNonHostReady}
-                    >
-                      Start Game(F5)
-                    </button>
+                      <button
+                        onClick={() => {
+                          const client = getStompClient();
+                          if (client && client.connected) {
+                            if (currentIsHost) {
+                              const destination =
+                                getGameDestination(selectedGame);
+                              client.publish({
+                                destination,
+                                body: JSON.stringify({
+                                  roomId,
+                                  gameType: selectedGame,
+                                }),
+                              });
+                            } else {
+                              client.publish({
+                                destination: myReady
+                                  ? '/app/chat.unready'
+                                  : '/app/chat.ready',
+                                body: JSON.stringify({
+                                  roomId,
+                                  sender: userName,
+                                }),
+                              });
+                            }
+                          }
+                        }}
+                        className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
+                          currentIsHost && !allNonHostReady
+                            ? 'opacity-50 cursor-not-allowed'
+                            : ''
+                        }`}
+                        disabled={currentIsHost ? !allNonHostReady : false}
+                      >
+                        {currentIsHost
+                          ? 'Start Game(F5)'
+                          : myReady
+                          ? 'Unready'
+                          : 'Ready'}
+                      </button>
+                    </>
                   </div>
                 </div>
               </div>
