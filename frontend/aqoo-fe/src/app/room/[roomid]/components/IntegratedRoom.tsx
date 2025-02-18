@@ -71,8 +71,9 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
   const authState = useRecoilValue(authAtom);
 
-  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
-  const { play: playGame } = useSFX("/sounds/카운트다운-02.mp3");
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");  // 클릭효과음(레디버튼)
+  const { play: playGame } = useSFX("/sounds/카운트다운-02.mp3"); // 게임시작 카운트다운
+  const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방입장
 
 
   // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
@@ -83,8 +84,22 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
 
   console.log("IntegratedRoom currentUser:", currentUser);
   console.log("usernickname:", user.nickname);
+
   // 현재 참가자 수
   const participantCount = users.length;
+
+  // 이전 참가자 수를 추적하는 ref
+  const prevUsersCountRef = useRef<number>(users.length);
+
+  // 참가자 수(users.length)가 변경될 때마다 효과음 재생
+  useEffect(() => {
+    if (users.length > prevUsersCountRef.current) {
+      // 참가자가 새로 추가된 경우
+      entranceRoom();
+    }
+    // 현재 참가자 수를 업데이트
+    prevUsersCountRef.current = users.length;
+  }, [users.length, entranceRoom]);
 
   // 사용자 목록 상태 및 displayUsers 선언
   const displayUsers = useMemo(() => {
