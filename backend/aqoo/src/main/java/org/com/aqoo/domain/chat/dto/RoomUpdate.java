@@ -33,5 +33,7 @@ public class RoomUpdate {
         private boolean isHost;
 
         private String mainFishImage;
+
+        private int level;
     }
 }

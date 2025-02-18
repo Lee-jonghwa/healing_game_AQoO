@@ -15,4 +15,5 @@ public class MemberDto {
     private String nickname;
     private String mainFishImage;
     private boolean isHost;
+    private int level;
 }
