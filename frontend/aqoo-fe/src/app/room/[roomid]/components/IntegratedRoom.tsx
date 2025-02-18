@@ -68,6 +68,10 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
   const authState = useRecoilValue(authAtom);
 
+  // 채팅/참가자 모달 토글 상태
+  const [showChat, setShowChat] = useState(false);
+  const [showParticipant, setShowParticipant] = useState(false);
+
   // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
   const [friendList, setFriendList] = useState<Friend[]>([]);
 
@@ -374,7 +378,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                   <div className="flex space-x-2 w-full">
                     <button 
                       onClick={() => setShowFriendList((prev) => !prev)} 
-                      className="w-1/2 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
+                      className="w-1/2 px-6 py-2 bg-white text-black rounded text-center border border-black"
                     >
                       친구 초대
                     </button>
