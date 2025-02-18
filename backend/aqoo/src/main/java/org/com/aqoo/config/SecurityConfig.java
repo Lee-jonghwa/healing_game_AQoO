@@ -56,6 +56,7 @@ public class SecurityConfig {
                         ).authenticated()
                         // 인증 없이 접근 가능한 경로
                         .requestMatchers(
+                                "/api/v1/auth/refresh/**",
                                 "/api/v1/auth/**",
                                 "/oauth2/**",
                                 "/api/v1/chatrooms/**",
