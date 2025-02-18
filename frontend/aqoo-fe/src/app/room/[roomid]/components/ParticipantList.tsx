@@ -18,9 +18,9 @@ interface Participant {
 }
 
 interface ParticipantListProps {
-  users: Participant[]; // ✅ 참가자 리스트
-  friendList: Friend[]; // ✅ 친구 리스트 추가
-  currentUser: User; // ✅ 로그인한 사용자 정보 추가
+  users: Participant[]; // 참가자 리스트
+  friendList: Friend[]; // 친구 목록 API로 받아온 값
+  currentUser: User; // 로그인한 사용자 정보 (authAtom)
   currentIsHost: boolean;
   onKickUser: (userName: string) => void;
 }
@@ -31,20 +31,19 @@ export default function ParticipantList({ users, friendList, currentUser, curren
       <h3 className="text-lg font-bold mb-2">참가자 리스트 {users.length}</h3>
       <ul className="space-y-2">
         {users.map((user) => {
-          let displayName;
-          // ✅ `authAtom`의 User에서 직접 닉네임 가져오기
-          if (user.isHost) {
-            displayName = (currentUser?.id === user.userName) 
-              ? `${currentUser.nickname} (Lv.${currentUser.level}) (방장)` 
-              : `${user.userName} (방장)`;
+          let displayName = "";
+          // 현재 사용자이면 authAtom의 nickname 사용
+          if (currentUser?.id === user.userName) {
+            displayName = `${currentUser.nickname} (Lv.${currentUser.level})${user.isHost ? " (방장)" : ""}`;
           } else {
-            // ✅ 일반 참가자는 `friendList`에서 가져오되, 없으면 `authAtom`에서 가져오기
+            // 나머지 사용자는 friendList API에서 가져온 값을 우선 사용
             const friend = friendList.find((f) => f.friendId === user.userName);
-            displayName = friend 
-              ? `${friend.nickname} (Lv.${friend.level})` 
-              : (currentUser?.id === user.userName 
-                ? `${currentUser.nickname} (Lv.${currentUser.level})` 
-                : user.userName);
+            if (friend) {
+              displayName = `${friend.nickname} (Lv.${friend.level})${user.isHost ? " (방장)" : ""}`;
+            } else {
+              // friendList에 없으면 기본값으로 user.nickname 사용
+              displayName = `${user.nickname}${user.isHost ? " (방장)" : ""}`;
+            }
           }
 
           return (
