@@ -27,7 +27,7 @@ export default function LevelUpModal({
           <Image src="/icon/levelupIcon.png" alt="level up" width={32} height={32} className="ml-2 scale-x-[-1]" />
         </div>
 
-        <p className="mt-4 text-lg font-bold text-black">레벨이 올라 물고기를 한 마리 더 키울 수 있습니다!</p>
+        <p className="mt-4 text-lg font-bold text-black">레벨이 올라 물고기 티켓 세 개를 획득했습니다!</p>
 
         <div className="flex justify-center space-x-6 mt-6">
           <button
@@ -43,7 +43,7 @@ export default function LevelUpModal({
             className="w-[240px] py-3 bg-gray-200 border-[2px] border-black rounded-lg text-lg font-bold hover:bg-gray-300 transition"
             onClick={onClose}
           >
-            🎨 다음에 얻기
+            👋 다음에 얻기
           </button>
         </div>
       </div>

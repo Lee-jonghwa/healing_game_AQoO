@@ -10,6 +10,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useState } from "react";
+import axiosInstance from "@/services/axiosInstance";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -76,8 +77,8 @@ export default function BottomMenuBar({
       return;
     }
     try {
-      await axios.post(`${API_BASE_URL}/aquariums/update`, {
-        aquariumId: selectedAquariumId,
+      await axiosInstance.post(`${API_BASE_URL}/aquariums/update`, {
+        aquariumId: userInfo.mainAquarium,
         type,
         data: "",
       });
