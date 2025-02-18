@@ -1,5 +1,6 @@
 import { User } from "@/store/authAtom";
 import axios from "axios";
+import axiosInstance from "@/services/axiosInstance";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -11,7 +12,7 @@ const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
  */
 export const increaseUserExp = async (userId: string, earnedExp: number) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/users/exp-up`, {
+    const response = await axiosInstance.post(`/users/exp-up`, {
       userId,
       earnedExp,
     });
@@ -40,7 +41,7 @@ export const getUsers = async (): Promise<User[]> => {
  */
 export const increaseFishTicket = async (userId: string) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/fish/ticket/${userId}`, {
+    const response = await axiosInstance.get(`/fish/ticket/${userId}`, {
       withCredentials: true,
     });
 
