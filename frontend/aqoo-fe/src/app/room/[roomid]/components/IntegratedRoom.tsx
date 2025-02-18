@@ -461,6 +461,7 @@ export default function IntegratedRoom({
                     <ChatBox
                       roomId={roomId}
                       userName={userName}
+                      friendList={friendList}
                       onNewMessage={handleNewMessage}
                     />
                   </div>
