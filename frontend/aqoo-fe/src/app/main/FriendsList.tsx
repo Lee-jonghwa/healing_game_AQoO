@@ -31,6 +31,7 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+
   // dummy Friend 객체 (랜덤방문 셀)
   const dummyFriend: Friend = {
     friendId: "random",
@@ -45,11 +46,12 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
     axiosInstance
       .get(`/friends/find-non-friend/${userId}`)
       .then((res: AxiosResponse<string>) => {
-        const randomUserId = res.data; // 응답으로 랜덤한 한 사용자의 id만 반환됨
+        const randomUserId = res.data; // 응답으로 랜덤한 한 사용자의 id만 반환
+
         if (randomUserId) {
           // alert(`랜덤 방문: ${randomUserId} (사용자 ID)`);
           // 예를 들어 해당 사용자 페이지로 이동할 수도 있습니다.
-          router.push(`/myfriend?friendId=${randomUserId}`);
+          router.push(`/myfriend?friendId=${randomUserId}&isFriendExist=false`);
         } else {
           alert("방문할 비친구 사용자가 없습니다.");
         }
@@ -232,7 +234,7 @@ function FriendItem({
           </div>
         </div>
       ) : (
-        <Link href={`/myfriend?friendId=${friend.friendId}`} className="flex items-center space-x-3 w-full">
+        <Link href={`/myfriend?friendId=${friend.friendId}&isFriendExist=true`} className="flex items-center space-x-3 w-full">
           <div className="w-12 h-12 rounded-full overflow-hidden">
             <Image
               loader={customLoader}
