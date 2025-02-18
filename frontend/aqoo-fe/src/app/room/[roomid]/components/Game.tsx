@@ -135,37 +135,45 @@ export default function Game({
     setHasCountdownFinished(true);
   }, [countdown]);
 
-  // (D) 스페이스바 tap
+  // (D) 탭(스페이스바 또는 마우스 클릭) 시 호출되는 함수
+  const handleTap = useCallback(() => {
+    if (!hasCountdownFinished || gameEnded) return;
+    const me = players.find((p) => p.userName === userName);
+    if (me && me.totalPressCount >= 100) {
+      return;
+    }
+    if (!hasStarted) {
+      setHasStarted(true);
+    }
+    setIsTapping(true);
+    setTimeout(() => setIsTapping(false), 300);
+
+    publishMessage('/app/game.press', { roomId, userName, pressCount: 1 });
+  }, [hasCountdownFinished, gameEnded, players, userName, hasStarted, roomId]);
+
+  // (E) 스페이스바 keyup 이벤트 핸들러
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
-      if (!hasCountdownFinished || gameEnded || e.code !== 'Space') return;
+      if (e.code !== 'Space') return;
       e.preventDefault();
-
-      const me = players.find((p) => p.userName === userName);
-      if (me && me.totalPressCount >= 100) {
-        return;
-      }
-      if (!hasStarted) {
-        setHasStarted(true);
-      }
-
-      setIsTapping(true);
-      setTimeout(() => setIsTapping(false), 300);
-
-      publishMessage('/app/game.press', { roomId, userName, pressCount: 1 });
+      handleTap();
     },
-    [hasCountdownFinished, gameEnded, roomId, userName, hasStarted, players]
+    [handleTap]
   );
 
-  // (E) Countdown 끝 → keyup 등록
+  // (F) countdown 끝 → keyup, click 이벤트 등록
   useEffect(() => {
     if (hasCountdownFinished) {
       window.addEventListener('keyup', handleKeyPress);
-      return () => window.removeEventListener('keyup', handleKeyPress);
+      window.addEventListener('click', handleTap);
+      return () => {
+        window.removeEventListener('keyup', handleKeyPress);
+        window.removeEventListener('click', handleTap);
+      };
     }
-  }, [hasCountdownFinished, handleKeyPress]);
+  }, [hasCountdownFinished, handleKeyPress, handleTap]);
 
-  // (F) STOMP 구독
+  // (G) STOMP 구독
   useEffect(() => {
     const client = getStompClient();
     if (client) {
@@ -184,7 +192,7 @@ export default function Game({
     }
   }, [roomId]);
 
-  // (G) wind effect
+  // (H) wind effect
   useEffect(() => {
     players.forEach((player) => {
       if (player.userName !== userName) {
@@ -205,7 +213,7 @@ export default function Game({
     previousPlayersRef.current = players;
   }, [players, userName]);
 
-  // (H) 1초마다 gameTime--
+  // (I) 1초마다 gameTime--
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     const timer = setInterval(() => {
@@ -214,7 +222,7 @@ export default function Game({
     return () => clearInterval(timer);
   }, [hasStarted, gameEnded]);
 
-  // (I) gameTime=0 or 모두 100탭 → 종료
+  // (J) gameTime=0 or 모두 100탭 → 종료
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     if (
@@ -234,7 +242,7 @@ export default function Game({
     }
   }, [gameTime, players, hasStarted, gameEnded]);
 
-  // (J) countdown 끝났는데 안시작 → 강제 tap
+  // (K) countdown 끝났는데 안시작 → 강제 tap
   useEffect(() => {
     if (hasCountdownFinished && !hasStarted) {
       setTimeout(() => {
@@ -243,7 +251,7 @@ export default function Game({
     }
   }, [hasCountdownFinished, hasStarted]);
 
-  // (K) 게임 종료 & finishOrder가 있으면, 내 등수별로 exp-up
+  // (L) 게임 종료 & finishOrder가 있으면, 내 등수별로 exp-up
   useEffect(() => {
     if (!gameEnded || finishOrder.length === 0) return;
 
@@ -280,24 +288,24 @@ export default function Game({
     })();
   }, [gameEnded, finishOrder, userName]);
 
-  // (L) 현재 유저 도착 체크
+  // (M) 현재 유저 도착 체크
   const me = players.find((p) => p.userName === userName);
   const hasArrived = me ? me.totalPressCount >= 100 : false;
 
-  // (M) 결과 확인 버튼
+  // (N) 결과 확인 버튼
   const handleResultCheck = () => onResultConfirmed();
 
-  // (N) 결승점 모달 닫기
+  // (O) 결승점 모달 닫기
   const handleModalClose = () => setModalDismissed(true);
 
-  // (O) 내 expInfo 생성 시, 경험치 모달 표시
+  // (P) 내 expInfo 생성 시, 경험치 모달 표시
   useEffect(() => {
     if (myExpInfo) {
       setShowExpModal(true);
     }
   }, [myExpInfo]);
 
-  // (P) 경험치 모달 닫기 -> 레벨 업 확인
+  // (Q) 경험치 모달 닫기 -> 레벨 업 확인
   const handleExpModalClose = () => {
     setShowExpModal(false);
     if (!myExpInfo) return;
@@ -324,7 +332,7 @@ export default function Game({
     }
   };
 
-  // (Q) 레벨 업 모달 닫기
+  // (R) 레벨 업 모달 닫기
   const handleLevelUpModalClose = () => {
     setShowLevelUpModal(false);
   };
@@ -380,7 +388,7 @@ export default function Game({
           </button>
         </div>
 
-        {/* (R) 경험치 모달 */}
+        {/* (S) 경험치 모달 */}
         {showExpModal && myExpInfo && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
@@ -416,7 +424,7 @@ export default function Game({
           </div>
         )}
 
-        {/* (S) 레벨 업 모달 */}
+        {/* (T) 레벨 업 모달 */}
         {showLevelUpModal && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
@@ -627,7 +635,7 @@ export default function Game({
 
       {/* 하단 안내 */}
       <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>
-        Press the <span className='font-bold'>Spacebar</span> to tap!
+        Press the <span className='font-bold'>Spacebar</span> or touch anywhere to tap!
       </p>
 
       {/* 카운트다운 & 게임 설명 */}
@@ -656,13 +664,12 @@ export default function Game({
               누가 먼저 Goal에 도착하는지 대결하는 게임입니다.
             </p>
             <p className='text-md md:text-lg lg:text-4xl text-gray-700 mt-4 flex items-center justify-center'>
-              친구보다
               <img
                 src='/chat_images/spacebar.png'
                 alt='스페이스바'
                 className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
               />
-              스페이스바를 빨리 눌러 1등을 쟁취해보세요!
+              스페이스바 or 터치로 친구보다 먼저 Goal에 도착하세요!
             </p>
             <p className='mt-8 text-2xl text-gray-800'>
               {countdown} 초 후 게임 시작
