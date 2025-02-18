@@ -122,7 +122,8 @@ public class GameService {
             boolean allReached100 = roomScore.values().stream().allMatch(score -> score >= 100);
             if (allReached100) {
                 // 모든 사용자가 100에 도달하면 finishOrder의 첫 번째 사용자를 승자로 설정
-                String winner = finishOrder.get(0);
+                String winnerId = finishOrder.get(0);
+                String winner = userService.getUserInfo(winnerId).getNickname();
                 RoomResponse response = new RoomResponse(roomId, players, "GAME_ENDED", winner, finishOrder);
                 messagingTemplate.convertAndSend("/topic/room/" + roomId, response);
                 log.info("Broadcasted GAME_ENDED message for roomId: {} with finish order: {}", roomId, finishOrder);
