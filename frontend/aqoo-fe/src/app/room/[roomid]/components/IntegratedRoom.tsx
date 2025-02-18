@@ -80,11 +80,11 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
       ? [
           ...users.map((user) => ({
             ...user,
-            nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.userName,
+            nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.nickname, // ✅ 닉네임 보장
           })),
           { 
             userName, 
-            nickname: currentUser?.nickname ?? userName,
+            nickname: currentUser?.nickname, // ✅ 방장 닉네임 추가
             ready: false, 
             isHost: true, 
             mainFishImage: '' 

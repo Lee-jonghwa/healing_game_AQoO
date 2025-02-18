@@ -372,6 +372,7 @@ export default function MainPage() {
   //   if (!userInfo) return;
   //   if (!auth.user) return;
 
+
   //   axiosInstance.get(`aquariums/all/${auth.user.id}`).then((res) => {
   //     setAquariumList(res.data.aquariums);
   //     // userInfo.mainAquarium이 있으면 그걸로, 없으면 0번 인덱스
@@ -383,6 +384,7 @@ export default function MainPage() {
   // ② 어항 리스트 조회 (유저 정보와 auth.user.id가 준비되면)
   useEffect(() => {
     if (!auth.user?.id) return;
+
     Promise.all([
       axiosInstance.get(`/users/${auth.user.id}`),
       axiosInstance.get(`/aquariums/all/${auth.user.id}`),
