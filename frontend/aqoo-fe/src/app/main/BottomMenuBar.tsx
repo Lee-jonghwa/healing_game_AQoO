@@ -25,6 +25,8 @@ interface BottomMenuBarProps {
   aquariumList: AquariumListItem[];
   selectedAquariumId: number | null;
   setSelectedAquariumId: (id: number) => void;
+  manualSelected: boolean;
+  setManualSelected: (manualSelected: boolean) => void;
 }
 
 export default function BottomMenuBar({
@@ -40,6 +42,8 @@ export default function BottomMenuBar({
   aquariumList,
   selectedAquariumId,
   setSelectedAquariumId,
+  manualSelected,
+  setManualSelected,
 }: BottomMenuBarProps) {
   const router = useRouter();
   const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
@@ -76,7 +80,7 @@ export default function BottomMenuBar({
     }
     try {
       await axiosInstance.post(`/aquariums/update`, {
-        aquariumId: userInfo.mainAquarium,
+        aquariumId: selectedAquariumId,
         type,
         data: "",
       });
@@ -123,7 +127,10 @@ export default function BottomMenuBar({
                 <select
                   className="px-3 py-2 border rounded bg-white/80"
                   value={selectedAquariumId || ""}
-                  onChange={(e) => setSelectedAquariumId(Number(e.target.value))}
+                  onChange={(e) => {
+                    setManualSelected(true); // ✅ 수동 선택 플래그 켜기
+                    setSelectedAquariumId(Number(e.target.value));
+                  }}
                 >
                   {aquariumList.map((aq) => (
                     <option key={aq.id} value={aq.id}>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Fish } from "lucide-react";
+import axiosInstance from "@/services/axiosInstance"; // axiosInstance import
 
 interface UserData {
   id: string;
@@ -44,27 +45,24 @@ function wrapPromise<T>(promise: Promise<T>): { read(): T } {
 }
 
 /**
- * API에서 유저 정보를 불러오는 함수
+ * API에서 유저 정보를 불러오는 함수 (axiosInstance 사용)
  */
 function fetchUserData(userId: string): Promise<any> {
   const token = localStorage.getItem("accessToken");
-  const API_BASE_URL = "https://i12e203.p.ssafy.io";
-  // const IMAGE_API_BASE_URL = "https://i12e203.p.ssafy.io/images";
-  return fetch(`${API_BASE_URL}/api/v1/users/${userId}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  }).then((response) => {
-    if (!response.ok) {
+  return axiosInstance
+    .get(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+    .then((response) => {
+      console.log("Fetched user data:", response.data);
+      return response.data;
+    })
+    .catch((error) => {
       throw new Error("유저 정보를 불러오는데 실패했습니다.");
-    }
-    return response.json().then((data) => {
-      console.log("Fetched user data:", data);
-      return data;
     });
-  });
 }
 
 /**

@@ -40,7 +40,7 @@ export default function MyFishCollection({
     if (auth.user?.id) {
       setLoading(true);
       axiosInstance
-        .get(`aquariums/fish/-1`)
+        .get(`/aquariums/fish/-1`)
         .then((response) => {
           if (Array.isArray(response.data)) {
             const grouped: { [key: string]: MyFish } = {};

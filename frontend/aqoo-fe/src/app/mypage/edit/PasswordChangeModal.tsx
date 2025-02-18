@@ -3,15 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { useAuth } from "@/hooks/useAuth";
+import axiosInstance from "@/services/axiosInstance";
 
 interface PasswordChangeModalProps {
   onClose: () => void;
 }
 
 export default function PasswordChangeModal({ onClose }: PasswordChangeModalProps) {
-  const API_BASE_URL = "https://i12e203.p.ssafy.io";
-  const token = localStorage.getItem("accessToken");
-  // 사용자 ID는 전역 상태나 localStorage 또는 useAuth 에서 가져옴.
+  // axiosInstance에 이미 baseURL과 기본 헤더가 설정되어 있으므로 별도 설정 불필요
   const { auth } = useAuth();
   const userId = localStorage.getItem("userId") || auth.user?.id || "";
 
@@ -19,9 +18,8 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  // 입력값 검증:
-  // - 새 비밀번호와 확인이 일치하는지,
-  // - 현재 비밀번호와 새 비밀번호가 다른지 확인
+
+  // 입력값 검증: 새 비밀번호와 확인이 일치하는지, 현재 비밀번호와 새 비밀번호가 다른지 확인
   useEffect(() => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       setErrorMessage("");
@@ -37,10 +35,8 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
   }, [currentPassword, newPassword, confirmPassword]);
 
   const handlePasswordChange = async () => {
-    // 모든 필드가 입력되어야 하고, 에러 메시지가 없어야 함
     if (!currentPassword || !newPassword || !confirmPassword || errorMessage) return;
 
-    // 디버깅용: 요청 데이터 로그 출력
     console.log("비밀번호 변경 요청 데이터:", {
       userId,
       currentPassword,
@@ -48,32 +44,20 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
     });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/change-password`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          currentPassword,
-          newPassword,
-        }),
+      const response = await axiosInstance.post("/auth/change-password", {
+        userId,
+        currentPassword,
+        newPassword,
       });
 
-      // 응답 로그 출력
       console.log("응답 상태 코드:", response.status);
-      const responseData = await response.json();
-      console.log("응답 데이터:", responseData);
+      console.log("응답 데이터:", response.data);
 
-      if (!response.ok) {
-        throw new Error(responseData.message || "비밀번호 변경 실패");
-      }
-      alert(responseData.message); // "비밀번호 변경이 완료 되었습니다."
+      alert(response.data.message);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("비밀번호 변경 중 오류 발생:", error);
-      alert("비밀번호 변경 실패: " + (error instanceof Error ? error.message : "알 수 없는 오류"));
+      alert("비밀번호 변경 실패: " + (error.message || "알 수 없는 오류"));
     }
   };
 
@@ -117,10 +101,6 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
         </div>
       </div>
       <div className="flex justify-end mt-6">
-        {/* 취소 x표시 있으니 쓰지 않기 */}
-        {/* <button className="px-4 py-2 bg-gray-300 rounded mr-2" onClick={onClose}>
-          취소
-        </button> */}
         <button
           className="px-4 py-2 bg-blue-600 text-white rounded"
           onClick={handlePasswordChange}

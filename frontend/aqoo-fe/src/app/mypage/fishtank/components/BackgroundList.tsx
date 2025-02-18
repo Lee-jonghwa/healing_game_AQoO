@@ -24,7 +24,7 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
 
   useEffect(() => {
     axiosInstance
-      .get("aquariums/backgrounds/all")
+      .get("/aquariums/backgrounds/all")
       .then((response) => {
         const fetchedBackgrounds: Background[] = response.data;
         setBackgrounds(fetchedBackgrounds);

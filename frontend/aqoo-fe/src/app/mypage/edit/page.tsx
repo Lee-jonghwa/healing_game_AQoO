@@ -129,7 +129,7 @@ function EditProfilePage() {
     axiosInstance
       .get(`/users/${auth.user.id}`)
       .then((response: AxiosResponse<UserInfo>) => {
-        console.log("✅ 유저 정보:", response.data);
+        // console.log("✅ 유저 정보:", response.data);
         setUserInfo(response.data);
       })
       .catch((error) => {
@@ -147,7 +147,7 @@ function EditProfilePage() {
     axiosInstance
       .get(`/aquariums/${userInfo.mainAquarium}`)
       .then((res: AxiosResponse<AquariumData>) => {
-        console.log("✅ 어항 상세 정보:", res.data);
+        // console.log("✅ 어항 상세 정보:", res.data);
         setAquariumData(res.data);
 
         const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
