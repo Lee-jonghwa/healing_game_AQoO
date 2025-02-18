@@ -291,6 +291,44 @@ export default function IntegratedRoom({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [roomId, userName]);
 
+  // [F5 키 동작 수정: 새로고침 대신 ready/unready 또는 게임 시작 동작]
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'F5') {
+        event.preventDefault(); // 기본 새로고침 동작 방지
+        const client = getStompClient();
+        if (!client || !client.connected) return;
+        if (currentIsHost) {
+          // 방장인 경우: 모든 비방장 사용자가 준비되었는지 확인
+          if (allNonHostReady) {
+            client.publish({
+              destination: '/app/game.start',
+              body: JSON.stringify({ roomId }),
+            });
+          } else {
+            alert('아직 준비되지 않은 물고기가 있습니다.');
+          }
+        } else {
+          // 일반 사용자는 현재 상태에 따라 ready/unready 전환
+          if (myReady) {
+            client.publish({
+              destination: '/app/chat.unready',
+              body: JSON.stringify({ roomId, sender: userName }),
+            });
+          } else {
+            client.publish({
+              destination: '/app/chat.ready',
+              body: JSON.stringify({ roomId, sender: userName }),
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [roomId, userName, currentIsHost, myReady, allNonHostReady]);
+
   return (
     <>
       {!isConnected ? (
@@ -438,7 +476,7 @@ export default function IntegratedRoom({
                         }`}
                         disabled={!allNonHostReady}
                       >
-                        Start Game
+                        Start Game(F5)
                       </button>
                     ) : (
                       <button
@@ -466,7 +504,7 @@ export default function IntegratedRoom({
                         }}
                         className='w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded'
                       >
-                        {myReady ? 'Unready' : 'Ready'}
+                        {myReady ? 'Unready(F5)' : 'Ready(F5)'}
                       </button>
                     )}
                   </div>
