@@ -75,6 +75,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
 
   console.log("IntegratedRoom currentUser:", currentUser);
   console.log("usernickname:", user.nickname);
+  console.log("userImage:", user.mainFishImage);
   // 현재 참가자 수
   const participantCount = users.length;
 
