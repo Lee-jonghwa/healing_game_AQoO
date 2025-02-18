@@ -5,7 +5,7 @@ const { persistAtom } = recoilPersist();
 
 export interface User {
   id: string;
-  nickName: string;
+  nickname: string;
   email?: string;
   mainFishImage?: string;
   exp?: number;
