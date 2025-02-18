@@ -15,7 +15,7 @@ export interface FishData {
 
 interface FishProps {
   fish: FishData;
-  handleIncreaseExp: (earnedExp: number) => Promise<void>;
+  handleIncreaseExp?: (earnedExp: number) => Promise<void>;
 }
 
 export default function Fish({ fish, handleIncreaseExp, }: FishProps) {
@@ -45,11 +45,13 @@ export default function Fish({ fish, handleIncreaseExp, }: FishProps) {
       repeat: 1,
     });
 
-    // 경험치 이펙트 추가
-    createExpEffect(clientX, clientY);
+    if(handleIncreaseExp){
+      // 경험치 이펙트 추가
+      createExpEffect(clientX, clientY);
 
-    //exp
-    handleIncreaseExp(1);
+      //exp
+      handleIncreaseExp(1);
+    }
   };
 
   const createExpEffect = (x: number, y: number) => {
