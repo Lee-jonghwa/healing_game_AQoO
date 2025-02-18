@@ -7,10 +7,10 @@ import FriendsList from "@/app/main/FriendsList";
 import MenuButton from "./MenuButton";
 import PushNotifications from "@/app/main/PushNotifications";
 import axios from "axios";
+import axiosInstance from "@/services/axiosInstance";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useState } from "react";
-import axiosInstance from "@/services/axiosInstance";
 
 const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
 
@@ -77,7 +77,7 @@ export default function BottomMenuBar({
       return;
     }
     try {
-      await axiosInstance.post(`${API_BASE_URL}/aquariums/update`, {
+      await axiosInstance.post(`/aquariums/update`, {
         aquariumId: userInfo.mainAquarium,
         type,
         data: "",
