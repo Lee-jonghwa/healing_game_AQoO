@@ -12,6 +12,8 @@ import { User } from '@/store/authAtom';
 import { useRecoilValue } from "recoil";
 import { authAtom } from "@/store/authAtom";
 
+import { useMemo } from 'react';
+
 
 // 플레이어 타입 정의
 interface Player {
@@ -78,21 +80,27 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const participantCount = users.length;
 
   // 사용자 목록 상태 및 displayUsers 선언
-  const displayUsers = currentIsHost && !users.some((u) => u.userName === userName)
-  ? [
-      ...users.map((user) => ({
-        ...user,
-        nickname: user.nickname ?? user.userName, // ✅ 기존 users 배열에도 nickname 추가
-      })),
-      { 
-        userName, 
-        nickname: currentUser?.nickname ?? userName, // ✅ 방장 닉네임 추가
-        ready: false, 
-        isHost: true, 
-        mainFishImage: '' 
-      }
-    ]
-  : users;
+  const displayUsers = useMemo(() => {
+    return currentIsHost && !users.some((u) => u.userName === userName)
+      ? [
+          ...users.map((user) => ({
+            ...user,
+            nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.userName, // ✅ 닉네임 보장
+          })),
+          { 
+            userName, 
+            nickname: currentUser?.nickname ?? userName, // ✅ 방장 닉네임 추가
+            ready: false, 
+            isHost: true, 
+            mainFishImage: '' 
+          }
+        ]
+      : users.map((user) => ({
+          ...user,
+          nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.userName, // ✅ 기존 참가자들도 닉네임 추가
+        }));
+  }, [users, friendList, currentIsHost, userName, currentUser?.nickname]);
+
 
 
   useEffect(() => {
@@ -114,18 +122,24 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
 
  // Fish 
 
-  useEffect(() => {
-    const fishList: FishData[] = displayUsers
-      .filter((user) => user.mainFishImage) // ✅ mainFishImage가 있는 유저만 필터링
-      .map((user, index) => ({
+ useEffect(() => {
+  const fishList: FishData[] = displayUsers
+    .filter((user) => user.mainFishImage) // ✅ mainFishImage가 있는 유저만 필터링
+    .map((user, index) => {
+      console.log(`🐟 [DEBUG] User: ${user.userName}, Nickname: ${user.nickname}, FishImage: ${user.mainFishImage}`);
+      return {
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
         fishName: user.nickname, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
         fishImage: user.mainFishImage,
-      }));
-    setFishes(fishList);
-  }, [displayUsers]);
+      };
+    });
+
+  console.log("🐠 Final Fish List:", fishList);
+  setFishes(fishList);
+}, [displayUsers]);
+
   
   // join 메시지 전송 및 구독 설정
   useEffect(() => {
