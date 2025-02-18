@@ -10,7 +10,6 @@ import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 import { useSFX } from "@/hooks/useSFX";
 
-
 const PALM_IMAGE_SRC = "/cleanIcon.png";
 
 export default function CleanComponent({
@@ -179,6 +178,7 @@ export default function CleanComponent({
           });
         };
       } catch (err) {
+        setIsAlternativeMode(true);
         setError("손 인식을 초기화하는 중 문제가 발생했습니다.");
         console.error("Error initializing hand recognition:", err);
       }
@@ -360,41 +360,113 @@ export default function CleanComponent({
     }
   };
 
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isAlternativeMode, setIsAlternativeMode] = useState(false);
+
   return (
-    <div className="relative w-auto h-auto bg-white bg-opacity-70 border border-black rounded-lg shadow-lg rounded-lg p-4">
+    <div className="relative w-auto h-auto bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">어항 청소하기</h2>
-        <button onClick={onClose} className="text-xl font-bold hover:text-red-500">
-          ✖
-        </button>
-      </div>
-      <div className="space-y-3">
-        <div className="w-[300px] h-[200px] relative">
-          {/* 📌 로딩 중일 때 스켈레톤 UI 표시 */}
-          {!isCameraReady && (
-            <div className="absolute inset-0 bg-gray-300 animate-pulse rounded-md flex items-center justify-center">
-              <span className="text-gray-500 text-sm">카메라 준비 중...</span>
-            </div>
-          )}
-          <div className="absolute top-2 right-2 px-2 py-1 bg-black text-white rounded-md font-bold z-10">
-            {motionCount}
-          </div>
-          <video
-            ref={videoRef}
-            className="absolute w-[300px] h-[200px]"
-            style={{ display: "none" }}
-            playsInline
-            muted
-          />
-          <canvas ref={canvasRef} className="absolute w-[300px] h-[200px]" />
+        <div className="flex space-x-2">
+          <button onClick={() => setIsGuideOpen(true)} className="text-xl font-bold hover:text-blue-500">
+            ❓
+          </button>
+          <button onClick={onClose} className="text-xl font-bold hover:text-red-500">
+            ✖
+          </button>
         </div>
       </div>
-      <div>
-        <p className="mt-5 text-sm text-center">
-          어항이 깨끗해질 수 있게 박박 닦아주세요! <br />
-          카메라를 향해 손바닥을 펴서 흔들어주세요!
-        </p>
-      </div>
+
+      {!isAlternativeMode ? (
+        <div className="space-y-3">
+          <div className="w-[300px] h-[200px] relative">
+            {!isCameraReady && (
+              <div className="absolute inset-0 bg-gray-300 animate-pulse flex items-center justify-center">
+                <span className="text-gray-500 text-sm">카메라 준비 중...</span>
+              </div>
+            )}
+            <div className="absolute top-2 right-2 px-2 py-1 bg-black text-white rounded-md font-bold z-10">
+              {motionCount}
+            </div>
+            <video
+              ref={videoRef}
+              className="absolute w-[300px] h-[200px]"
+              style={{ display: "none" }}
+              playsInline
+              muted
+            />
+            <canvas ref={canvasRef} className="absolute w-[300px] h-[200px]" />
+          </div>
+
+          <div>
+            <p className="mt-5 text-sm text-center">
+              어항이 깨끗해질 수 있게 박박 닦아주세요! <br />
+              카메라를 향해 손바닥을 펴서 흔들어주세요!
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center space-y-3">
+          <p>
+            카메라를 사용할 수 없습니다. <br />
+            대신 아래 버튼을 눌러 청소하세요!
+          </p>
+          <button
+            onClick={handleCleanSuccess}
+            className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg hover:bg-blue-700"
+          >
+            청소 완료하기
+          </button>
+          <input
+            type="text"
+            placeholder="'청소 완료' 입력 후 Enter"
+            className="border p-2 rounded-lg text-center"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.currentTarget.value === "청소 완료") {
+                handleCleanSuccess();
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {isGuideOpen && (
+        <div className="absolute top-0 left-0 z-10 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-lg shadow-lg text-center">
+            <h3 className="text-lg font-bold">청소 방법 안내</h3>
+            <div className="border mt-2 p-2 border-black rounded-sm">
+              <p className="mt-2">
+                손을 왼쪽 끝부터 오른쪽 끝까지 <br />
+                천천히 움직여 보세요!
+                <br /> 우측 상단 카운트가 올라가요!
+              </p>
+            </div>
+            <p className="mt-2">
+              카메라 사용이 불가능한 경우,
+              <br />
+              버튼으로 청소해 주세요!
+            </p>
+            <button
+              onClick={() => {
+                alert("청소에 성공했어요! 🐟");
+                playClear();
+                count.current = 0;
+                handleCleanSuccess();
+                setIsGuideOpen(false);
+              }}
+              className="mt-4 px-4 py-2 bg-green-500 mr-2 text-white font-bold rounded-lg hover:bg-red-700"
+            >
+              청소하기
+            </button>
+            <button
+              onClick={() => setIsGuideOpen(false)}
+              className="mt-4 px-4 py-2 bg-gray-500 text-white font-bold rounded-lg hover:bg-red-700"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
