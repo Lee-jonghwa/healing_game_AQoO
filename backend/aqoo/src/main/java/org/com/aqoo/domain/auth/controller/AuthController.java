@@ -80,7 +80,8 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponse> refreshAccessToken(
             @CookieValue(name = "refreshToken", required = false) String refreshToken) {
-
+        System.out.println("refresh API 호출");
+        
         if (refreshToken == null) {
             throw new IllegalArgumentException("Refresh Token is missing");
         }
