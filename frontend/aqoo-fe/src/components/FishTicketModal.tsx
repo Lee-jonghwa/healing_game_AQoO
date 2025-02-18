@@ -43,7 +43,7 @@ export default function FishTicketModal({
 
     setTimeout(async () => {
       try {
-        const response = await axiosInstance.get("https://i12e203.p.ssafy.io/api/v1/fish/gotcha", {
+        const response = await axiosInstance.get("/fish/gotcha", {
           withCredentials: true,
         });
 

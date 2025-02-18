@@ -403,7 +403,7 @@ export default function CustomFishPages() {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
 
-        console.log('✅ 응답 :', response.data);
+        // console.log('✅ 응답 :', response.data);
 
         // 서버에서 중복된 이름일 경우 "이미 존재하는 이름입니다."라는 문자열을 반환하는 경우
         if (

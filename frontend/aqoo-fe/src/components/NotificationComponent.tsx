@@ -35,7 +35,7 @@ export default function NotificationComponent({
             });
 
             if (currentToken) {
-                console.log("✅ FCM 토큰:", currentToken);
+                // console.log("✅ FCM 토큰:", currentToken);
                 setFcmToken(currentToken);
 
                 // 🔹 서버에 FCM 토큰 전송 (userId와 함께 전송)
@@ -94,7 +94,7 @@ const sendTokenToServer = async (userId: string, token: string) => {
       });
 
       const data = await response.text();
-      console.log("✅ 서버로 토큰 전송 성공:", data);
+      // console.log("✅ 서버로 토큰 전송 성공:", data);
   } catch (error) {
       console.error("🔥 FCM 토큰 서버 전송 실패:", error);
   }

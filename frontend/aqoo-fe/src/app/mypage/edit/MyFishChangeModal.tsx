@@ -82,8 +82,6 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
   // 현재 대표 물고기 정보는 상위에서 받아온 userData.mainFishImage를 사용
   const currentMainFishImage = userData.mainFishImage;
 
-  const API_BASE_URL = "https://i12e203.p.ssafy.io/images";
-
   // 모달 내부 콘텐츠의 위치/크기를 측정하기 위한 ref와 상태
   const modalContentRef = useRef<HTMLDivElement>(null);
   const [modalRect, setModalRect] = useState<DOMRect | null>(null);

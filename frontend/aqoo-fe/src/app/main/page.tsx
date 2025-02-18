@@ -182,6 +182,7 @@ export default function MainPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [fishes, setFishes] = useState<FishData[]>([]);
   const [aquariumData, setAquariumData] = useState<AquariumData | null>(null);
+  const [manualSelected, setManualSelected] = useState(false);
 
   const [aquariumList, setAquariumList] = useState<AquariumListItem[]>([]);
   const [selectedAquariumId, setSelectedAquariumId] = useState<number | null>(null);
@@ -367,41 +368,50 @@ export default function MainPage() {
     refreshUserInfo();
   }, [auth.user?.id]);
 
-  useEffect(() => {
-    if (!userInfo) return;
-    if (!auth.user) return;
+  // useEffect(() => {
+  //   if (!userInfo) return;
+  //   if (!auth.user) return;
 
-    axiosInstance.get(`/aquariums/all/${auth.user.id}`).then((res) => {
-      setAquariumList(res.data.aquariums);
-      // userInfo.mainAquarium이 있으면 그걸로, 없으면 0번 인덱스
-      const defaultId = userInfo.mainAquarium ?? res.data.aquariums[0]?.id ?? null;
-      setSelectedAquariumId(defaultId);
-    });
-  }, [userInfo]);
+
+  //   axiosInstance.get(`aquariums/all/${auth.user.id}`).then((res) => {
+  //     setAquariumList(res.data.aquariums);
+  //     // userInfo.mainAquarium이 있으면 그걸로, 없으면 0번 인덱스
+  //     const defaultId = userInfo.mainAquarium ?? res.data.aquariums[0]?.id ?? null;
+  //     setSelectedAquariumId(defaultId);
+  //   });
+  // }, [userInfo]);
 
   // ② 어항 리스트 조회 (유저 정보와 auth.user.id가 준비되면)
   useEffect(() => {
     if (!auth.user?.id) return;
-    Promise.all([axiosInstance.get(`/users/${auth.user.id}`), axiosInstance.get(`/aquariums/all/${auth.user.id}`)]).then(
-      ([userRes, aqRes]) => {
-        const newUserInfo = userRes.data;
-        const newAquariums = aqRes.data.aquariums;
-        setUserInfo(newUserInfo);
-        setAquariumList(newAquariums);
 
-        // 여기서 userInfo.mainAquarium를 사용할 수 있음
+    Promise.all([
+      axiosInstance.get(`/users/${auth.user.id}`),
+      axiosInstance.get(`/aquariums/all/${auth.user.id}`),
+    ]).then(([userRes, aqRes]) => {
+      const newUserInfo = userRes.data;
+      const newAquariums = aqRes.data.aquariums;
+      setUserInfo(newUserInfo);
+      setAquariumList(newAquariums);
+
+      // 만약 selectedAquariumId가 아직 null이면, mainAquarium (또는 0번)을 기본값으로
+      if (selectedAquariumId === null) {
         const defaultId = newUserInfo.mainAquarium ?? newAquariums[0]?.id ?? null;
         setSelectedAquariumId(defaultId);
       }
-    );
+    });
   }, [auth.user?.id]);
 
-  // 1) userInfo?.mainAquarium, aquariumList 변경 시, 선택 어항을 mainAquarium으로 재설정
+  // 최종 형태 (단 하나의 effect만 존재)
   useEffect(() => {
-    if (userInfo?.mainAquarium && aquariumList.some((aq) => aq.id === userInfo.mainAquarium)) {
+    if (!userInfo?.mainAquarium) return;
+    if (aquariumList.length === 0) return;
+
+    const exists = aquariumList.some((aq) => aq.id === userInfo.mainAquarium);
+    if (exists && !manualSelected) {
       setSelectedAquariumId(userInfo.mainAquarium);
     }
-  }, [userInfo?.mainAquarium, aquariumList]);
+  }, [userInfo?.mainAquarium, aquariumList, manualSelected]);
 
   // ④ 선택된 어항 ID로 물고기 리스트 조회
   useEffect(() => {
@@ -502,6 +512,8 @@ export default function MainPage() {
         aquariumList={aquariumList}
         selectedAquariumId={selectedAquariumId}
         setSelectedAquariumId={setSelectedAquariumId}
+        manualSelected={manualSelected}
+        setManualSelected={setManualSelected}
       />
 
       {levelUpInfo && (
