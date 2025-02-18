@@ -11,7 +11,7 @@ import Fish from "./Fish";
 import { User } from '@/store/authAtom';
 import { useRecoilValue } from "recoil";
 import { authAtom } from "@/store/authAtom";
-
+import axiosInstance from "@/services/axiosInstance";
 
 // 플레이어 타입 정의
 interface Player {
@@ -52,7 +52,6 @@ interface Friend {
   mainFishImage: string | null;
 }
 
-
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
   const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string, nickname: string; }[]>([]);
@@ -69,7 +68,6 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
   const [friendList, setFriendList] = useState<Friend[]>([]);
 
-
   // 기존 props의 user 대신 내부 상태로 관리하여 업데이트할 수 있도록 함
   const [currentUser, setCurrentUser] = useState<User>(user);
 
@@ -80,28 +78,26 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
 
   // 사용자 목록 상태 및 displayUsers 선언
   const displayUsers = currentIsHost && !users.some((u) => u.userName === userName)
-  ? [
-      ...users.map((user) => ({
-        ...user,
-        nickname: user.nickname ?? user.userName, // ✅ 기존 users 배열에도 nickname 추가
-      })),
-      { 
-        userName, 
-        nickname: currentUser?.nickname ?? userName, // ✅ 방장 닉네임 추가
-        ready: false, 
-        isHost: true, 
-        mainFishImage: '' 
-      }
-    ]
-  : users;
+    ? [
+        ...users.map((user) => ({
+          ...user,
+          nickname: user.nickname ?? user.userName, // 기존 users 배열에도 nickname 추가
+        })),
+        { 
+          userName, 
+          nickname: currentUser?.nickname ?? userName, // 방장 닉네임 추가
+          ready: false, 
+          isHost: true, 
+          mainFishImage: '' 
+        }
+      ]
+    : users;
 
-
+  // 친구 목록 조회 (axiosInstance 사용)
   useEffect(() => {
-    fetch(`https://i12e203.p.ssafy.io/api/v1/friends/${encodeURIComponent(userName)}`)
-      .then((response) => response.json())
-      .then((data) => {
-
-        setFriendList(data.friends)
+    axiosInstance.get(`/friends/${encodeURIComponent(userName)}`)
+      .then((response) => {
+        setFriendList(response.data.friends);
       })
       .catch((error) => console.error("❌ 친구 목록 불러오기 실패:", error));
   }, [userName]);
@@ -113,16 +109,15 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     });
   }, []);
 
- // Fish 
-
+  // Fish 
   useEffect(() => {
     const fishList: FishData[] = displayUsers
-      .filter((user) => user.mainFishImage) // ✅ mainFishImage가 있는 유저만 필터링
+      .filter((user) => user.mainFishImage) // mainFishImage가 있는 유저만 필터링
       .map((user, index) => ({
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
-        fishName: user.nickname ?? user.userName, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
+        fishName: user.nickname ?? user.userName, // 닉네임이 있으면 사용, 없으면 userName 사용
         fishImage: user.mainFishImage,
       }));
     setFishes(fishList);
@@ -179,23 +174,17 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     }
     
     try {
-      const response = await fetch("https://i12e203.p.ssafy.io/api/v1/chatrooms/invite", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          hostId: userName,
-          guestId: friendUserId,
-          roomId: roomId,
-        }),
+      const response = await axiosInstance.post("/chatrooms/invite", {
+        hostId: userName,
+        guestId: friendUserId,
+        roomId: roomId,
       });
-      if (!response.ok) {
-        console.error(`Invitation failed for ${friendUserId}`);
-        alert(`${friendUserId} 초대에 실패했습니다.`);
-      } else {
+      if (response.status >= 200 && response.status < 300) {
         console.log(`Invitation succeeded for ${friendUserId}`);
         alert(`${friendUserId}님을 초대했습니다.`);
+      } else {
+        console.error(`Invitation failed for ${friendUserId}`);
+        alert(`${friendUserId} 초대에 실패했습니다.`);
       }
     } catch (error) {
       console.error("Error inviting friend", error);
@@ -240,15 +229,9 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     
     // 게임 종료 후 최신 유저 정보를 API를 통해 가져옴
     try {
-      // userName을 user id로 사용
-      const response = await fetch(`https://i12e203.p.ssafy.io/api/v1/users/${userName}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const updatedUser: User = await response.json();
+      const response = await axiosInstance.get(`/users/${userName}`);
+      if (response.status >= 200 && response.status < 300) {
+        const updatedUser: User = response.data;
         setCurrentUser(updatedUser);
         console.log('User updated:', updatedUser);
       } else {
@@ -397,22 +380,21 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   
                   {/* 참가자 리스트 */}
                   <div>
-                  <ParticipantList 
-                    users={displayUsers} 
-                    currentUser={currentUser} 
-                    currentIsHost={currentIsHost} 
-                    friendList={friendList}  // ✅ 친구 목록 전달
-                    onKickUser={(target) => {
-                      const client = getStompClient();
-                      if (client && client.connected) {
-                        client.publish({
-                          destination: '/app/chat.kickUser',
-                          body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
-                        });
-                      }
-                    }} 
-                  />
-
+                    <ParticipantList 
+                      users={displayUsers} 
+                      currentUser={currentUser} 
+                      currentIsHost={currentIsHost} 
+                      friendList={friendList}  // 친구 목록 전달
+                      onKickUser={(target) => {
+                        const client = getStompClient();
+                        if (client && client.connected) {
+                          client.publish({
+                            destination: '/app/chat.kickUser',
+                            body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
+                          });
+                        }
+                      }} 
+                    />
                   </div>
   
                   {/* 채팅창 */}
