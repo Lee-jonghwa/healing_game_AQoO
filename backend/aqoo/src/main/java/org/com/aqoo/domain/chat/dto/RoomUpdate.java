@@ -26,6 +26,7 @@ public class RoomUpdate {
     @AllArgsConstructor
     public static class UserInfo {
         private String userName;
+        private String nickname;
         private boolean ready;
 
         @JsonProperty("isHost")

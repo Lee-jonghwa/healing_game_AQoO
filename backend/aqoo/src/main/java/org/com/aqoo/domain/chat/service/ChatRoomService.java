@@ -147,12 +147,13 @@ public class ChatRoomService {
         if (room != null) {
             System.out.println("RoomUpdate 실행");
             List<RoomUpdate.UserInfo> userList = room.getMembers().stream()
-                    .map(userName -> {
-                        boolean isHost = userName.equals(room.getOwnerId());
-                        boolean ready = room.getReadyMembers().contains(userName);
-                        UserInfoResponse tmpUser = userService.getUserInfo(userName);
+                    .map(userId -> {
+                        boolean isHost = userId.equals(room.getOwnerId());
+                        boolean ready = room.getReadyMembers().contains(userId);
+                        UserInfoResponse tmpUser = userService.getUserInfo(userId);
                         String mainFishImage = tmpUser.getMainFishImage();
-                        return new RoomUpdate.UserInfo(userName, ready, isHost, mainFishImage);
+                        String nickname = tmpUser.getNickname();  // nickname 정보 추가
+                        return new RoomUpdate.UserInfo(userId, nickname, ready, isHost, mainFishImage);
                     })
                     .collect(Collectors.toList());
             return new RoomUpdate(roomId, "USER_LIST", userList);
