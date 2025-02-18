@@ -30,7 +30,6 @@ export default function MyPage() {
   // 총 물고기
   const totalFishCount = userFishList.reduce((acc, fish) => acc + fish.cnt, 0) + customFishList.length;
 
-
   const [logoWidth, setLogoWidth] = useState<number>(0);
 
   // 접속 유저의 정보 조회
@@ -43,16 +42,16 @@ export default function MyPage() {
         setUserInfo(response.data);
       })
       .catch((error) => {
-        console.error("❌ 유저 정보 불러오기 실패", error);
+        // console.error("❌ 유저 정보 불러오기 실패", error);
       });
   }, [auth.user?.id]);
 
   useEffect(() => {
-    console.log("Fetching aquarium data...");
+    // console.log("Fetching aquarium data...");
 
     if (!userInfo?.mainAquarium) return;
 
-    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+    // console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
 
     axiosInstance
       .get(`/aquariums/${userInfo.mainAquarium}`)
@@ -69,10 +68,10 @@ export default function MyPage() {
         if (!bgUrl.startsWith("http")) {
           bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
         }
-        console.log("Setting background to:", bgUrl);
+        // console.log("Setting background to:", bgUrl);
         setBackground(bgUrl);
       })
-      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+      .catch((err) => console.error("❌ 어항 정보 불러오기 실패"));
   }, [userInfo]);
 
   useEffect(() => {

@@ -67,7 +67,7 @@ const InputField: React.FC<InputFieldProps> = ({
               }
             }}
             className="absolute top-1/2 right-1 -translate-y-1/2 
-                     z-10 text-[10px] bg-white px-1 sm:px-3 py-1 sm:py-1 border rounded-md shadow"
+                     z-10 text-[10px] sm:text-lg bg-white px-1 sm:px-3 py-1 sm:py-1 border rounded-md shadow"
           >
             완료
           </button>

@@ -40,14 +40,14 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
       const response = await axiosInstance.delete<{ message: string }, any, { userId: string }>("/users", {
         data: { userId },
       });
-      console.log("회원 탈퇴 응답:", response.data);
+      // console.log("회원 탈퇴 응답:", response.data);
       alert(response.data.message || "회원 탈퇴 완료");
 
       // 탈퇴 후 처리: 토큰 제거 및 로그인 페이지로 이동
       // localStorage.removeItem("accessToken");
       router.push("/user/login");
     } catch (error) {
-      console.error("회원 탈퇴 중 오류:", error);
+      // console.error("회원 탈퇴 중 오류:", error);
       alert("회원 탈퇴 실패: " + (error instanceof Error ? error.message : "알 수 없는 오류"));
     }
   };

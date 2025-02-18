@@ -114,7 +114,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error("내 fish 정보를 불러오는 중 오류 발생:", error);
+        // console.error("내 fish 정보를 불러오는 중 오류 발생:", error);
         setIsLoading(false);
       });
   }, [userData.id, currentMainFishImage]);
@@ -161,9 +161,9 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
         userNickName: userData.nickname,
         mainFishImage: parsedImageName,
       });
-      console.log("응답:", response.data);
-      console.log("선택한 이미지:", selectedFishImage);
-      console.log("파싱된 이미지:", parsedImageName);
+      // console.log("응답:", response.data);
+      // console.log("선택한 이미지:", selectedFishImage);
+      // console.log("파싱된 이미지:", parsedImageName);
 
       // 낙관적 업데이트: 전역 auth 상태에 바로 새로운 대표 이미지를 반영
       setAuth({
@@ -180,7 +180,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
       onClose();
     } catch (error) {
       alert("대표 물고기 변경에 실패했습니다.");
-      console.error(error);
+      // console.error(error);
     } finally {
       setIsLoading(false);
     }

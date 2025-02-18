@@ -37,11 +37,11 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword || errorMessage) return;
 
-    console.log("비밀번호 변경 요청 데이터:", {
-      userId,
-      currentPassword,
-      newPassword,
-    });
+    // console.log("비밀번호 변경 요청 데이터:", {
+    //   userId,
+    //   currentPassword,
+    //   newPassword,
+    // });
 
     try {
       const response = await axiosInstance.post("/auth/change-password", {

@@ -57,7 +57,7 @@ function fetchUserData(userId: string): Promise<any> {
       },
     })
     .then((response) => {
-      console.log("Fetched user data:", response.data);
+      // console.log("Fetched user data:", response.data);
       return response.data;
     })
     .catch((error) => {
@@ -204,8 +204,8 @@ function Profile({ fishTotal }: { fishTotal: number }) {
   }, [userId, resource]);
 
   if (!auth.user || !resource) {
-    console.log(`auth.user: ${auth.user}`);
-    console.log(`resource: ${resource}`);
+    // console.log(`auth.user: ${auth.user}`);
+    // console.log(`resource: ${resource}`);
     return <div>로딩 중...</div>;
   }
 
