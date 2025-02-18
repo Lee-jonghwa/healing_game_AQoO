@@ -3,12 +3,6 @@
 import React from "react";
 import { User } from '@/store/authAtom';
 
-interface CurrentUser {
-  id: string;
-  nickName: string;
-  level: number;
-}
-
 interface Friend {
   friendId: string;
   nickname: string;
