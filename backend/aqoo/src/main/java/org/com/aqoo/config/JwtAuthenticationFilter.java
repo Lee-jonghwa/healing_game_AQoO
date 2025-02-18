@@ -29,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String jwt = authorizationHeader.substring(7);
-
+            System.out.println("doFilterInternal jwt:" + jwt);
             try {
                 // JwtUtil을 사용하여 토큰 검증 및 사용자 정보 추출
                 if (jwtUtil.validateToken(jwt)) {
