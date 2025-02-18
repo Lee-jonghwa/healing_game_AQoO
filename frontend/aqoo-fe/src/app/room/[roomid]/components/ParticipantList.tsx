@@ -20,6 +20,7 @@ interface Participant {
   ready: boolean;
   isHost: boolean;
   mainFishImage: string;
+  nickname?: string;
 }
 
 interface ParticipantListProps {
@@ -41,7 +42,6 @@ export default function ParticipantList({ users, friendList, currentUser, curren
       <ul className="space-y-2">
         {users.map((user) => {
           let displayName;
-
           // ✅ `authAtom`의 User에서 직접 닉네임 가져오기
           if (user.isHost) {
             displayName = (currentUser?.id === user.userName) 

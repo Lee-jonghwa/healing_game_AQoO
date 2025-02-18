@@ -25,7 +25,7 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
-  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[];
+  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string, nickname: string; }[];
   players?: Player[];
   targetUser?: string;
 }
@@ -55,7 +55,7 @@ interface Friend {
 
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
-  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string }[]>([]);
+  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string, nickname: string; }[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -78,17 +78,28 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const participantCount = users.length;
 
   // 사용자 목록 상태 및 displayUsers 선언
-  const displayUsers =
-    currentIsHost && !users.some((u) => u.userName === userName)
-      ? [...users, { userName, ready: false, isHost: true, mainFishImage: '' }]
-      : users;
+  const displayUsers = currentIsHost && !users.some((u) => u.userName === userName)
+  ? [
+      ...users.map((user) => ({
+        ...user,
+        nickname: user.nickname ?? user.userName, // ✅ 기존 users 배열에도 nickname 추가
+      })),
+      { 
+        userName, 
+        nickname: currentUser?.nickname ?? userName, // ✅ 방장 닉네임 추가
+        ready: false, 
+        isHost: true, 
+        mainFishImage: '' 
+      }
+    ]
+  : users;
 
 
   useEffect(() => {
     fetch(`https://i12e203.p.ssafy.io/api/v1/friends/${encodeURIComponent(userName)}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log("📢 친구 목록 데이터:", data.friends);
+
         setFriendList(data.friends)
       })
       .catch((error) => console.error("❌ 친구 목록 불러오기 실패:", error));
@@ -101,20 +112,21 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     });
   }, []);
 
-  // 참가자 대표 물고기 -> fishes 배열 업데이트
+ // Fish 
+
   useEffect(() => {
     const fishList: FishData[] = displayUsers
-      .filter((user) => user.mainFishImage)
+      .filter((user) => user.mainFishImage) // ✅ mainFishImage가 있는 유저만 필터링
       .map((user, index) => ({
         aquariumId: 0,
         fishId: index,
         fishTypeId: 0,
-        fishName: user.userName,
+        fishName: user.nickname, // ✅ 닉네임이 있으면 사용, 없으면 userName 사용
         fishImage: user.mainFishImage,
       }));
     setFishes(fishList);
   }, [displayUsers]);
-
+  
   // join 메시지 전송 및 구독 설정
   useEffect(() => {
     const client = getStompClient();
