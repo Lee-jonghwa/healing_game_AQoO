@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { useAuth } from "@/hooks/useAuth";
 import axiosInstance from "@/services/axiosInstance";
+import { useSFX } from "@/hooks/useSFX";
 
 interface PasswordChangeModalProps {
   onClose: () => void;
@@ -18,6 +19,15 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3")
+
+  const wrapOnSuccess = (originalOnClick?: () => void) => () => {
+    playSuccess();
+    if (originalOnClick) {
+      originalOnClick()
+    }
+  }
 
   // 입력값 검증: 새 비밀번호와 확인이 일치하는지, 현재 비밀번호와 새 비밀번호가 다른지 확인
   useEffect(() => {
@@ -37,11 +47,11 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword || errorMessage) return;
 
-    console.log("비밀번호 변경 요청 데이터:", {
-      userId,
-      currentPassword,
-      newPassword,
-    });
+    // console.log("비밀번호 변경 요청 데이터:", {
+    //   userId,
+    //   currentPassword,
+    //   newPassword,
+    // });
 
     try {
       const response = await axiosInstance.post("/auth/change-password", {
@@ -50,14 +60,15 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
         newPassword,
       });
 
-      console.log("응답 상태 코드:", response.status);
-      console.log("응답 데이터:", response.data);
+      // console.log("응답 상태 코드:", response.status);
+      // console.log("응답 데이터:", response.data);
 
+      playSuccess()
       alert(response.data.message);
       onClose();
     } catch (error: any) {
-      console.error("비밀번호 변경 중 오류 발생:", error);
-      alert("비밀번호 변경 실패: " + (error.message || "알 수 없는 오류"));
+      // console.error("비밀번호 변경 중 오류 발생:", error);
+      // alert("비밀번호 변경 실패: " + (error.message || "알 수 없는 오류"));
     }
   };
 

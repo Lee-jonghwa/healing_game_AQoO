@@ -18,9 +18,11 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
   const router = useRouter();
   const selectedTab = searchParams.get("tab") || "basic";
   const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
   const handleTabChange = (tabName: string) => {
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set("tab", tabName);
+    playClick()
     router.push(`/mypage?${newParams.toString()}`);
   };
 
@@ -29,7 +31,9 @@ function MyCollectionContent({ allFishList, userFishList, customFishList }: MyCo
       {/* 탭 영역 */}
       <div className="flex items-end mb-0 mt-1 gap-1">
         <button
-          onClick={() => handleTabChange("basic")}
+          onClick={() =>
+            handleTabChange("basic")
+          }
           className={`
             relative left-[10px] sm:left-[30px] 
             cursor-pointer inline-flex items-center justify-center

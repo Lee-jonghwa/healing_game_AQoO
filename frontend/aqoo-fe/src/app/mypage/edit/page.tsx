@@ -19,6 +19,7 @@ import MyFishChangeModal from "./MyFishChangeModal";
 import { ProfileFormInputs } from "@/types";
 import axiosInstance from "@/services/axiosInstance";
 import { AxiosResponse } from "axios";
+import { useSFX } from "@/hooks/useSFX";
 
 /**
  * Suspense 리소스를 위한 헬퍼 함수
@@ -123,6 +124,17 @@ function EditProfilePage() {
   const userDataResourceRef = useRef<{ read: () => any } | null>(null);
   const [userDataResource, setUserDataResource] = useState<{ read: () => any } | null>(null);
 
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
+
+  const wrapOnClick = (originalOnClick?: () => void) => () => {
+    playClick();
+    if (originalOnClick) {
+      originalOnClick()
+    }
+  }
+
+
+
   // 접속 유저의 정보 조회
   useEffect(() => {
     if (!auth.user?.id) return;
@@ -133,35 +145,33 @@ function EditProfilePage() {
         setUserInfo(response.data);
       })
       .catch((error) => {
-        console.error("❌ 유저 정보 불러오기 실패", error);
+        // console.error("❌ 유저 정보 불러오기 실패", error);
       });
   }, [auth.user?.id]);
 
   // 어항 상세 정보 및 배경 정보 조회
   useEffect(() => {
-    console.log("Fetching aquarium data...");
+    // console.log("Fetching aquarium data...");
     if (!userInfo?.mainAquarium) return;
 
-    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+    // console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
 
-    axiosInstance
-      .get(`/aquariums/${userInfo.mainAquarium}`)
-      .then((res: AxiosResponse<AquariumData>) => {
-        // console.log("✅ 어항 상세 정보:", res.data);
-        setAquariumData(res.data);
+    axiosInstance.get(`/aquariums/${userInfo.mainAquarium}`).then((res: AxiosResponse<AquariumData>) => {
+      // console.log("✅ 어항 상세 정보:", res.data);
+      setAquariumData(res.data);
 
-        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
+      const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
 
-        let bgUrl = res.data.aquariumBackground;
-        if (!bgUrl) return;
+      let bgUrl = res.data.aquariumBackground;
+      if (!bgUrl) return;
 
-        if (!bgUrl.startsWith("http")) {
-          bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
-        }
-        console.log("Setting background to:", bgUrl);
-        setBackground(bgUrl);
-      })
-      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+      if (!bgUrl.startsWith("http")) {
+        bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
+      }
+      // console.log("Setting background to:", bgUrl);
+      setBackground(bgUrl);
+    });
+    // .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
   }, [userInfo]);
 
   // userData 리소스 생성: auth.user?.id가 준비되면 axiosInstance로 데이터 가져오기
@@ -195,7 +205,7 @@ function EditProfilePage() {
   const onSubmit: SubmitHandler<ProfileFormInputs> = async (data) => {
     setIsLoading(true);
     try {
-      console.log("닉네임 입력값:", data.nickname);
+      // console.log("닉네임 입력값:", data.nickname);
       const token = localStorage.getItem("accessToken");
 
       const parsedImageName = "/" + (userData?.mainFishImage.split("/").pop() || "");
@@ -215,8 +225,8 @@ function EditProfilePage() {
         }
       );
 
-      console.log("API 응답 상태:", response.status);
-      console.log("API 응답 데이터:", response.data);
+      // console.log("API 응답 상태:", response.status);
+      // console.log("API 응답 데이터:", response.data);
 
       if (response.status < 200 || response.status >= 300) {
         throw new Error(`회원 정보 수정 실패: ${response.data.message || "알 수 없는 오류"}`);
@@ -239,7 +249,7 @@ function EditProfilePage() {
       router.push("/mypage/edit");
     } catch (error) {
       alert("회원 정보 수정 실패");
-      console.error(error);
+      // console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -292,7 +302,7 @@ function EditProfilePage() {
             text="대표 물고기 변경"
             isLoading={isLoading}
             color="none"
-            onClick={() => setIsMyFishModalOpen(true)}
+            onClick={wrapOnClick(() => setIsMyFishModalOpen(true))}
             isSpecial={true}
           />
         </div>
@@ -322,13 +332,13 @@ function EditProfilePage() {
                 text="비밀번호변경"
                 isLoading={isLoading}
                 color="blue"
-                onClick={() => setIsPasswordModalOpen(true)}
+                onClick={wrapOnClick(() => setIsPasswordModalOpen(true))}
               />
               <ModalButtons
                 text="회원탈퇴"
                 isLoading={isLoading}
                 color="red"
-                onClick={() => setIsDeleteModalOpen(true)}
+                onClick={wrapOnClick(() => setIsDeleteModalOpen(true))}
               />
             </div>
           </div>

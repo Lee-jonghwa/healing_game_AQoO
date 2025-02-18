@@ -103,7 +103,7 @@ export default function CollectionItemCard({
           <p
             className="
           flex flex-col items-center gap-1
-          text-[11px] sm:text-[1.5em] text-black
+          text-[11px] sm:text-[1.3em] text-black
         "
           >
             {name}
