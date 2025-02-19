@@ -1,3 +1,0 @@
-프로젝트 API 명세서 작성
-
-https://www.notion.so/API-17321a4e211c809183f6d9352f8c3183

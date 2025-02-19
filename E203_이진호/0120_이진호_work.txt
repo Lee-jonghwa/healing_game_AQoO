@@ -1,4 +1,0 @@
-기능명세서 작성 및 취업특강 수강, ERD 설계 어항, 물고기 테이블 설계 
-
-ERD
-https://silky-stinger-631.notion.site/17321a4e211c8006a7e0eb01cf09880b?pvs=74

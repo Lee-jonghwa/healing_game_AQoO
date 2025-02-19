@@ -1,7 +1,0 @@
-ERD 작성 및 어항 및 친구 관리 API 명세서 작성
-
-ERD
-https://silky-stinger-631.notion.site/DB-ERD-dummy-01-21-17-05-17321a4e211c80edba01ded309299f2f?pvs=74
-
-API 명세서
-https://silky-stinger-631.notion.site/API-17321a4e211c809183f6d9352f8c3183?pvs=74
