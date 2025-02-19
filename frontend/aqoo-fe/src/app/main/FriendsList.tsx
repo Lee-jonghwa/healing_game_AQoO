@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import axiosInstance from "@/services/axiosInstance";
+import { debounce } from "lodash";
 import { useAuth } from "@/hooks/useAuth";
 import { useInput } from "@/hooks/useInput";
 import { useRouter } from "next/navigation";
@@ -30,7 +31,7 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   const searchInput = useInput("");
   const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-
+  const [isSearchTriggered, setIsSearchTriggered] = useState(false); // 검색 여부
 
   // dummy Friend 객체 (랜덤방문 셀)
   const dummyFriend: Friend = {
@@ -109,8 +110,13 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   const handleSearch = () => {
     if (!searchInput.value.trim()) {
       setSearchResults([]);
+      setIsSearchTriggered(false);
+
       return;
     }
+
+    setIsSearchTriggered(true); // 검색이 실행되었음을 표시
+
     axiosInstance
       .get(`/friends/find-users/${searchInput.value}`, {
         withCredentials: true,
@@ -124,6 +130,22 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       })
       .finally(() => setLoading(false));
   };
+
+  useEffect(() => {
+    if (!searchInput.value.trim()) {
+      setSearchResults([]); // 검색어가 없을 때 검색 결과 초기화
+      setIsSearchTriggered(false);
+      return;
+    }
+
+    const delayedSearch = debounce(() => {
+      handleSearch();
+    }, 100);
+
+    delayedSearch(); // 검색 실행
+
+    return () => delayedSearch.cancel(); // cleanup (입력 중이면 이전 요청 취소)
+  }, [searchInput.value]); // searchInput.value가 변경될 때마다 실행
 
   // 엔터 키 입력 시 검색 실행
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -185,13 +207,19 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
       </div>
       {/* 검색창 + 버튼 + 검색 결과 리스트 */}
       <div className="relative mt-4" ref={searchContainerRef}>
-        {searchResults.length > 0 && (
+        {/* 검색창 + 검색 결과 리스트 */}
+        {isSearchTriggered && (
           <div className="absolute bottom-full left-0 w-full bg-white border border-black rounded-lg shadow-lg p-3 max-h-[200px] overflow-y-auto scrollbar-hide z-10">
-            {searchResults.map((user, index) => (
-              <SearchResultItem key={index} user={user} handleAddFriend={handleAddFriend} />
-            ))}
+            {searchResults.length > 0 ? (
+              searchResults.map((user, index) => (
+                <SearchResultItem key={index} user={user} handleAddFriend={handleAddFriend} />
+              ))
+            ) : (
+              <p className="text-center text-gray-500 text-sm">검색 결과가 없습니다.</p>
+            )}
           </div>
         )}
+
         <div className="flex items-center border border-gray-400 rounded-lg p-2 bg-white w-full">
           <input
             type="text"
@@ -248,8 +276,10 @@ function FriendItem({
           </div>
         </div>
       ) : (
-
-        <Link href={`/myfriend?friendId=${friend.friendId}&isFriendExist=true`} className="flex items-center space-x-3 w-full">
+        <Link
+          href={`/myfriend?friendId=${friend.friendId}&isFriendExist=true`}
+          className="flex items-center space-x-3 w-full"
+        >
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden">
             <Image
               loader={customLoader}
