@@ -95,14 +95,14 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
   const [modalRect, setModalRect] = useState<DOMRect | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3")
+  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3");
 
   const wrapOnSuccess = (originalOnClick?: () => void) => () => {
     playSuccess();
     if (originalOnClick) {
-      originalOnClick()
+      originalOnClick();
     }
-  }
+  };
 
   // 내가 가진 fish 정보를 axiosInstance를 통해 불러오고,
   // 현재 대표 물고기와 동일한 fishImage는 필터링합니다.
@@ -183,7 +183,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
           mainFishImage: selectedFishImage,
         } as any,
       });
-      playSuccess()
+      playSuccess();
       alert("대표 물고기 변경 성공!");
       // 서버와 동기화하기 위해 fetchUser()를 호출
       await fetchUser();
@@ -228,7 +228,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
           {isLoading && <p>로딩 중...</p>}
           {!isLoading && (
             <div
-              className={`flex flex-1 justify-end mt-6 w-full overflow-y-auto
+              className={`flex flex-1 justify-end sm:mt-6 sm:mb-7 w-full overflow-y-auto
                 ${isFullScreen ? "max-h-[550px]" : "pb-5"}`}
             >
               <div

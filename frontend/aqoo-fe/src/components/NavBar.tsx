@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
 import { useState } from "react";
 import { getStompClient } from "@/lib/stompclient";
+import HowToPlayModal from "./HowToPlay";
 
 export default function Navbar() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -19,6 +20,8 @@ export default function Navbar() {
   // 배경음 & 효과음 개별 ON/OFF 상태 추가
   const [isBgOn, setIsBgOn] = useState(bgMusicVolume > 0);
   const [isSfxOn, setIsSfxOn] = useState(sfxVolume > 0);
+
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
 
   // 배경음악 ON/OFF 토글
   const toggleBgMusic = () => {
@@ -41,7 +44,7 @@ export default function Navbar() {
       const client = getStompClient();
       if (client && client.connected && roomId) {
         client.publish({
-          destination: '/app/chat.leaveRoom',
+          destination: "/app/chat.leaveRoom",
           body: JSON.stringify({ roomId, sender: auth?.user?.id || "" }),
         });
         console.log("chat.leaveRoom API 호출됨", { roomId, sender: auth?.user?.id || "" });
@@ -71,15 +74,26 @@ export default function Navbar() {
           <span className="pointer-events-auto text-white text-5xl hover:text-yellow-300">AQoO</span>
         </button>
 
-        {/* ⚙️ 설정 버튼 */}
-        <button
-          className="pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50"
-          onClick={() => setIsSettingsOpen(true)}
-        >
-          <Settings className="w-6 h-6 text-fwhite" />
-        </button>
+        {/* 안내창 테스트 */}
+        <div className="flex gap-3">
+          <img
+            src={"/icon/howtoplayicon.png"}
+            width={45}
+            onClick={() => setIsHowToPlayOpen(true)}
+            className="pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50"
+          />
+
+          {/* ⚙️ 설정 버튼 */}
+          <button
+            className="pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <Settings className="w-6 h-6 text-fwhite" />
+          </button>
+        </div>
       </nav>
 
+      {isHowToPlayOpen && <HowToPlayModal isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)} />}
       {/* 🎛️ 설정 모달 */}
       {isSettingsOpen && (
         <div
