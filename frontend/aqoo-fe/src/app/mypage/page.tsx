@@ -4,19 +4,16 @@ import { UserInfo, AquariumData } from "@/types";
 
 import MyCollection from "./components/MyCollection";
 import Profile from "./components/Profile";
-import HowToPlay from "./components/HowToPlay";
 
 import { useUserFishCollectionTest } from "@/hooks/useUserFishCollection";
 import { useAllFishCollectionTest } from "@/hooks/useAllFishCollection";
 import { useCustomFishCollectionTest } from "@/hooks/useCustomFishCollection";
-import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/services/axiosInstance";
 import { AxiosResponse } from "axios";
 
-import { useSFX } from "@/hooks/useSFX";
 
 export default function MyPage() {
   const { auth, logout } = useAuth();
