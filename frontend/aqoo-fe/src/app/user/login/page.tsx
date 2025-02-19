@@ -1,7 +1,6 @@
 "use client";
 
 import { SubmitHandler, useForm } from "react-hook-form";
-
 import { FcGoogle } from "react-icons/fc";
 import InputField from "@/app/user/login/components/InputField";
 import LoginButton from "@/app/user/login/components/LoginButton";
@@ -23,32 +22,42 @@ export default function LoginPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Electron 환경 감지 (userAgent에 "electron"이 포함되어 있으면 Electron으로 판단)
-  const isElectron = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
+  const isElectron =
+    typeof navigator !== "undefined" &&
+    navigator.userAgent.toLowerCase().includes("electron");
 
-// 일반 로그인 처리
-const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-  setIsLoading(true);
-  try {
-    await login(data.id, data.pw);
-    router.push("/main");
-  } catch (error: any) {
-    // Electron 환경이면 native dialog 사용, 아니면 기존 alert 호출
-    const electronAPI = (window as any).electronAPI;
-    if (electronAPI && electronAPI.showAlert) {
-      electronAPI.showAlert(error.message);
-    } else {
-      alert(error.message);
+  // 일반 로그인 처리
+  const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
+    setIsLoading(true);
+    try {
+      await login(data.id, data.pw);
+      router.push("/main");
+    } catch (error: any) {
+      // Electron 환경이면 native dialog 사용, 아니면 기존 alert 호출
+      const electronAPI = (window as any).electronAPI;
+      if (electronAPI && electronAPI.showAlert) {
+        electronAPI.showAlert(error.message);
+      } else {
+        alert(error.message);
+      }
+    } finally {
+      setIsLoading(false);
     }
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   /**
    * 소셜 로그인 버튼 클릭 시, 백엔드의 OAuth2 엔드포인트로 브라우저를 이동합니다.
+   * 단, 네이버 로그인은 현재 미지원되어 alert를 출력합니다.
    */
   const handleSocialLogin = (provider: "google" | "naver") => {
-    const url = provider === "google" ? "/oauth2/authorization/google" : "/oauth2/authorization/naver";
+    if (provider === "naver") {
+      alert("추후 서비스 예정입니다.");
+      return;
+    }
+    const url =
+      provider === "google"
+        ? "/oauth2/authorization/google"
+        : "/oauth2/authorization/naver";
     window.location.href = url;
   };
 
