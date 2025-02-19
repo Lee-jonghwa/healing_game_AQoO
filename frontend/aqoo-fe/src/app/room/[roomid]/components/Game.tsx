@@ -79,6 +79,20 @@ export default function Game({
   const [winner, setWinner] = useState<string | null>(null);
   const [finishOrder, setFinishOrder] = useState<string[]>([]);
 
+  // <-- finishOrder snapshot 추가 (요구사항 수정)
+  // finishOrder 스냅샷 시 userName이 아닌 매칭되는 nickname을 저장합니다.
+  const [finishOrderSnapshot, setFinishOrderSnapshot] = useState<string[]>([]);
+  useEffect(() => {
+    if (gameEnded && finishOrder.length > 0 && finishOrderSnapshot.length === 0) {
+      const snapshot = finishOrder.map((user) => {
+        const player = players.find((p) => p.userName === user);
+        return player ? player.nickname : user;
+      });
+      setFinishOrderSnapshot(snapshot);
+    }
+  }, [gameEnded, finishOrder, finishOrderSnapshot, players]);
+  // ------------------------------
+
   const [isTapping, setIsTapping] = useState(false);
   const [windEffects, setWindEffects] = useState<Record<string, boolean>>({});
 
@@ -326,31 +340,24 @@ export default function Game({
               {winner || 'No Winner'}
             </span>
           </p>
-          {finishOrder.length > 0 && (
+          {finishOrderSnapshot.length > 0 && (
             <div className='mb-8'>
               <h2 className='text-3xl font-bold text-gray-800 mb-4'>
                 전체 순위
               </h2>
               <div className='bg-gray-100 rounded-lg shadow-md p-4'>
                 <ol className='divide-y divide-gray-300'>
-                  {finishOrder.map((name, index) => {
-                    const matchingPlayer = players.find(
-                      (p) => p.userName === name
-                    );
-                    return (
-                      <li
-                        key={name}
-                        className='py-2 flex justify-between items-center'
-                      >
-                        <span className='font-semibold text-gray-700'>
-                          {index + 1}.
-                        </span>
-                        <span className='text-gray-900'>
-                          {matchingPlayer ? matchingPlayer.nickname : name}
-                        </span>
-                      </li>
-                    );
-                  })}
+                  {finishOrderSnapshot.map((nickname, index) => (
+                    <li
+                      key={nickname}
+                      className='py-2 flex justify-between items-center'
+                    >
+                      <span className='font-semibold text-gray-700'>
+                        {index + 1}.
+                      </span>
+                      <span className='text-gray-900'>{nickname}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
             </div>
