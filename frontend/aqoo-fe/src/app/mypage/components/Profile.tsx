@@ -155,7 +155,7 @@ function ProfileContent({ userData, fishTotal }: { userData: UserData; fishTotal
           </p>
           <p
             className="
-              px-2 flex items-center
+              px-2 sm:px-4 flex items-center
               sm:min-w-[300px] md:min-w-[280px] lg:min-w-[330px]
               h-7 md:h-9 lg:h-11
               flex-shrink-0 mb-1 sm:mt-2 sm:mb-2

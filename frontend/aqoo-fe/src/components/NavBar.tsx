@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useRecoilState } from "recoil";
 import { getStompClient } from "@/lib/stompclient";
+import HowToPlayModal from "./HowToPlay";
 import { useAuth } from '@/hooks/useAuth';
 import { bgMusicVolumeState, sfxVolumeState } from '@/store/soundAtom';
 import { Settings, X } from 'lucide-react';
@@ -20,7 +21,7 @@ export default function Navbar() {
   const [isBgOn, setIsBgOn] = useState(bgMusicVolume > 0);
   const [isSfxOn, setIsSfxOn] = useState(sfxVolume > 0);
 
-  // Electron 환경 여부 확인 (클라이언트 사이드에서만)
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isElectron, setIsElectron] = useState(false);
   useEffect(() => {
     if (
@@ -87,15 +88,26 @@ export default function Navbar() {
           </span>
         </button>
 
-        {/* ⚙️ 설정 버튼 */}
-        <button
-          className='pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50'
-          onClick={() => setIsSettingsOpen(true)}
-        >
-          <Settings className='w-6 h-6 text-fwhite' />
-        </button>
+        {/* 안내창 테스트 */}
+        <div className="flex gap-3">
+          <img
+            src={"/icon/howtoplayicon.png"}
+            width={45}
+            onClick={() => setIsHowToPlayOpen(true)}
+            className="pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50"
+          />
+
+          {/* ⚙️ 설정 버튼 */}
+          <button
+            className="pointer-events-auto p-2 bg-white/30 rounded-full hover:bg-white/50"
+            onClick={() => setIsSettingsOpen(true)}
+          >
+            <Settings className="w-6 h-6 text-fwhite" />
+          </button>
+        </div>
       </nav>
 
+      {isHowToPlayOpen && <HowToPlayModal isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)} />}
       {/* 🎛️ 설정 모달 */}
       {isSettingsOpen && (
         <div
