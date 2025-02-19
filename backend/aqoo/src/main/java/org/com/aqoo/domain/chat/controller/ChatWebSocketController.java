@@ -2,8 +2,11 @@ package org.com.aqoo.domain.chat.controller;
 
 import lombok.AllArgsConstructor;
 import org.com.aqoo.domain.chat.dto.ChatMessageDto;
+import org.com.aqoo.domain.chat.dto.DropdownStateUpdate;
+import org.com.aqoo.domain.chat.dto.DropdownUpdateMessage;
 import org.com.aqoo.domain.chat.service.ChatRoomService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
@@ -117,5 +120,19 @@ public class ChatWebSocketController {
         kickMessage.setSender("SYSTEM");
         kickMessage.setContent(targetUser + "님이 추방되셨습니다.");
         messagingTemplate.convertAndSend("/topic/" + chatMessage.getRoomId(), kickMessage);
+    }
+
+    @MessageMapping("/chat.dropdown")
+    public void updateDropdownState(@Payload DropdownUpdateMessage message) {
+        // 필요 시 message.sender가 방장인지 검증하는 로직 추가
+
+        // 드롭다운 업데이트 메시지 생성
+        DropdownStateUpdate update = new DropdownStateUpdate();
+        update.setMessage("GAME_DROPDOWN_UPDATED");
+        update.setGameType(message.getGameType());
+        update.setUpdatedBy(message.getSender());
+
+        // 해당 채팅방의 모든 클라이언트에게 브로드캐스트 (/topic/room/{roomId} 구독 중)
+        messagingTemplate.convertAndSend("/topic/room/" + message.getRoomId(), update);
     }
 }
