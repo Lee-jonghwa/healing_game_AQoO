@@ -1,14 +1,15 @@
-'use client';
+"use client";
 
-import { getStompClient } from '@/lib/stompclient';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
+
+import { getStompClient } from "@/lib/stompclient";
 
 interface ChatMessage {
   roomId: string;
   sender: string;
   nickname?: string;
   content: string;
-  type: 'CHAT' | 'JOIN' | 'LEAVE' | 'READY';
+  type: "CHAT" | "JOIN" | "LEAVE" | "READY";
 }
 
 interface ChatBoxProps {
@@ -19,51 +20,41 @@ interface ChatBoxProps {
   onNewMessage: (sender: string, message: string) => void;
 }
 
-export default function ChatBox({
-  roomId,
-  users,
-  currentUser,
-  onNewMessage,
-}: ChatBoxProps) {
+export default function ChatBox({ roomId, users, currentUser, onNewMessage }: ChatBoxProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // 메시지가 업데이트될 때마다 스크롤을 맨 아래로 이동
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   // WebSocket 구독: 채팅 메시지 수신
   useEffect(() => {
     const client = getStompClient();
     if (client) {
-      const subscription = client.subscribe(
-        `/topic/${roomId}`,
-        (messageFrame) => {
-          const incoming: ChatMessage = JSON.parse(messageFrame.body);
-          setMessages((prev) => [...prev, incoming]);
+      const subscription = client.subscribe(`/topic/${roomId}`, (messageFrame) => {
+        const incoming: ChatMessage = JSON.parse(messageFrame.body);
+        setMessages((prev) => [...prev, incoming]);
 
-          if (incoming.type === 'CHAT') {
-            // lookup: 현재 사용자인 경우 authAtom의 nickname 사용,
-            // 그 외에는 전달된 메시지의 nickname이 있으면 사용하고, 없으면 users 배열에서 찾아봅니다.
-            const displayNickname =
-              incoming.sender === currentUser.id
-                ? currentUser.nickname
-                : incoming.nickname ||
-                  users.find((u) => u.userName === incoming.sender)?.nickname ||
-                  incoming.sender;
-            onNewMessage(displayNickname, incoming.content);
-          }
+        if (incoming.type === "CHAT") {
+          // lookup: 현재 사용자인 경우 authAtom의 nickname 사용,
+          // 그 외에는 전달된 메시지의 nickname이 있으면 사용하고, 없으면 users 배열에서 찾아봅니다.
+          const displayNickname =
+            incoming.sender === currentUser.id
+              ? currentUser.nickname
+              : incoming.nickname || users.find((u) => u.userName === incoming.sender)?.nickname || incoming.sender;
+          onNewMessage(displayNickname, incoming.content);
         }
-      );
+      });
       return () => subscription.unsubscribe();
     }
   }, [roomId, onNewMessage, currentUser, users]);
 
   // 메시지 전송 함수: 메시지를 보낼 때 currentUser.nickname을 함께 전송
   const sendMessage = () => {
-    if (newMessage.trim() === '') return;
+    if (newMessage.trim() === "") return;
     const client = getStompClient();
     if (client && client.connected) {
       const chatMessage: ChatMessage = {
@@ -71,28 +62,25 @@ export default function ChatBox({
         sender: currentUser.id,
         nickname: currentUser.nickname,
         content: newMessage,
-        type: 'CHAT',
+        type: "CHAT",
       };
       client.publish({
-        destination: '/app/chat.sendMessage',
+        destination: "/app/chat.sendMessage",
         body: JSON.stringify(chatMessage),
       });
-      setNewMessage('');
+      setNewMessage("");
     } else {
       onNewMessage(currentUser.nickname, newMessage);
     }
   };
 
   return (
-    <div className='border rounded p-4 mt-6 bg-white w-full'>
-      <div className='h-64 overflow-y-auto custom-scrollbar mb-4'>
+    <div className="sm:border rounded sm:p-3 p-1 sm:bg-white flex flex-col w-full h-full ">
+      <div className="flex-grow overflow-y-auto min-h-0 sm:p-4 p-2 custom-scrollbar">
         {messages.map((msg, index) => {
-          if (msg.sender === 'SYSTEM') {
+          if (msg.sender === "SYSTEM") {
             return (
-              <div
-                key={index}
-                className='mb-2 text-center text-gray-500 italic'
-              >
+              <div key={index} className="mb-2 text-center text-gray-500 italic">
                 {msg.content}
               </div>
             );
@@ -100,42 +88,38 @@ export default function ChatBox({
           const displayNickname =
             msg.sender === currentUser.id
               ? currentUser.nickname
-              : msg.nickname ||
-                users.find((u) => u.userName === msg.sender)?.nickname ||
-                msg.sender;
+              : msg.nickname || users.find((u) => u.userName === msg.sender)?.nickname || msg.sender;
           return (
-            <div
-              key={index}
-              className={`mb-2 ${
-                msg.sender === currentUser.id ? 'text-right' : 'text-left'
-              }`}
-            >
-              <strong>{displayNickname}</strong>: {msg.content}
+            <div key={index} className={`mb-4 ${msg.sender === currentUser.id ? "text-right" : "text-left"}`}>
+              {msg.sender !== currentUser.id && (
+                <p className="sm:text-sm text-xs sm:text-gray-600 text-gray-100 mb-2"> {displayNickname} </p>
+              )}
+              <span className="sm:text-base text-sm bg-gray-100 p-2">{msg.content}</span>
             </div>
           );
         })}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className='flex items-center border rounded-lg scrollbar-hide'>
+      <div className="flex items-center  rounded-lg scrollbar-hide 0">
         <input
-          type='text'
+          type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === "Enter") {
               e.preventDefault();
               sendMessage();
             }
           }}
-          className='flex-grow p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
-          placeholder='Type your message...'
+          className="flex-grow p-3 focus:outline-none focus:shadow-sm bg-gray-50 sm:text-sm text-xs"
+          placeholder="채팅을 입력해 주세요"
         />
         <button
           onClick={sendMessage}
-          className='w-[25%] p-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors'
+          className="w-[25%] p-3 bg-blue-300  hover:bg-blue-400 transition-colors  sm:text-sm text-xs"
         >
-          Send
+          보내기
         </button>
       </div>
     </div>
