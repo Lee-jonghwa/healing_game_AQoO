@@ -75,8 +75,8 @@ export default function ChatBox({ roomId, users, currentUser, onNewMessage }: Ch
   };
 
   return (
-    <div className="border rounded p-4 bg-white w-full">
-      <div className="h-64 overflow-y-auto custom-scrollbar mb-4">
+    <div className="border rounded p-4 bg-white flex flex-col w-full h-full">
+      <div className="flex-grow overflow-y-auto min-h-0 p-4 custom-scrollbar">
         {messages.map((msg, index) => {
           if (msg.sender === "SYSTEM") {
             return (
@@ -90,15 +90,16 @@ export default function ChatBox({ roomId, users, currentUser, onNewMessage }: Ch
               ? currentUser.nickname
               : msg.nickname || users.find((u) => u.userName === msg.sender)?.nickname || msg.sender;
           return (
-            <div key={index} className={`mb-2 ${msg.sender === currentUser.id ? "text-right" : "text-left"}`}>
-              <strong>{displayNickname}</strong>: {msg.content}
+            <div key={index} className={`mb-4 ${msg.sender === currentUser.id ? "text-right" : "text-left"}`}>
+              {msg.sender !== currentUser.id && <p className="text-sm text-gray-600 mb-2"> {displayNickname} </p>}
+              <span className="bg-gray-100 p-2">{msg.content}</span>
             </div>
           );
         })}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex items-center border rounded-lg scrollbar-hide">
+      <div className="flex items-center  rounded-lg scrollbar-hide">
         <input
           type="text"
           value={newMessage}
@@ -109,14 +110,14 @@ export default function ChatBox({ roomId, users, currentUser, onNewMessage }: Ch
               sendMessage();
             }
           }}
-          className="flex-grow p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Type your message..."
+          className="flex-grow p-3 text-sm focus:outline-none focus:shadow-sm border-[1px] bg-gray-50  sm:text-sm text-xs"
+          placeholder="채팅을 입력해 주세요"
         />
         <button
           onClick={sendMessage}
-          className="w-[25%] p-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          className="w-[25%] p-3 bg-blue-300 border-[1px]  hover:bg-blue-400 transition-colors rounded sm:text-sm text-xs"
         >
-          Send
+          보내기
         </button>
       </div>
     </div>

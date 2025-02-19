@@ -349,19 +349,20 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                 <Fish key={fish.fishId} fish={fish} message={fishMessages[fish.fishName] || ""} />
               ))}
 
-              {/* 오른쪽 패널 */}
-              <div className="absolute top-24 right-16 flex flex-col space-y-4">
-                {/* 친구 목록 오버레이는 "친구 초대" 버튼의 왼쪽에 나타남 */}
-                <div className="flex flex-col space-y-4 w-[370px] items-center">
+              {/* 오른쪽 패널 전체 */}
+              <div className="absolute top-20 sm:right-16 flex flex-col space-y-4 w-[370px] h-[90vh]">
+                {/* 참가자 리스트 + 채팅창 + 버튼 묶은 div */}
+                <div className="flex flex-col justify-between h-full w-full">
+                  {/* 초대 및 나가기 버튼 div */}
                   <div className="flex space-x-2 w-full">
                     {/* 친구 초대 버튼을 감싸는 영역을 relative로 처리 */}
-                    <div className="relative w-1/2">
+                    <div className="relative w-1/2 space-x-2">
                       <button
                         onClick={() => {
                           playModal();
                           setShowFriendList((prev) => !prev);
                         }}
-                        className="w-full px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
+                        className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
                       >
                         친구 초대
                       </button>
@@ -414,14 +415,14 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                           router.replace("/main");
                         }
                       }}
-                      className="w-1/2 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center"
+                      className="w-1/2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center"
                     >
                       나가기
                     </button>
                   </div>
 
                   {/* 참가자 리스트 div */}
-                  <div>
+                  <div className="transition-all duration-300 my-2">
                     <ParticipantList
                       users={displayUsers}
                       currentUser={currentUser}
@@ -443,7 +444,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                   </div>
 
                   {/* 채팅창 div */}
-                  <div className="p-2 bg-white/70 rounded shadow-md w-full">
+                  <div className="flex-grow overflow-hidden min-h-0 flex flex-col bg-white/70 rounded shadow-md p-2">
                     <ChatBox
                       roomId={roomId}
                       users={displayUsers}
@@ -453,12 +454,12 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                   </div>
 
                   {/* 드롭다운과 게임 시작 버튼 영역 */}
-                  <div className="w-full flex flex-col items-center space-y-2">
+                  <div className="w-full flex flex-col items-center space-y-2 flex-shrink-0 mb-4">
                     <>
                       <select
                         value={selectedGame}
                         onChange={(e) => currentIsHost && setSelectedGame(e.target.value)}
-                        className="w-full px-4 py-2 border rounded"
+                        className="w-full px-4 py-2 border rounded mt-2"
                         disabled={!currentIsHost}
                       >
                         <option value="Game">Game</option>
@@ -497,9 +498,15 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                             }
                           }
                         }}
-                        className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
-                          currentIsHost && !allNonHostReady ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className={`w-full px-6 py-3 text-xl rounded transition-colors 
+                          ${
+                            currentIsHost
+                              ? "bg-yellow-300" // Start Game 버튼 (방장)
+                              : myReady
+                              ? "bg-green-600 hover:bg-green-700 text-white" // Unready 버튼 (진한 초록)
+                              : "bg-green-400 hover:bg-green-500" // Ready 버튼 (연한 초록)
+                          }
+                          ${currentIsHost && !allNonHostReady ? "opacity-50 cursor-not-allowed" : ""}`}
                         disabled={currentIsHost ? !allNonHostReady : false}
                       >
                         {currentIsHost ? "Start Game(F5)" : myReady ? "Unready(F5)" : "Ready(F5)"}
