@@ -37,6 +37,9 @@ interface RoomUpdate {
   }[];
   players?: Player[];
   targetUser?: string;
+  // 드롭다운 동기화용 추가 필드 (서버에서 보내는 DropdownStateUpdate)
+  gameType?: string;
+  updatedBy?: string;
 }
 
 interface IntegratedRoomProps {
@@ -70,15 +73,15 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [fishes, setFishes] = useState<FishData[]>([]);
+
+  const { play: playHostSound } = useSFX("/sounds/카운트다운-02.mp3");
+  const { play: playUserSound } = useSFX("/sounds/clickeffect-02.mp3");
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
   const [selectedGame, setSelectedGame] = useState<string>("Game");
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
-  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때때
-  const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방입장
-
-  const { play: playHostSound } = useSFX("/sounds/카운트다운-02.mp3");
-  const { play: playUserSound } = useSFX("/sounds/clickeffect-02.mp3");
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
+  const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방 입장 사운드
 
   // 현재 참가자 수
   const router = useRouter();
@@ -91,8 +94,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     axiosInstance
       .get(`/chatrooms/${roomId}`)
       .then((response) => {
-        // 응답이 배열 형태로 전달됨:
-        // [ { "userId": "user1", "nickname": "Alice", "mainFishImage": "이미지경로", "isHost": true, "level": 5 }, ... ]
+        // 응답이 배열 형태로 전달됨
         const updatedUsers = response.data.map((member: any) => ({
           userName: member.userId,
           nickname: member.nickname,
@@ -103,6 +105,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
         }));
         setUsers(updatedUsers);
       })
+
       .catch((error) => console.error("❌ 채팅방 멤버 정보 불러오기 실패:", error));
   }, [roomId]);
 
@@ -125,6 +128,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
           });
           hasSentJoinRef.current = true;
         }
+
         const subscription = client.subscribe(`/topic/room/${roomId}`, (messageFrame) => {
           const data: RoomUpdate = JSON.parse(messageFrame.body);
           if (data.message === "GAME_STARTED") {
@@ -137,6 +141,11 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
               router.replace("/main?status=kicked");
             } else {
               setUsers((prev) => prev.filter((u) => u.userName !== data.targetUser));
+            }
+          } else if (data.message === "GAME_DROPDOWN_UPDATED") {
+            // 드롭다운 동기화 메시지 수신 시 상태 업데이트
+            if (data.gameType) {
+              setSelectedGame(data.gameType);
             }
           }
         });
@@ -219,13 +228,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   // [8] 게임 종료 후 대기 화면 복귀 콜백
   const handleResultConfirmed = async () => {
     setScreen("chat");
-    const client = getStompClient();
-    if (client && client.connected) {
-      client.publish({
-        destination: "/app/chat.clearReady",
-        body: JSON.stringify({ roomId, sender: userName }),
-      });
-    }
+
     const response = await axiosInstance.get(`/users/${userName}`);
     if (response.status >= 200 && response.status < 300) {
       const updatedUser: User = response.data;
@@ -396,7 +399,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                                 inviteFriend(memberId);
                               }}
                             />
-                            {/* 닫기 버튼이 FriendList 내부 우측 상단에 위치 */}
+                            {/* 닫기 버튼 */}
                             <button
                               onClick={() => {
                                 playModal();
@@ -465,8 +468,24 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                     <>
                       <select
                         value={selectedGame}
-                        onChange={(e) => currentIsHost && setSelectedGame(e.target.value)}
-                        className="w-full px-4 py-2 border rounded sm:mt-2 mt-1"
+                        onChange={(e) => {
+                          if (currentIsHost) {
+                            const newGame = e.target.value;
+                            setSelectedGame(newGame);
+                            const client = getStompClient();
+                            if (client && client.connected) {
+                              client.publish({
+                                destination: "/app/chat.dropdown",
+                                body: JSON.stringify({
+                                  roomId,
+                                  sender: userName,
+                                  gameType: newGame,
+                                }),
+                              });
+                            }
+                          }
+                        }}
+                        className="w-full px-4 py-2 border rounded"
                         disabled={!currentIsHost}
                       >
                         <option value="Game">Game</option>
@@ -475,11 +494,11 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                       </select>
                       <button
                         onClick={() => {
-                          // 조건에 따라 다른 사운드를 재생합니다.
+                          // 조건에 따라 다른 사운드 재생
                           if (currentIsHost) {
-                            playHostSound(); // "Start Game(F5)" 사운드
+                            playHostSound();
                           } else {
-                            playUserSound(); // "Ready(F5)" 또는 "Unready(F5)" 사운드
+                            playUserSound();
                           }
 
                           // 기존 로직 실행

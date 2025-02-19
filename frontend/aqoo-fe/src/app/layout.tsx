@@ -1,7 +1,8 @@
 // app/layout.tsx
-"use client"; // 클라이언트 컴포넌트 설정
+"use client";
 
-import "@/styles/globals.css"; // Tailwind 등 글로벌 스타일 적용
+import Script from "next/script";
+import "@/styles/globals.css";
 import BackgroundMusic from "@/components/BackgroundMusic";
 import Navbar from "@/components/NavBar";
 import RecoilProvider from "@/providers/RecoilProvider";
@@ -11,13 +12,11 @@ import React from "react";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // ✅ 네비게이션을 숨기고 싶은 페이지 리스트
   const hiddenNavPaths: string[] = [
     "/",
     "/user/login",
     "/register",
     "/some-other-page",
-    // 추가로 네비게이션을 숨길 경로가 있다면 여기에 추가하세요.
   ];
 
   return (
@@ -26,14 +25,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* PWA 관련 태그 */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
-        {/* iOS 홈 화면 아이콘 */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icon/icon-180.png" />
+
+        {/* GA4 gtag.js 스크립트 */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-WN3Z4434D2"
+          strategy="afterInteractive"
+        />
+        <Script id="ga-setup" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-WN3Z4434D2');
+          `}
+        </Script>
       </head>
       <body className="w-full min-h-screen sm:overflow-auto">
         <div className="relative w-full min-h-screen overflow-x-hidden">
           <RecoilProvider>
-            <BackgroundMusic /> {/* 배경 음악 실행 */}
-            {/* 특정 페이지에서만 네비게이션 렌더링 */}
+            <BackgroundMusic />
             {!hiddenNavPaths.includes(pathname) && <Navbar />}
             <div className="w-full min-h-screen">{children}</div>
           </RecoilProvider>
