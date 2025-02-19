@@ -248,13 +248,6 @@ export default function IntegratedRoom({
   // [8] 게임 종료 후 대기 화면 복귀 콜백
   const handleResultConfirmed = async () => {
     setScreen("chat");
-    const client = getStompClient();
-    if (client && client.connected) {
-      client.publish({
-        destination: "/app/chat.clearReady",
-        body: JSON.stringify({ roomId, sender: userName }),
-      });
-    }
     const response = await axiosInstance.get(`/users/${userName}`);
     if (response.status >= 200 && response.status < 300) {
       const updatedUser: User = response.data;
@@ -410,7 +403,8 @@ export default function IntegratedRoom({
                               users={displayUsers}
                               onInvite={(memberId) => {
                                 if (users.length >= 6) {
-                                  const electronAPI = (window as any).electronAPI;
+                                  const electronAPI = (window as any)
+                                    .electronAPI;
                                   if (electronAPI && electronAPI.showAlert) {
                                     electronAPI.showAlert(
                                       "참가자가 최대 인원(6명)을 초과할 수 없습니다."
@@ -529,7 +523,8 @@ export default function IntegratedRoom({
                           const client = getStompClient();
                           if (client && client.connected) {
                             if (currentIsHost) {
-                              const destination = getGameDestination(selectedGame);
+                              const destination =
+                                getGameDestination(selectedGame);
                               client.publish({
                                 destination,
                                 body: JSON.stringify({
