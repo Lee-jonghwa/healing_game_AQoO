@@ -1,29 +1,25 @@
 'use client';
 
 import { connectStompClient, getStompClient } from '@/lib/stompclient';
-import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import ChatBox from './ChatBox';
-import Game from './Game';
-import ParticipantList from './ParticipantList';
-import FriendList from './FriendList';
-import Fish from "./Fish";
+import axiosInstance from '@/services/axiosInstance';
 import { User } from '@/store/authAtom';
-import { useRecoilValue } from "recoil";
-import { authAtom } from "@/store/authAtom";
-
-import { useMemo } from 'react';
-
-import axiosInstance from "@/services/axiosInstance";
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import ChatBox from './ChatBox';
+import Fish from './Fish';
+import FriendList from './FriendList';
+import Game from './Game';
+import GameA from './GameA';
+import GameB from './GameB';
+import ParticipantList from './ParticipantList';
 
 import { useSFX } from "@/hooks/useSFX";
-import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 
-// 플레이어 타입 정의
 interface Player {
   userName: string;
   mainFishImage: string;
   totalPressCount: number;
+  nickname: string;
 }
 
 type ScreenState = 'chat' | 'game';
@@ -31,7 +27,14 @@ type ScreenState = 'chat' | 'game';
 interface RoomUpdate {
   roomId: string;
   message: string;
-  users?: { userName: string; ready: boolean; isHost: boolean; mainFishImage: string, nickname: string; }[];
+  users?: {
+    userName: string;
+    ready: boolean;
+    isHost: boolean;
+    mainFishImage: string;
+    nickname: string;
+    level: number;
+  }[];
   players?: Player[];
   targetUser?: string;
 }
@@ -48,125 +51,78 @@ interface FishData {
   fishTypeId: number;
   fishName: string;
   fishImage: string;
+  userName: string; // 원래 userId (여기서는 userName로 사용)
 }
 
-interface Friend {
-  id: number;
-  friendId: string;
+export interface Member {
+  userName: string;
   nickname: string;
+  mainFishImage: string;
+  isHost: boolean;
+  ready: boolean;
   level: number;
-  mainFishImage: string | null;
 }
 
-export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
+export default function IntegratedRoom({
+  roomId,
+  userName,
+  user,
+}: IntegratedRoomProps) {
   const [screen, setScreen] = useState<ScreenState>('chat');
-  const [users, setUsers] = useState<{ userName: string; ready: boolean; isHost: boolean; mainFishImage: string, nickname: string; }[]>([]);
+  const [users, setUsers] = useState<Member[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [showFriendList, setShowFriendList] = useState(false);
-  const hasSentJoinRef = useRef(false);
-  const router = useRouter();
   const [fishes, setFishes] = useState<FishData[]>([]);
-  const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
-  const authState = useRecoilValue(authAtom);
+  const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>(
+    {}
+  );
+  const [selectedGame, setSelectedGame] = useState<string>('Game');
+  const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");  // 클릭효과음(레디버튼)
   const { play: playGame } = useSFX("/sounds/카운트다운-02.mp3"); // 게임시작 카운트다운
   const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방입장
 
 
-  // 물고기 밑에 닉네임 띄우기 위해 친구리스트 받아오기
-  const [friendList, setFriendList] = useState<Friend[]>([]);
-
-  // 기존 props의 user 대신 내부 상태로 관리하여 업데이트할 수 있도록 함
-  const [currentUser, setCurrentUser] = useState<User>(user);
-
-  console.log("IntegratedRoom currentUser:", currentUser);
-  console.log("usernickname:", user.nickname);
-
   // 현재 참가자 수
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<User>(user);
   const participantCount = users.length;
+  const hasSentJoinRef = useRef<boolean>(false);
 
-  // 이전 참가자 수를 추적하는 ref
-  const prevUsersCountRef = useRef<number>(users.length);
-
-  // 참가자 수(users.length)가 변경될 때마다 효과음 재생
+  // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
   useEffect(() => {
-    if (users.length > prevUsersCountRef.current) {
-      // 참가자가 새로 추가된 경우
-      entranceRoom();
-    }
-    // 현재 참가자 수를 업데이트
-    prevUsersCountRef.current = users.length;
-  }, [users.length, entranceRoom]);
-
-  // 사용자 목록 상태 및 displayUsers 선언
-  const displayUsers = useMemo(() => {
-    return currentIsHost && !users.some((u) => u.userName === userName)
-      ? [
-          ...users.map((user) => ({
-            ...user,
-            nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.userName, // ✅ 닉네임 보장
-          })),
-          { 
-            userName, 
-            nickname: currentUser?.nickname ?? userName, // ✅ 방장 닉네임 추가
-            ready: false, 
-            isHost: true, 
-            mainFishImage: '' 
-          }
-        ]
-      : users.map((user) => ({
-          ...user,
-          nickname: user.nickname ?? friendList.find(f => f.friendId === user.userName)?.nickname ?? user.userName, // ✅ 기존 참가자들도 닉네임 추가
-        }));
-  }, [users, friendList, currentIsHost, userName, currentUser?.nickname]);
-
-
-
-  // 친구 목록 조회 (axiosInstance 사용)
-  useEffect(() => {
-    axiosInstance.get(`/friends/${encodeURIComponent(userName)}`)
+    axiosInstance
+      .get(`/chatrooms/${roomId}`)
       .then((response) => {
-        setFriendList(response.data.friends);
+        console.log('API 호출 완료: ', response);
+        // 응답이 배열 형태로 전달됨:
+        // [ { "userId": "user1", "nickname": "Alice", "mainFishImage": "이미지경로", "isHost": true, "level": 5 }, ... ]
+        const updatedUsers = response.data.map((member: any) => ({
+          userName: member.userId,
+          nickname: member.nickname,
+          mainFishImage: member.mainFishImage || '',
+          isHost: member.isHost,
+          ready: false,
+          level: member.level,
+        }));
+        console.log('updatedUsers:', updatedUsers);
+        setUsers(updatedUsers);
       })
-      .catch((error) => console.error("❌ 친구 목록 불러오기 실패:", error));
-  }, [userName]);
+      .catch((error) =>
+        console.error('❌ 채팅방 멤버 정보 불러오기 실패:', error)
+      );
+  }, [roomId]);
 
-  // STOMP 연결 활성화
+  // [2] STOMP 연결 활성화 및 메시지 구독
   useEffect(() => {
-    connectStompClient(() => {
-      console.log('STOMP client activated from IntegratedRoom.');
-    });
+    connectStompClient(() => {});
   }, []);
 
- // Fish 
-
- useEffect(() => {
-  const fishList: FishData[] = displayUsers
-    .filter((user) => user.mainFishImage) // ✅ mainFishImage가 있는 유저만 필터링
-    .map((user, index) => {
-      console.log(`🐟 [DEBUG] User: ${user.userName}, Nickname: ${user.nickname}, FishImage: ${user.mainFishImage}`);
-      return {
-        aquariumId: 0,
-        fishId: index,
-        fishTypeId: 0,
-        fishName: user.nickname, // 닉네임이 있으면 사용, 없으면 userName 사용
-        fishImage: user.mainFishImage,
-      };
-    });
-
-  console.log("🐠 Final Fish List:", fishList);
-  setFishes(fishList);
-}, [displayUsers]);
-
-  
-  // join 메시지 전송 및 구독 설정
   useEffect(() => {
     const client = getStompClient();
     if (!client) return;
-
     const intervalId = setInterval(() => {
       if (client.connected) {
         setIsConnected(true);
@@ -176,83 +132,109 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
             destination: '/app/chat.joinRoom',
             body: JSON.stringify(joinMessage),
           });
-          console.log('Join room message sent:', joinMessage);
           hasSentJoinRef.current = true;
         }
-        
-        const subscription = client.subscribe(`/topic/room/${roomId}`, (message) => {
-          const data: RoomUpdate = JSON.parse(message.body);
-          console.log('Room update received:', data);
-          if (data.message === 'GAME_STARTED') {
-            setGamePlayers(data.players ?? []);
-            setScreen('game');
-          } else if (data.message === 'USER_LIST') {
-            console.log("data.users:", data.users);
-            setUsers(data.users ?? []);
-          } else if (data.message === 'USER_KICKED') {
-            if (data.targetUser === userName) {
-              router.replace('/main?status=kicked');
-            } else {
-              setUsers((prevUsers) => prevUsers.filter((u) => u.userName !== data.targetUser));
+        const subscription = client.subscribe(
+          `/topic/room/${roomId}`,
+          (messageFrame) => {
+            const data: RoomUpdate = JSON.parse(messageFrame.body);
+            if (data.message === 'GAME_STARTED') {
+              setGamePlayers(data.players ?? []);
+              setScreen('game');
+            } else if (data.message === 'USER_LIST') {
+              setUsers(data.users ?? []);
+            } else if (data.message === 'USER_KICKED') {
+              if (data.targetUser === userName) {
+                router.replace('/main?status=kicked');
+              } else {
+                setUsers((prev) =>
+                  prev.filter((u) => u.userName !== data.targetUser)
+                );
+              }
             }
           }
-        });
+        );
         clearInterval(intervalId);
         return () => subscription.unsubscribe();
       }
     }, 500);
-
     return () => clearInterval(intervalId);
   }, [roomId, userName, router]);
 
-  // 친구 초대 함수 (참가자가 6명 이상이면 초대 불가)
-  const inviteFriend = async (friendUserId: string) => {
+  // [3] displayUsers: API에서 받아온 사용자 정보를 그대로 사용.
+  const displayUsers = useMemo(() => users, [users]);
+  console.log('채팅방의 displayUsers:', displayUsers);
+
+  // [4] Fish 리스트 생성: displayUsers 기반
+  useEffect(() => {
+    const fishList: FishData[] = displayUsers.map((member, index) => ({
+      aquariumId: 0,
+      fishId: index,
+      fishTypeId: 0,
+      fishName: member.nickname,
+      fishImage: member.mainFishImage,
+      userName: member.userName,
+    }));
+    setFishes(fishList);
+  }, [displayUsers]);
+
+  // [5] 친구 초대 함수
+  const inviteFriend = async (memberId: string) => {
     if (participantCount >= 6) {
-      alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+      const electronAPI = (window as any).electronAPI;
+      if (electronAPI && electronAPI.showAlert) {
+        electronAPI.showAlert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+      } else {
+        alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+      }
       return;
     }
-    
     try {
-      const response = await axiosInstance.post("/chatrooms/invite", {
+      const response = await axiosInstance.post('/chatrooms/invite', {
         hostId: userName,
-        guestId: friendUserId,
-        roomId: roomId,
+        guestId: memberId,
+        roomId,
       });
       if (response.status >= 200 && response.status < 300) {
-        console.log(`Invitation succeeded for ${friendUserId}`);
-        alert(`${friendUserId}님을 초대했습니다.`);
+        const electronAPI = (window as any).electronAPI;
+        if (electronAPI && electronAPI.showAlert) {
+          electronAPI.showAlert(`${memberId}님을 초대했습니다.`);
+        } else {
+          alert(`${memberId}님을 초대했습니다.`);
+        }
       } else {
-        console.error(`Invitation failed for ${friendUserId}`);
-        alert(`${friendUserId} 초대에 실패했습니다.`);
+        const electronAPI = (window as any).electronAPI;
+        if (electronAPI && electronAPI.showAlert) {
+          electronAPI.showAlert(`${memberId} 초대에 실패했습니다.`);
+        } else {
+          alert(`${memberId} 초대에 실패했습니다.`);
+        }
       }
     } catch (error) {
-      console.error("Error inviting friend", error);
-      alert("초대 도중 오류가 발생했습니다.");
+      const electronAPI = (window as any).electronAPI;
+      if (electronAPI && electronAPI.showAlert) {
+        electronAPI.showAlert('초대 도중 오류가 발생했습니다.');
+      } else {
+        alert('초대 도중 오류가 발생했습니다.');
+      }
     }
   };
 
-  // 현재 사용자의 방장 여부 갱신
+  // [6] 현재 사용자의 방장 여부 갱신
   useEffect(() => {
     const me = users.find((u) => u.userName === userName);
     setCurrentIsHost(me ? me.isHost : false);
   }, [users, userName]);
 
-  // 디버깅
-  useEffect(() => {
-    console.log('Updated users:', users);
-    users.forEach((user) =>
-      console.log(`User ${user.userName}: isHost = ${user.isHost}, ready = ${user.ready}`)
-    );
-  }, [users]);
-
-  // ready / start 관련 상태 계산
+  // [7] ready / start 관련 상태 계산
   const myReady = users.find((u) => u.userName === userName)?.ready;
   const nonHostUsers = currentIsHost
     ? users.filter((u) => u.userName !== userName)
     : users.filter((u) => !u.isHost);
-  const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
+  const allNonHostReady =
+    nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
 
-  // 게임 종료 후 대기 화면으로 복귀 시 호출될 콜백
+  // [8] 게임 종료 후 대기 화면 복귀 콜백
   const handleResultConfirmed = async () => {
     setScreen('chat');
     const client = getStompClient();
@@ -261,55 +243,77 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
         destination: '/app/chat.clearReady',
         body: JSON.stringify({ roomId, sender: userName }),
       });
-      console.log('Clear ready status message sent');
-    } else {
-      console.error('STOMP client is not connected yet.');
     }
-    
-    // 게임 종료 후 최신 유저 정보를 API를 통해 가져옴
-    try {
-      const response = await axiosInstance.get(`/users/${userName}`);
-      if (response.status >= 200 && response.status < 300) {
-        const updatedUser: User = response.data;
-        setCurrentUser(updatedUser);
-        console.log('User updated:', updatedUser);
-      } else {
-        console.error('Failed to fetch updated user info. Status:', response.status);
-      }
-    } catch (error) {
-      console.error('Error fetching updated user info:', error);
+    const response = await axiosInstance.get(`/users/${userName}`);
+    if (response.status >= 200 && response.status < 300) {
+      const updatedUser: User = response.data;
+      setCurrentUser(updatedUser);
     }
   };
 
-  // 물고기 말풍선 업데이트
+  // [9] 물고기 말풍선 업데이트
   const handleNewMessage = (sender: string, message: string) => {
-    console.log(`🐟 [DEBUG] New Message from "${sender}": "${message}"`);
-    
+    const fishItem = fishes.find((f) => f.userName === sender);
+    const key = fishItem ? fishItem.fishName : sender;
     setFishMessages((prev) => ({
       ...prev,
-      [sender]: message,
+      [key]: message,
     }));
-  
     setTimeout(() => {
-      console.log(`💨 [DEBUG] Message cleared for ${sender}`);
       setFishMessages((prev) => ({
         ...prev,
-        [sender]: "",
+        [key]: '',
       }));
-    }, 3000);
+    }, 2000);
   };
 
-  /*  
-    ===================================================
-    아래의 useEffect들은 브라우저를 닫거나 다른 페이지로 이동할 때,
-    chat.leaveRoom API를 호출하도록 합니다.
-    단, 키보드 새로고침(F5, Ctrl/Cmd+R)을 감지한 경우에는
-    새로고침으로 동작하도록 (즉, leave 메시지 전송을 생략) 합니다.
-    ===================================================
-  */
-  // 새로고침 키(F5, Ctrl/Cmd+R) 감지를 위한 ref
-  const isRefreshRef = useRef(false);
+  // Helper 함수: 게임에 따른 destination 반환
+  const getGameDestination = (game: string) => {
+    if (game === 'Game') return '/app/game.start';
+    if (game === 'gameA') return '/app/game.start';
+    if (game === 'gameB') return '/app/game.start';
+    return '/app/game.start';
+  };
 
+  // [F5 키 동작 수정: ready/unready 또는 게임 시작 동작, 드롭다운 포함]
+  const isRefreshRef = useRef(false);
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'F5') {
+        event.preventDefault();
+        const client = getStompClient();
+        if (!client || !client.connected) return;
+        if (currentIsHost) {
+          if (allNonHostReady) {
+            const destination = getGameDestination(selectedGame);
+            client.publish({
+              destination,
+              body: JSON.stringify({ roomId, gameType: selectedGame }),
+            });
+          } else {
+            alert('아직 준비되지 않은 물고기가 있습니다.');
+          }
+        } else {
+          if (myReady) {
+            client.publish({
+              destination: '/app/chat.unready',
+              body: JSON.stringify({ roomId, sender: userName }),
+            });
+          } else {
+            client.publish({
+              destination: '/app/chat.ready',
+              body: JSON.stringify({ roomId, sender: userName }),
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [roomId, userName, currentIsHost, myReady, allNonHostReady, selectedGame]);
+
+  // 새로고침 키 감지
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -320,14 +324,12 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
         isRefreshRef.current = true;
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      // 새로고침이 아니라면 leaveRoom API 실행
       if (!isRefreshRef.current) {
         const client = getStompClient();
         if (client && client.connected) {
@@ -335,11 +337,9 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
             destination: '/app/chat.leaveRoom',
             body: JSON.stringify({ roomId, sender: userName }),
           });
-          console.log('chat.leaveRoom 메시지가 beforeunload에서 전송되었습니다.');
         }
       }
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [roomId, userName]);
@@ -347,70 +347,87 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   return (
     <>
       {!isConnected ? (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10">
-          <p className="text-2xl font-bold text-gray-900">로딩중...</p>
+        <div className='min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10'>
+          <p className='text-2xl font-bold text-gray-900'>로딩중...</p>
         </div>
       ) : (
         <>
           {screen === 'chat' && (
-            <div 
-              className="relative w-full h-full min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden"
-              style={{ backgroundImage: "url('/chat_images/background.png')", backgroundSize: "cover", backgroundAttachment: "fixed", backgroundPosition: "center" }}
+            <div
+              className='relative w-full h-full min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden'
+              style={{
+                backgroundImage: "url('/chat_images/background.png')",
+                backgroundSize: 'cover',
+                backgroundAttachment: 'fixed',
+                backgroundPosition: 'center',
+              }}
             >
               {/* 물고기 렌더링, 말풍선 표시 */}
               {fishes.map((fish) => (
-                <Fish key={fish.fishId} fish={fish} message={fishMessages[fish.fishName] || ''}/>
+                <Fish
+                  key={fish.fishId}
+                  fish={fish}
+                  message={fishMessages[fish.fishName] || ''}
+                />
               ))}
-  
-              {/* 오른쪽 패널 (참가자 리스트, 친구 초대, 나가기 버튼, 채팅창, Ready/Start 버튼) */}
-              <div className="absolute top-24 right-16 flex space-x-4">
-  
-                {/* 친구 목록 리스트 (초대 버튼을 눌렀을 때만 보임) */}
-                {showFriendList && (
-                  <div className="w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg">
-                    <div className="flex justify-end mb-2">
-                      <button 
+
+              {/* 오른쪽 패널 */}
+              <div className='absolute top-24 right-16 flex flex-col space-y-4'>
+                {/* 친구 목록 오버레이는 "친구 초대" 버튼의 왼쪽에 나타남 */}
+                <div className='flex flex-col space-y-4 w-[370px] items-center'>
+                  <div className='flex space-x-2 w-full'>
+                    {/* 친구 초대 버튼을 감싸는 영역을 relative로 처리 */}
+                    <div className='relative w-1/2'>
+                      <button
                         onClick={() => {
                           playModal();
-                          setShowFriendList(false);
-                        }} 
-                        className="text-gray-500 hover:text-black"
+                          setShowFriendList((prev) => !prev)}}
+                        className='w-full px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center'
                       >
-                        ❌
+                        친구 초대
                       </button>
+                      {showFriendList && (
+                        <div className='absolute right-full top-0 mr-2 w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg'>
+                          <div className='relative h-full'>
+                            {/* FriendList 컴포넌트 */}
+                            <FriendList
+                              userName={userName}
+                              roomId={roomId}
+                              isHost={currentIsHost}
+                              participantCount={users.length}
+                              users={displayUsers}
+                              onInvite={(memberId) => {
+                                if (users.length >= 6) {
+                                  const electronAPI = (window as any)
+                                    .electronAPI;
+                                  if (electronAPI && electronAPI.showAlert) {
+                                    electronAPI.showAlert(
+                                      '참가자가 최대 인원(6명)을 초과할 수 없습니다.'
+                                    );
+                                  } else {
+                                    alert(
+                                      '참가자가 최대 인원(6명)을 초과할 수 없습니다.'
+                                    );
+                                  }
+                                  return;
+                                }
+                                inviteFriend(memberId);
+                              }}
+                            />
+                            {/* 닫기 버튼이 FriendList 내부 우측 상단에 위치 */}
+                            <button
+                              onClick={() => {
+                                playModal();
+                                setShowFriendList(false)}}
+                              className='absolute top-2 right-2 text-gray-500 hover:text-black'
+                            >
+                              ❌
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <FriendList 
-                      userName={userName} 
-                      friendList={friendList}
-                      roomId={roomId} 
-                      isHost={currentIsHost} 
-                      participantCount={users.length} 
-                      users={displayUsers}
-                      onInvite={(friendId) => {
-                        if (users.length >= 6) {
-                          alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
-                          return;
-                        }
-                        inviteFriend(friendId);
-                      }} 
-                    />
-                  </div>
-                )}
-  
-                {/* 오른쪽 기능 패널 (참가자 리스트 포함) */}
-                <div className="flex flex-col space-y-4 w-[370px] items-center">  
-  
-                  {/* 친구 초대 & 나가기 버튼 (상단 배치) */}
-                  <div className="flex space-x-2 w-full">
-                    <button 
-                      onClick={() => {
-                        playModal();
-                        setShowFriendList((prev) => !prev)}} 
-                      className="w-1/2 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
-                    >
-                      친구 초대
-                    </button>
-                    <button 
+                    <button
                       onClick={() => {
                         playModal();
                         const client = getStompClient();
@@ -421,97 +438,133 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                           });
                           router.replace('/main');
                         }
-                      }} 
-                      className="w-1/2 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center"
+                      }}
+                      className='w-1/2 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center'
                     >
                       나가기
                     </button>
                   </div>
-  
-                  {/* 참가자 리스트 */}
+
                   <div>
-                    <ParticipantList 
-                      users={displayUsers} 
-                      currentUser={currentUser} 
-                      currentIsHost={currentIsHost} 
-                      friendList={friendList}  // 친구 목록 전달
+                    <ParticipantList
+                      users={displayUsers}
+                      currentUser={currentUser}
+                      currentIsHost={currentIsHost}
                       onKickUser={(target) => {
                         const client = getStompClient();
                         if (client && client.connected) {
                           client.publish({
                             destination: '/app/chat.kickUser',
-                            body: JSON.stringify({ roomId, targetUser: target, sender: userName }),
+                            body: JSON.stringify({
+                              roomId,
+                              targetUser: target,
+                              sender: userName,
+                            }),
                           });
                         }
-                      }} 
+                      }}
                     />
                   </div>
-  
-                  {/* 채팅창 */}
-                  <div className="p-3 bg-white/70 rounded shadow-md w-full">
-                    <ChatBox roomId={roomId} userName={userName} onNewMessage={handleNewMessage} />
+
+                  <div className='p-3 bg-white/70 rounded shadow-md w-full'>
+                    <ChatBox
+                      roomId={roomId}
+                      users={displayUsers}
+                      currentUser={currentUser}
+                      onNewMessage={handleNewMessage}
+                    />
                   </div>
-  
-                  {/* Ready / Start 버튼 */}
-                  <div className="w-full">
-                    {currentIsHost ? (
-                      <button 
-                        onClick={() => {
-                          playGame();
-                          if (!allNonHostReady) return;
-                          const client = getStompClient();
-                          if (client && client.connected) {
-                            client.publish({
-                              destination: '/app/game.start',
-                              body: JSON.stringify({ roomId }),
-                            });
-                          }
-                        }} 
-                        className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${allNonHostReady ? '' : 'opacity-50 cursor-not-allowed'}`} 
-                        disabled={!allNonHostReady}
+
+                  {/* 드롭다운과 게임 시작 버튼 영역 */}
+                  <div className='w-full flex flex-col items-center space-y-2'>
+                    <>
+                      <select
+                        value={selectedGame}
+                        onChange={(e) =>
+                          currentIsHost && setSelectedGame(e.target.value)
+                        }
+                        className='w-full px-4 py-2 border rounded'
+                        disabled={!currentIsHost}
                       >
-                        Start Game
-                      </button>
-                    ) : (
-                      <button 
+                        <option value='Game'>Game</option>
+                        <option value='gameA'>Game A</option>
+                        <option value='gameB'>Game B</option>
+                      </select>
+                      <button
                         onClick={() => {
                           playModal();
                           const client = getStompClient();
                           if (client && client.connected) {
-                            if (myReady) {
+                            if (currentIsHost) {
+                              const destination =
+                                getGameDestination(selectedGame);
                               client.publish({
-                                destination: '/app/chat.unready',
-                                body: JSON.stringify({ roomId, sender: userName }),
+                                destination,
+                                body: JSON.stringify({
+                                  roomId,
+                                  gameType: selectedGame,
+                                }),
                               });
                             } else {
                               client.publish({
-                                destination: '/app/chat.ready',
-                                body: JSON.stringify({ roomId, sender: userName }),
+                                destination: myReady
+                                  ? '/app/chat.unready'
+                                  : '/app/chat.ready',
+                                body: JSON.stringify({
+                                  roomId,
+                                  sender: userName,
+                                }),
                               });
                             }
                           }
-                        }} 
-                        className="w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded"
+                        }}
+                        className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
+                          currentIsHost && !allNonHostReady
+                            ? 'opacity-50 cursor-not-allowed'
+                            : ''
+                        }`}
+                        disabled={currentIsHost ? !allNonHostReady : false}
                       >
-                        {myReady ? 'Unready' : 'Ready'}
+                        {currentIsHost
+                          ? 'Start Game(F5)'
+                          : myReady
+                          ? 'Unready(F5)'
+                          : 'Ready(F5)'}
                       </button>
-                    )}
+                    </>
                   </div>
                 </div>
               </div>
             </div>
           )}
-  
-          {/* 게임 화면 */}
+
           {screen === 'game' && (
-            <div className="w-full h-screen bg-cover bg-center">
-              <Game 
-                roomId={roomId} 
-                userName={userName} 
-                initialPlayers={gamePlayers} 
-                onResultConfirmed={handleResultConfirmed} 
-                user={currentUser} 
-              />
+            <div className='w-full h-screen bg-cover bg-center'>
+              {selectedGame === 'Game' ? (
+                <Game
+                  roomId={roomId}
+                  userName={userName}
+                  initialPlayers={gamePlayers}
+                  onResultConfirmed={handleResultConfirmed}
+                  user={currentUser}
+                />
+              ) : selectedGame === 'gameA' ? (
+                <GameA
+                  roomId={roomId}
+                  userName={userName}
+                  initialPlayers={gamePlayers}
+                  onResultConfirmed={handleResultConfirmed}
+                  user={currentUser}
+                />
+              ) : selectedGame === 'gameB' ? (
+                <GameB
+                  roomId={roomId}
+                  userName={userName}
+                  initialPlayers={gamePlayers}
+                  onResultConfirmed={handleResultConfirmed}
+                  user={currentUser}
+                />
+              ) : null}
             </div>
           )}
         </>

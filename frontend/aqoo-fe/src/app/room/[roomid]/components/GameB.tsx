@@ -5,12 +5,8 @@ import axiosInstance from '@/services/axiosInstance';
 import { User } from '@/store/authAtom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useSFX } from "@/hooks/useSFX";
-import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
-
 interface GameProps {
   roomId: string;
-  // 이제 userName은 실제로 사용자의 nickname을 의미합니다.
   userName: string;
   initialPlayers: Player[];
   onResultConfirmed: () => void;
@@ -19,9 +15,8 @@ interface GameProps {
 
 interface Player {
   userName: string;
-  mainFishImage: string;
   totalPressCount: number;
-  nickname: string;
+  mainFishImage: string;
 }
 
 interface RoomResponse {
@@ -42,17 +37,18 @@ interface ExpResponse {
 
 interface TicketResponse {
   userId: string;
-  fishTicket: number;
+  fishTicket: number; // 증가 후 현재 티켓 수
 }
 
+// 등수별 경험치 계산 함수
 function getExpByRank(rank: number): number {
   if (rank === 1) return 20;
   if (rank === 2) return 10;
   if (rank === 3) return 5;
-  return 3;
+  return 3; // 4등~6등은 3
 }
 
-export default function Game({
+export default function GameB({
   roomId,
   userName,
   initialPlayers,
@@ -69,11 +65,14 @@ export default function Game({
   // 3) 티켓, 경험치 정보
   const [myTicket, setMyTicket] = useState<number | null>(null);
   const [myExpInfo, setMyExpInfo] = useState<ExpResponse | null>(null);
+
+  // **추가**: “획득 경험치(earnedExp)”를 저장할 상태
   const [myEarnedExp, setMyEarnedExp] = useState<number>(0);
 
   // 4) 게임 진행 상태
   const [countdown, setCountdown] = useState(3);
   const [hasCountdownFinished, setHasCountdownFinished] = useState(false);
+
   const [players, setPlayers] = useState<Player[]>(initialPlayers);
   const [gameEnded, setGameEnded] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
@@ -84,6 +83,7 @@ export default function Game({
 
   const [hasStarted, setHasStarted] = useState(false);
   const [gameTime, setGameTime] = useState(30);
+
   const [modalDismissed, setModalDismissed] = useState(false);
 
   // 5) 이전 players
@@ -92,16 +92,12 @@ export default function Game({
   // 6) 트랙 크기 측정
   const trackRef = useRef<HTMLDivElement>(null);
   const [trackDims, setTrackDims] = useState({ width: 0, height: 0 });
+
   const totalLanes = 6;
   const laneAreaFactor = 0.7;
   const laneAreaHeight = trackDims.height * laneAreaFactor;
   const laneAreaTopOffset = (trackDims.height - laneAreaHeight) / 2;
   const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
-
-  // 7)  효과음
-  const { play: pushSpacebar } = useSFX("/sounds/clickeffect-03.mp3"); // 스페이스바누를때
-  const { play: earnedExp} = useSFX("/sounds/짜잔.mp3"); // 게임끝나고 경험치 얻을 때
-  const { play: levelUp} = useSFX("/sounds/levelupRank.mp3"); // 레벨업할때
 
   // -----------------------------
   // (A) 트랙 사이즈 측정
@@ -118,7 +114,7 @@ export default function Game({
     return () => window.removeEventListener('resize', updateDims);
   }, []);
 
-  // STOMP 전송 함수
+  // (B) STOMP 전송 함수
   const publishMessage = (destination: string, message: object) => {
     const client = getStompClient();
     if (client && client.connected) {
@@ -131,7 +127,7 @@ export default function Game({
     }
   };
 
-  // 카운트다운
+  // (C) 카운트다운
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
@@ -140,26 +136,23 @@ export default function Game({
     setHasCountdownFinished(true);
   }, [countdown]);
 
-  // 탭 이벤트 처리 (스페이스바 또는 클릭)
+  // (D) 탭(스페이스바 또는 마우스 클릭) 시 호출되는 함수
   const handleTap = useCallback(() => {
-    pushSpacebar();
     if (!hasCountdownFinished || gameEnded) return;
     const me = players.find((p) => p.userName === userName);
-    if (me && me.totalPressCount >= 100) return;
+    if (me && me.totalPressCount >= 100) {
+      return;
+    }
     if (!hasStarted) {
       setHasStarted(true);
     }
     setIsTapping(true);
     setTimeout(() => setIsTapping(false), 300);
 
-    // nickname 필드로 전송 (fallback 로직 제거)
-    publishMessage('/app/game.press', {
-      roomId,
-      userName,
-      pressCount: 1,
-    });
+    publishMessage('/app/game.press', { roomId, userName, pressCount: 1 });
   }, [hasCountdownFinished, gameEnded, players, userName, hasStarted, roomId]);
 
+  // (E) 스페이스바 keyup 이벤트 핸들러
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
       if (e.code !== 'Space') return;
@@ -169,6 +162,7 @@ export default function Game({
     [handleTap]
   );
 
+  // (F) countdown 끝 → keyup, click 이벤트 등록
   useEffect(() => {
     if (hasCountdownFinished) {
       window.addEventListener('keyup', handleKeyPress);
@@ -180,7 +174,7 @@ export default function Game({
     }
   }, [hasCountdownFinished, handleKeyPress, handleTap]);
 
-  // STOMP 구독
+  // (G) STOMP 구독
   useEffect(() => {
     const client = getStompClient();
     if (client) {
@@ -189,7 +183,7 @@ export default function Game({
         setPlayers(data.players ?? []);
         if (data.message === 'GAME_ENDED') {
           setGameEnded(true);
-          setWinner(data.winner || null);
+          setWinner(data.winner || null); // 서버 우승자
           if (data.finishOrder) {
             setFinishOrder(data.finishOrder);
           }
@@ -199,20 +193,20 @@ export default function Game({
     }
   }, [roomId]);
 
-  // wind effect 처리
+  // (H) wind effect
   useEffect(() => {
     players.forEach((player) => {
-      if (player.nickname !== userName) {
+      if (player.userName !== userName) {
         const prevPlayer = previousPlayersRef.current.find(
-          (p) => p.nickname === player.nickname
+          (p) => p.userName === player.userName
         );
         if (
           !prevPlayer ||
           player.totalPressCount > prevPlayer.totalPressCount
         ) {
-          setWindEffects((prev) => ({ ...prev, [player.nickname]: true }));
+          setWindEffects((prev) => ({ ...prev, [player.userName]: true }));
           setTimeout(() => {
-            setWindEffects((prev) => ({ ...prev, [player.nickname]: false }));
+            setWindEffects((prev) => ({ ...prev, [player.userName]: false }));
           }, 300);
         }
       }
@@ -220,7 +214,7 @@ export default function Game({
     previousPlayersRef.current = players;
   }, [players, userName]);
 
-  // 게임 타이머
+  // (I) 1초마다 gameTime--
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     const timer = setInterval(() => {
@@ -229,7 +223,7 @@ export default function Game({
     return () => clearInterval(timer);
   }, [hasStarted, gameEnded]);
 
-  // 게임 종료 조건 체크
+  // (J) gameTime=0 or 모두 100탭 → 종료
   useEffect(() => {
     if (!hasStarted || gameEnded) return;
     if (
@@ -237,17 +231,19 @@ export default function Game({
       (players.length > 0 && players.every((p) => p.totalPressCount >= 100))
     ) {
       setGameEnded(true);
+
       const maxPlayer = players.reduce(
         (prev, cur) =>
           cur.totalPressCount > prev.totalPressCount ? cur : prev,
         players[0]
       );
-      setWinner(maxPlayer?.nickname || null);
+      setWinner(maxPlayer?.userName || null);
+
       publishMessage('/app/game.end', { roomId });
     }
   }, [gameTime, players, hasStarted, gameEnded]);
 
-  // countdown 끝났는데 아직 시작되지 않은 경우 강제 탭
+  // (K) countdown 끝났는데 안시작 → 강제 tap
   useEffect(() => {
     if (hasCountdownFinished && !hasStarted) {
       setTimeout(() => {
@@ -256,16 +252,21 @@ export default function Game({
     }
   }, [hasCountdownFinished, hasStarted]);
 
-  // 게임 종료 시 exp-up 처리
+  // (L) 게임 종료 & finishOrder가 있으면, 내 등수별로 exp-up
   useEffect(() => {
     if (!gameEnded || finishOrder.length === 0) return;
+
+    // 내 등수
     const rank = finishOrder.indexOf(userName) + 1;
     if (rank <= 0) {
       console.log('내 이름이 finishOrder에 없음 (관전자?)');
       return;
     }
+    // 등수별 경험치
     const earnedExp = getExpByRank(rank);
-    setMyEarnedExp(earnedExp);
+    setMyEarnedExp(earnedExp); // ★ 획득 경험치 저장
+
+    // exp-up API 호출 (axiosInstance 사용)
     (async () => {
       try {
         const response = await axiosInstance.post('/users/exp-up', {
@@ -273,38 +274,45 @@ export default function Game({
           earnedExp,
         });
         setMyExpInfo(response.data);
-        console.log('경험치 갱신 성공:', response.data);
+        console.log('내 경험치 갱신 성공:', response.data);
       } catch (err) {
         console.error('경험치 지급 에러:', err);
       }
     })();
   }, [gameEnded, finishOrder, userName]);
 
-  // 현재 유저 도착 체크
+  // (M) 현재 유저 도착 체크
   const me = players.find((p) => p.userName === userName);
   const hasArrived = me ? me.totalPressCount >= 100 : false;
 
+  // (N) 결과 확인 버튼
   const handleResultCheck = () => onResultConfirmed();
+
+  // (O) 결승점 모달 닫기
   const handleModalClose = () => setModalDismissed(true);
 
+  // (P) 내 expInfo 생성 시, 경험치 모달 표시
   useEffect(() => {
     if (myExpInfo) {
       setShowExpModal(true);
-      earnedExp();
     }
   }, [myExpInfo]);
 
+  // (Q) 경험치 모달 닫기 -> 레벨 업 확인
   const handleExpModalClose = () => {
     setShowExpModal(false);
     if (!myExpInfo) return;
+
+    // 레벨 업이면 모달 열기 + 티켓 +1
     if (myExpInfo.userLevel > prevLevel) {
       setShowLevelUpModal(true);
+
       (async () => {
         try {
           const ticketRes = await axiosInstance.get(`/fish/ticket/${userName}`);
           const ticketData: TicketResponse = ticketRes.data;
           setMyTicket(ticketData.fishTicket);
-          console.log('티켓 +3 성공:', ticketData.fishTicket);
+          console.log('티켓 +1 성공:', ticketData.fishTicket);
         } catch (err) {
           console.error('티켓 증가 에러:', err);
         }
@@ -312,10 +320,14 @@ export default function Game({
     }
   };
 
+  // (R) 레벨 업 모달 닫기
   const handleLevelUpModalClose = () => {
     setShowLevelUpModal(false);
   };
 
+  // -----------------------------
+  // 게임 종료 화면
+  // -----------------------------
   if (gameEnded) {
     return (
       <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
@@ -323,12 +335,16 @@ export default function Game({
           <h1 className='text-4xl font-extrabold text-gray-800 mb-6'>
             Game Over
           </h1>
+
+          {/* (1) 우승자 (서버에서 준 winner) */}
           <p className='text-xl text-gray-600 mb-6'>
             Winner:{' '}
             <span className='font-bold text-gray-900'>
               {winner || 'No Winner'}
             </span>
           </p>
+
+          {/* (2) 전체 순위 */}
           {finishOrder.length > 0 && (
             <div className='mb-8'>
               <h2 className='text-3xl font-bold text-gray-800 mb-4'>
@@ -336,24 +352,17 @@ export default function Game({
               </h2>
               <div className='bg-gray-100 rounded-lg shadow-md p-4'>
                 <ol className='divide-y divide-gray-300'>
-                  {finishOrder.map((name, index) => {
-                    const matchingPlayer = players.find(
-                      (p) => p.userName === name
-                    );
-                    return (
-                      <li
-                        key={name}
-                        className='py-2 flex justify-between items-center'
-                      >
-                        <span className='font-semibold text-gray-700'>
-                          {index + 1}.
-                        </span>
-                        <span className='text-gray-900'>
-                          {matchingPlayer ? matchingPlayer.nickname : name}
-                        </span>
-                      </li>
-                    );
-                  })}
+                  {finishOrder.map((user, index) => (
+                    <li
+                      key={user}
+                      className='py-2 flex justify-between items-center'
+                    >
+                      <span className='font-semibold text-gray-700'>
+                        {index + 1}.
+                      </span>
+                      <span className='text-gray-900'>{user}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
             </div>
@@ -367,15 +376,19 @@ export default function Game({
           </button>
         </div>
 
+        {/* (S) 경험치 모달 */}
         {showExpModal && myExpInfo && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
               <h2 className='text-2xl font-extrabold text-blue-700 mb-4'>
                 경험치 획득!
               </h2>
+
+              {/* ★ 내가 저장한 “myEarnedExp” 표시 */}
               <p className='text-lg text-gray-700 mb-2'>
                 획득 경험치: <strong>+{myEarnedExp}</strong>
               </p>
+
               <p className='text-lg text-gray-700 mb-2'>
                 현재 레벨: <strong>{myExpInfo.userLevel}</strong>
               </p>
@@ -386,6 +399,7 @@ export default function Game({
                 </strong>
                 &nbsp;({myExpInfo.expProgress}%)
               </p>
+
               <div className='mt-6'>
                 <button
                   onClick={handleExpModalClose}
@@ -398,12 +412,14 @@ export default function Game({
           </div>
         )}
 
+        {/* (T) 레벨 업 모달 */}
         {showLevelUpModal && (
           <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
             <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
               <h2 className='text-3xl font-extrabold text-black mb-2 flex justify-center items-center'>
                 🎉 <span className='mx-2'>레벨 업!</span> 🎉
               </h2>
+
               <p className='text-lg font-medium text-gray-700 mt-3'>
                 레벨{' '}
                 <span className='text-blue-500 font-bold'>
@@ -411,15 +427,18 @@ export default function Game({
                 </span>{' '}
                 달성!
               </p>
+
               <hr className='my-4 border-gray-300' />
+
               <p className='text-lg font-medium text-gray-600 mb-6'>
-                티켓 +3
+                티켓 +1
                 {myTicket !== null && (
                   <span className='text-gray-700 ml-1'>
                     (현재 {myTicket}개)
                   </span>
                 )}
               </p>
+
               <button
                 onClick={handleLevelUpModalClose}
                 className='px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors'
@@ -433,12 +452,16 @@ export default function Game({
     );
   }
 
+  // -----------------------------
+  // 게임 진행 중 화면
+  // -----------------------------
   return (
     <div
       className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
+      {/* 결승점 도착 모달 */}
       {!gameEnded && hasArrived && !modalDismissed && (
         <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30'>
           <div className='bg-white p-8 rounded-lg shadow-lg text-center'>
@@ -456,6 +479,7 @@ export default function Game({
         </div>
       )}
 
+      {/* Start 라인 */}
       {trackDims.height > 0 && (
         <div
           className='absolute pointer-events-none'
@@ -474,6 +498,7 @@ export default function Game({
         </div>
       )}
 
+      {/* Goal 라인 */}
       {trackDims.width > 0 && (
         <div
           className='absolute pointer-events-none'
@@ -492,12 +517,14 @@ export default function Game({
         </div>
       )}
 
+      {/* 상단 중앙에 남은 시간 */}
       {hasCountdownFinished && !gameEnded && (
         <div className='absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
           Time: {gameTime}s
         </div>
       )}
 
+      {/* 레인 구분선 */}
       {trackDims.height > 0 && (
         <>
           <div
@@ -524,7 +551,9 @@ export default function Game({
         </>
       )}
 
+      {/* 물고기(플레이어) 렌더링 */}
       {players.map((player, index) => {
+        // 총 6개 레인 중, 실제 플레이어 수에 맞춰 중앙 정렬
         const offset =
           players.length < totalLanes
             ? Math.floor((totalLanes - players.length) / 2)
@@ -535,16 +564,17 @@ export default function Game({
           laneAreaTopOffset +
           laneIndex * laneHeight +
           (laneHeight - fishSize) / 2;
+
         const startOffset = trackDims.width ? trackDims.width * 0.1 : 95;
         const moveFactor = trackDims.width ? trackDims.width * 0.016 : 25;
         const leftPos =
-          player.nickname === userName && !hasStarted
+          player.userName === userName && !hasStarted
             ? startOffset
             : startOffset + Math.floor(player.totalPressCount / 2) * moveFactor;
 
         return (
           <div
-            key={player.nickname}
+            key={player.userName}
             className='absolute'
             style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
           >
@@ -554,13 +584,13 @@ export default function Game({
             >
               <img
                 src={player.mainFishImage}
-                alt={`${player.nickname}의 대표 물고기`}
+                alt={`${player.userName}의 대표 물고기`}
                 style={{ width: fishSize, height: fishSize }}
                 className='object-contain scale-x-[-1]'
               />
-              {(player.nickname === userName
+              {(player.userName === userName
                 ? isTapping
-                : windEffects[player.nickname]) && (
+                : windEffects[player.userName]) && (
                 <img
                   src='/chat_images/wind_overlay.png'
                   alt='Wind effect'
@@ -576,6 +606,7 @@ export default function Game({
                 />
               )}
             </div>
+            {/* 텍스트의 top 값을 줄여서 물고기 바로 아래에 위치시킴 */}
             <span
               className='absolute text-xl font-medium text-gray-900'
               style={{
@@ -584,17 +615,19 @@ export default function Game({
                 transform: 'translateX(-50%)',
               }}
             >
-              {player.nickname}
+              {player.userName}
             </span>
           </div>
         );
       })}
 
+      {/* 하단 안내 */}
       <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>
         Press the <span className='font-bold'>Spacebar</span> or touch anywhere
         to tap!
       </p>
 
+      {/* 카운트다운 & 게임 설명 */}
       {!hasCountdownFinished && (
         <div className='absolute inset-0 flex flex-col justify-center items-center bg-white/80 z-20 p-4'>
           <div className='max-w-6xl w-full text-center bg-white/90 border-2 border-gray-600 rounded-lg shadow-lg p-6'>

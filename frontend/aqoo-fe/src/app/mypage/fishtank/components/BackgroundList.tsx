@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axiosInstance from "@/services/axiosInstance";
 import BackgroundItemCard from "./BackgroundItemCard";
 import { BADFLAGS } from "dns";
+import { useSFX } from "@/hooks/useSFX";
 
 interface Background {
   id: number;
@@ -21,7 +22,7 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
   const [error, setError] = useState<string>("");
   const [selectedBackgroundId, setSelectedBackgroundId] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
+  const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
   useEffect(() => {
     axiosInstance
       .get("/aquariums/backgrounds/all")
@@ -65,26 +66,29 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
   return (
     <div className="h-38 overflow-y-auto">
       <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-      <div className="flex flex-wrap gap-4 justify-center">
-        {backgrounds.map((bg, idx) => {
-          const isSelected = bg.id === selectedBackgroundId;
-          const isHovered = hoveredIndex === idx;
-          const imageSrc = bg.imageUrl;
-          const name = `Background ${bg.id}`;
-          return (
-            <BackgroundItemCard
-              key={bg.id}
-              name={name}
-              imageSrc={imageSrc}
-              isSelected={isSelected}
-              isHovered={isHovered}
-              onMouseEnter={() => setHoveredIndex(idx)}
-              onMouseLeave={() => setHoveredIndex(null)}
-              onClick={() => handleBackgroundSelect(bg.id, bg.imageUrl)}
-            />
-          );
-        })}
-      </div>
+        <div className="flex flex-wrap gap-4 justify-center">
+          {backgrounds.map((bg, idx) => {
+            const isSelected = bg.id === selectedBackgroundId;
+            const isHovered = hoveredIndex === idx;
+            const imageSrc = bg.imageUrl;
+            const name = `Background ${bg.id}`;
+            return (
+              <BackgroundItemCard
+                key={bg.id}
+                name={name}
+                imageSrc={imageSrc}
+                isSelected={isSelected}
+                isHovered={isHovered}
+                onMouseEnter={() => setHoveredIndex(idx)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                onClick={() => {
+                  playModal();
+                  handleBackgroundSelect(bg.id, bg.imageUrl)
+                }}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

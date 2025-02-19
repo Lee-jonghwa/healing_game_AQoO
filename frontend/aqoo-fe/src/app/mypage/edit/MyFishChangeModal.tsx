@@ -9,6 +9,7 @@ import { useRecoilState } from "recoil";
 import { authAtom } from "@/store/authAtom";
 // 타이틀 밖에 띄우기
 import { createPortal } from "react-dom";
+import { useSFX } from "@/hooks/useSFX";
 
 interface FishData {
   fishTypeId: number;
@@ -37,13 +38,20 @@ interface ModalTitlePortalProps {
 function ModalTitlePortal({ title, containerRect }: ModalTitlePortalProps) {
   if (!containerRect) return null;
 
+  const isSmUp = typeof window !== "undefined" && window.innerWidth >= 640;
   // 모달 위에 표시할 오프셋 (예: 모달 위 20px 떨어진 곳)
-  const offset = 11;
+  const offset = isSmUp ? 11 : 0;
   // 타이틀의 높이를 대략 50px로 가정 (필요시 조절)
-  const titleHeight = 50;
-  const top = containerRect.top - offset - titleHeight;
-  const left = containerRect.left + containerRect.width / 2;
+  const titleHeight = isSmUp ? 50 : 40;
 
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+
+  // const top = containerRect.top - offset - titleHeight;
+  // const left = containerRect.left + containerRect.width / 2;
+
+  const top = scrollY + containerRect.top - offset - titleHeight;
+  const left = scrollX + containerRect.left + containerRect.width / 2;
   return createPortal(
     <div
       style={{
@@ -56,8 +64,8 @@ function ModalTitlePortal({ title, containerRect }: ModalTitlePortalProps) {
     >
       <h1
         className="
-        text-3xl font-bold text-black
-        bg-white px-6 py-2
+        text-md sm:text-3xl font-bold text-black
+        bg-white px-2 py-1 sm:px-6 sm:py-2
         border border-black
         rounded-lg shadow-lg"
       >
@@ -87,6 +95,15 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
   const [modalRect, setModalRect] = useState<DOMRect | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3")
+
+  const wrapOnSuccess = (originalOnClick?: () => void) => () => {
+    playSuccess();
+    if (originalOnClick) {
+      originalOnClick()
+    }
+  }
+
   // 내가 가진 fish 정보를 axiosInstance를 통해 불러오고,
   // 현재 대표 물고기와 동일한 fishImage는 필터링합니다.
   useEffect(() => {
@@ -107,7 +124,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error("내 fish 정보를 불러오는 중 오류 발생:", error);
+        // console.error("내 fish 정보를 불러오는 중 오류 발생:", error);
         setIsLoading(false);
       });
   }, [userData.id, currentMainFishImage]);
@@ -154,9 +171,9 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
         userNickName: userData.nickname,
         mainFishImage: parsedImageName,
       });
-      console.log("응답:", response.data);
-      console.log("선택한 이미지:", selectedFishImage);
-      console.log("파싱된 이미지:", parsedImageName);
+      // console.log("응답:", response.data);
+      // console.log("선택한 이미지:", selectedFishImage);
+      // console.log("파싱된 이미지:", parsedImageName);
 
       // 낙관적 업데이트: 전역 auth 상태에 바로 새로운 대표 이미지를 반영
       setAuth({
@@ -166,14 +183,14 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
           mainFishImage: selectedFishImage,
         } as any,
       });
-
+      playSuccess()
       alert("대표 물고기 변경 성공!");
       // 서버와 동기화하기 위해 fetchUser()를 호출
       await fetchUser();
       onClose();
     } catch (error) {
       alert("대표 물고기 변경에 실패했습니다.");
-      console.error(error);
+      // console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -194,32 +211,33 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
 
   return (
     <>
-      <ModalTitlePortal title="🐡 대표 물고기 변경 🐠" containerRect={modalRect} />
+      <ModalTitlePortal title="🐡대표 물고기 변경🐠" containerRect={modalRect} />
 
       <Modal
         onClose={onClose}
         className="
-        flex flex-col items-center justify-center
+        flex flex-col
+        items-center justify-center
         overflow-hidden
-        min-w-[60%] p-6
-        min-h-[70%]
+        min-w-[80%] sm:min-w-[60%] sm:p-6
+        h-[60%] sm:min-h-[70%]
         relative"
       >
-        {/* 모달 내부의 콘텐츠 래퍼에 ref를 부여 */}
-        <div ref={modalContentRef} className="pb-3">
+        {/* 모달 내부의 콘텐츠 래퍼 ref를 부여 */}
+        <div ref={modalContentRef} className="relative flex flex-col w-full h-full pb-3">
           {isLoading && <p>로딩 중...</p>}
           {!isLoading && (
             <div
-              className={`flex justify-end mt-6 w-full
+              className={`flex flex-1 justify-end mt-6 w-full overflow-y-auto
                 ${isFullScreen ? "max-h-[550px]" : "pb-5"}`}
             >
               <div
                 id="one-panel"
                 className={`
-                  flex flex-wrap
-                  grid gap-4 w-full
+                  flex flex-wrap items-center justify-center
+                  grid gap-1 sm:gap-4 w-full
                   grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
-                  overflow-y-auto max-h-[450px] scrollbar-hide
+                  overflow-y-auto max-h-full sm:max-h-[450px] scrollbar-hide
                   pr-1
                 `}
               >
@@ -246,7 +264,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
             </div>
           )}
           <button
-            className="absolute right-3 bottom-3 px-4 py-2 bg-blue-600 text-white rounded"
+            className="absolute right-0 bottom-0 sm:right-3 sm:bottom-3 px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 text-white rounded text-sm sm:text-lg"
             onClick={handleConfirm}
             disabled={isLoading}
           >

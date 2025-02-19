@@ -182,12 +182,19 @@ export default function BottomMenuBar({
         )}
 
         <div
-          className={`w-full bg-white/70 rounded-lg px-3 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md transition-all duration-500 ${
+          className={`w-full bg-white/70 rounded-lg px-3 py-2 sm:py-0 flex flex-wrap items-center justify-between shadow-lg backdrop-blur-md transition-all duration-500 ${
             isMenuVisible ? "opacity-100" : "opacity-0 translate-y-12 pointer-events-none"
           } relative`}
         >
-          <div className="flex space-x-2 md:space-x-4">
-            <MenuButton icon="/icon/icon-fishTank.png" label="MyPage" onClick={() => router.push("/mypage")} />
+          <div className="flex space-x-2 md:space-x-4 ">
+            <MenuButton
+              icon="/icon/icon-fishTank.png"
+              label="MyPage"
+              onClick={() => {
+                playModal();
+                router.push("/mypage");
+              }}
+            />
             <MenuButton
               icon="/icon/friendIcon.png"
               label="Friends"
@@ -220,46 +227,51 @@ export default function BottomMenuBar({
               }}
             />
           </div>
-          <div className="flex flex-col items-center text-center">
-            <p className="text-sm md:text-lg font-bold">
-              Lv. {userInfo.level} {userInfo.nickname}
-            </p>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-3 w-full">
-                <p className="text-lg font-bold">exp</p>
-                <div className="relative w-48 h-6 bg-gray-300 rounded-full overflow-hidden flex items-center">
+          {/* 유저 정보 + 상태바 (반응형 조정) */}
+          <div className="flex  sm:flex-row items-center text-center w-full sm:w-auto sm:space-x-12 ">
+            <div className="flex flex-col items-center sm:items-start">
+              <p className="text-sm sm:text-lg font-bold">
+                Lv. {userInfo.level} {userInfo.nickname}
+              </p>
+              {/* 경험치 바 반응형 조정 */}
+              <div className="flex items-center space-x-3 w-full mr-4">
+                <p className="text-sm sm:text-lg font-bold">exp</p>
+                <div className="relative w-32 sm:w-48 h-4 sm:h-6 bg-gray-300 rounded-full overflow-hidden flex items-center">
                   <div
                     className="bg-blue-600 h-full transition-all duration-300"
                     style={{ width: `${expProgress}%` }}
                   ></div>
-                  <p className="absolute inset-0 flex justify-center items-center text-base font-bold">
+                  <p className="absolute inset-0 flex justify-center items-center text-xs sm:text-base font-bold">
                     {userInfo.exp}
                   </p>
                 </div>
-                <p className="text-lg font-bold">{expToNextLevel}</p>
+                <p className="text-sm sm:text-lg font-bold">{expToNextLevel}</p>
               </div>
             </div>
+
+            {/* 상태 바 (반응형 조정) */}
+            <div className="flex flex-col space-y-1 p-1">
+              <StatusBar
+                icon="icon/waterIcon.png"
+                label="어항 수질"
+                value={aquariumData?.waterStatus ?? 0}
+                color="bg-blue-900"
+              />
+              <StatusBar
+                icon="icon/cleanIcon.png"
+                label="청결도"
+                value={aquariumData?.pollutionStatus ?? 0}
+                color="bg-indigo-400"
+              />
+              <StatusBar
+                icon="icon/feedIcon.png"
+                label="포만감"
+                value={aquariumData?.feedStatus ?? 0}
+                color="bg-cyan-400"
+              />
+            </div>
           </div>
-          <div className="flex flex-col space-y-1 p-1">
-            <StatusBar
-              icon="icon/waterIcon.png"
-              label="어항 수질"
-              value={aquariumData?.waterStatus ?? 0}
-              color="bg-blue-900"
-            />
-            <StatusBar
-              icon="icon/cleanIcon.png"
-              label="청결도"
-              value={aquariumData?.pollutionStatus ?? 0}
-              color="bg-indigo-400"
-            />
-            <StatusBar
-              icon="icon/feedIcon.png"
-              label="포만감"
-              value={aquariumData?.feedStatus ?? 0}
-              color="bg-cyan-400"
-            />
-          </div>
+
           <div className="flex space-x-2 md:space-x-4">
             <MenuButton icon="/icon/waterIcon.png" label="Water" onClick={() => handleAquariumUpdate("water")} />
             <MenuButton
@@ -288,8 +300,8 @@ function StatusBar({ icon, label, value, color }: { icon: string; label: string;
   return (
     <div className="flex items-center space-x-3">
       <img src={`/${icon}`} alt={label} className="w-[24px] h-[24px] md:w-[24px] md:h-[24px]" />
-      <span className="w-[72px] md:w-[86px] text-xs md:text-base text-black text-center">{label}</span>
-      <div className="w-40 md:w-48 h-4 md:h-5 flex border-2 border-black rounded-full overflow-hidden">
+      <span className="w-[72px] md:w-[86px] text-xs sm:text-base text-black text-center sm:inline hidden">{label}</span>
+      <div className="w-32 md:w-48 h-4 md:h-5 flex border-2 border-black rounded-full overflow-hidden">
         {Array.from({ length: segmentCount }).map((_, index) => (
           <div
             key={index}

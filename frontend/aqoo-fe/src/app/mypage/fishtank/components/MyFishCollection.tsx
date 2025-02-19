@@ -6,6 +6,7 @@ import CollectionItemCard from "./CollectionItemCard";
 import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { useRecoilValue } from "recoil";
+import { useSFX } from "@/hooks/useSFX";
 
 interface MyFish {
   fishName: string;
@@ -35,7 +36,7 @@ export default function MyFishCollection({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [currentFishCount, setCurrentFishCount] = useState<number>(0); // 어항에 있는 현재 물고기 수
-
+  const { play: fishClick } = useSFX("/sounds/pop-02.mp3");
   const fetchData = useCallback(() => {
     if (auth.user?.id) {
       setLoading(true);
@@ -92,6 +93,9 @@ export default function MyFishCollection({
   }, [auth.user?.id, refresh, fetchData, fetchCurrentFishCount]);
 
   const handleFishClick = (fish: MyFish) => {
+
+    fishClick();
+
     setSelectedFish(fish);
     setIsModalOpen(true);
   };
@@ -164,7 +168,7 @@ export default function MyFishCollection({
   return (
     <div>
       <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-      <div className="flex flex-wrap justify-start gap-4 ml-7">
+        <div className="flex flex-wrap justify-start gap-4 ml-7">
           {myFishList.map((fish) => (
             <div
               key={fish.fishName}

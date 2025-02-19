@@ -2,13 +2,7 @@
 
 import { UserInfo, AquariumData } from "@/types";
 import React, { useEffect, useState, Suspense, useRef } from "react";
-import {
-  useForm,
-  SubmitHandler,
-  UseFormRegister,
-  UseFormSetValue,
-  UseFormHandleSubmit,
-} from "react-hook-form";
+import { useForm, SubmitHandler, UseFormRegister, UseFormSetValue, UseFormHandleSubmit } from "react-hook-form";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -25,6 +19,7 @@ import MyFishChangeModal from "./MyFishChangeModal";
 import { ProfileFormInputs } from "@/types";
 import axiosInstance from "@/services/axiosInstance";
 import { AxiosResponse } from "axios";
+import { useSFX } from "@/hooks/useSFX";
 
 /**
  * Suspense 리소스를 위한 헬퍼 함수
@@ -80,18 +75,10 @@ function ProfileForm({
 }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
-      <div className="flex flex-col gap-4 ">
-        <InputField
-          label="아이디"
-          placeholder={userData?.id || "로딩 중..."}
-          variant="static"
-        />
-        <InputField
-          label="이메일"
-          placeholder={userData?.email || "로딩 중..."}
-          variant="static"
-        />
-        <div className="flex items-end justify-between gap-4 relative">
+      <div className="flex flex-col gap-1 sm:gap-4 ">
+        <InputField label="아이디" placeholder={userData?.id || "로딩 중..."} variant="static" />
+        <InputField label="이메일" placeholder={userData?.email || "로딩 중..."} variant="static" />
+        <div className="flex items-end justify-between sm:gap-4 relative">
           <div className="relative w-full">
             <InputField
               label="닉네임"
@@ -137,6 +124,17 @@ function EditProfilePage() {
   const userDataResourceRef = useRef<{ read: () => any } | null>(null);
   const [userDataResource, setUserDataResource] = useState<{ read: () => any } | null>(null);
 
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
+
+  const wrapOnClick = (originalOnClick?: () => void) => () => {
+    playClick();
+    if (originalOnClick) {
+      originalOnClick()
+    }
+  }
+
+
+
   // 접속 유저의 정보 조회
   useEffect(() => {
     if (!auth.user?.id) return;
@@ -147,35 +145,33 @@ function EditProfilePage() {
         setUserInfo(response.data);
       })
       .catch((error) => {
-        console.error("❌ 유저 정보 불러오기 실패", error);
+        // console.error("❌ 유저 정보 불러오기 실패", error);
       });
   }, [auth.user?.id]);
 
   // 어항 상세 정보 및 배경 정보 조회
   useEffect(() => {
-    console.log("Fetching aquarium data...");
+    // console.log("Fetching aquarium data...");
     if (!userInfo?.mainAquarium) return;
 
-    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+    // console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
 
-    axiosInstance
-      .get(`/aquariums/${userInfo.mainAquarium}`)
-      .then((res: AxiosResponse<AquariumData>) => {
-        // console.log("✅ 어항 상세 정보:", res.data);
-        setAquariumData(res.data);
+    axiosInstance.get(`/aquariums/${userInfo.mainAquarium}`).then((res: AxiosResponse<AquariumData>) => {
+      // console.log("✅ 어항 상세 정보:", res.data);
+      setAquariumData(res.data);
 
-        const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
+      const BACKGROUND_BASE_URL = "https://i12e203.p.ssafy.io/images";
 
-        let bgUrl = res.data.aquariumBackground;
-        if (!bgUrl) return;
+      let bgUrl = res.data.aquariumBackground;
+      if (!bgUrl) return;
 
-        if (!bgUrl.startsWith("http")) {
-          bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
-        }
-        console.log("Setting background to:", bgUrl);
-        setBackground(bgUrl);
-      })
-      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+      if (!bgUrl.startsWith("http")) {
+        bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
+      }
+      // console.log("Setting background to:", bgUrl);
+      setBackground(bgUrl);
+    });
+    // .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
   }, [userInfo]);
 
   // userData 리소스 생성: auth.user?.id가 준비되면 axiosInstance로 데이터 가져오기
@@ -209,11 +205,10 @@ function EditProfilePage() {
   const onSubmit: SubmitHandler<ProfileFormInputs> = async (data) => {
     setIsLoading(true);
     try {
-      console.log("닉네임 입력값:", data.nickname);
+      // console.log("닉네임 입력값:", data.nickname);
       const token = localStorage.getItem("accessToken");
 
-      const parsedImageName =
-        "/" + (userData?.mainFishImage.split("/").pop() || "");
+      const parsedImageName = "/" + (userData?.mainFishImage.split("/").pop() || "");
 
       const response = await axiosInstance.post(
         `/users`,
@@ -230,30 +225,31 @@ function EditProfilePage() {
         }
       );
 
-      console.log("API 응답 상태:", response.status);
-      console.log("API 응답 데이터:", response.data);
+      // console.log("API 응답 상태:", response.status);
+      // console.log("API 응답 데이터:", response.data);
 
       if (response.status < 200 || response.status >= 300) {
-        throw new Error(
-          `회원 정보 수정 실패: ${response.data.message || "알 수 없는 오류"}`
-        );
+        throw new Error(`회원 정보 수정 실패: ${response.data.message || "알 수 없는 오류"}`);
       }
 
       // 최신 유저데이터를 불러와서 recoil 상태 업데이트
       await fetchUser();
-      setAuthState((prevState) => ({
-        ...prevState,
-        user: {
-          ...prevState.user,
-          nickName: data.nickname,
-        },
-      }) as any);
+      setAuthState(
+        (prevState) =>
+          ({
+            ...prevState,
+            user: {
+              ...prevState.user,
+              nickName: data.nickname,
+            },
+          } as any)
+      );
 
       alert("회원 정보 수정 성공!");
       router.push("/mypage/edit");
     } catch (error) {
       alert("회원 정보 수정 실패");
-      console.error(error);
+      // console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -264,16 +260,27 @@ function EditProfilePage() {
       style={{
         backgroundImage: `url(${background})`,
       }}
-      className="flex h-screen bg-cover bg-center bg-no-repeat relative justify-center"
+      className="
+        bg-cover bg-center bg-no-repeat
+        h-screen w-screen overflow-hidden
+        relative"
     >
       <div className="absolute bottom-5 right-5">
         <Buttons text="BACK" />
       </div>
 
-      <div className="flex justify-center items-center h-screen w-screen bg-cover bg-center">
-        <div className="flex-1 flex flex-col items-center">
-          <div className="w-[250px] h-[250px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset] mb-10">
-            <div className="overflow-hidden w-[220px] h-[220px] flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
+      {/* 전체 감싸기 */}
+      <div className="mt-20 sm:mt-0 flex flex-col sm:flex-row justify-center items-center h-screen w-screen">
+        {/* 대표물고기 이미지 */}
+        <div className="sm:mt-0 sm:flex-1 flex flex-col items-center">
+          <div
+            className="w-1/2 sm:w-[250px] h-auto aspect-square
+          flex-shrink-0 flex items-center justify-center
+          rounded-xl border border-black bg-white
+          [box-shadow:-2px_-2px_0px_1px_rgba(0,0,0,0.5)_inset]
+          mb-2 sm:mb-10"
+          >
+            <div className="overflow-hidden w-[90%] h-auto aspect-square flex-shrink-0 flex items-center justify-center rounded-xl border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]">
               {userData?.mainFishImage ? (
                 <img
                   src={
@@ -295,23 +302,23 @@ function EditProfilePage() {
             text="대표 물고기 변경"
             isLoading={isLoading}
             color="none"
-            onClick={() => setIsMyFishModalOpen(true)}
+            onClick={wrapOnClick(() => setIsMyFishModalOpen(true))}
             isSpecial={true}
           />
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 w-[80%] mt-5 sm:mt-0">
           <div
             className="
-            bg-white p-8 rounded-2xl
-            w-[450px] min-h-[55vh]
+            bg-white p-5 sm:p-8 rounded-2xl
+            w-full sm:w-[450px]
+            min-h-[45vh] sm:min-h-[60vh]
             flex flex-col
             items-center justify-center
-            p-5
             "
             style={{ gap: "calc(60vh * 0.03)" }}
           >
-            <h2 className="text-center text-4xl mb-6">회원정보 수정</h2>
+            <h2 className="text-center text-xl sm:text-4xl sm:mb-6">회원정보 수정</h2>
             <ProfileForm
               userData={userData}
               onSubmit={onSubmit}
@@ -320,33 +327,26 @@ function EditProfilePage() {
               setValue={setValue}
               handleSubmit={handleSubmit}
             />
-            <div className="w-full flex justify-between gap-4 mt-4">
+            <div className="w-full flex justify-between gap-1 sm:gap-4 sm:mt-4">
               <ModalButtons
-                text="비밀번호 변경"
+                text="비밀번호변경"
                 isLoading={isLoading}
                 color="blue"
-                onClick={() => setIsPasswordModalOpen(true)}
+                onClick={wrapOnClick(() => setIsPasswordModalOpen(true))}
               />
               <ModalButtons
-                text="회원 탈퇴"
+                text="회원탈퇴"
                 isLoading={isLoading}
                 color="red"
-                onClick={() => setIsDeleteModalOpen(true)}
+                onClick={wrapOnClick(() => setIsDeleteModalOpen(true))}
               />
             </div>
           </div>
         </div>
       </div>
-
-      {isPasswordModalOpen && (
-        <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />
-      )}
-      {isDeleteModalOpen && (
-        <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} userData={userData} />
-      )}
-      {isMyFishModalOpen && (
-        <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} userData={userData} />
-      )}
+      {isPasswordModalOpen && <PasswordChangeModal onClose={() => setIsPasswordModalOpen(false)} />}
+      {isDeleteModalOpen && <DeleteAccountModal onClose={() => setIsDeleteModalOpen(false)} userData={userData} />}
+      {isMyFishModalOpen && <MyFishChangeModal onClose={() => setIsMyFishModalOpen(false)} userData={userData} />}
     </div>
   );
 }
