@@ -126,8 +126,6 @@ export default function Game({
         destination,
         body: JSON.stringify(message),
       });
-    } else {
-      console.error('STOMP client is not connected yet.');
     }
   };
 
@@ -261,7 +259,6 @@ export default function Game({
     if (!gameEnded || finishOrder.length === 0) return;
     const rank = finishOrder.indexOf(userName) + 1;
     if (rank <= 0) {
-      console.log('내 이름이 finishOrder에 없음 (관전자?)');
       return;
     }
     const earnedExp = getExpByRank(rank);
@@ -273,7 +270,6 @@ export default function Game({
           earnedExp,
         });
         setMyExpInfo(response.data);
-        console.log('경험치 갱신 성공:', response.data);
       } catch (err) {
         console.error('경험치 지급 에러:', err);
       }
@@ -298,13 +294,13 @@ export default function Game({
     setShowExpModal(false);
     if (!myExpInfo) return;
     if (myExpInfo.userLevel > prevLevel) {
+      levelUp();
       setShowLevelUpModal(true);
       (async () => {
         try {
           const ticketRes = await axiosInstance.get(`/fish/ticket/${userName}`);
           const ticketData: TicketResponse = ticketRes.data;
           setMyTicket(ticketData.fishTicket);
-          console.log('티켓 +3 성공:', ticketData.fishTicket);
         } catch (err) {
           console.error('티켓 증가 에러:', err);
         }
@@ -577,7 +573,7 @@ export default function Game({
               )}
             </div>
             <span
-              className='absolute text-xl font-medium text-gray-900'
+              className='absolute text-xl font-medium text-gray-900 whitespace-nowrap'
               style={{
                 top: `${fishSize - 16}px`,
                 left: '50%',

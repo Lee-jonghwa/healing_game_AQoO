@@ -26,6 +26,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* PWA 관련 태그 */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#000000" />
+        {/* iOS 홈 화면 아이콘 */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/icon/icon-180.png" />
       </head>
       <body className="w-full min-h-screen sm:overflow-auto">
         <div className="relative w-full min-h-screen overflow-x-hidden">

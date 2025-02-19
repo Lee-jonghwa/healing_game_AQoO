@@ -37,8 +37,6 @@ export default function FriendList({
   }>({});
   const [searchQuery, setSearchQuery] = useState('');
 
-  console.log('📢 API로부터 받아온 친구 목록:', friends);
-
   useEffect(() => {
     if (isHost) {
       axiosInstance

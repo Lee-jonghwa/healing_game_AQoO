@@ -80,9 +80,19 @@ export default function IntegratedRoom({
   const [selectedGame, setSelectedGame] = useState<string>('Game');
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
-  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");  // 클릭효과음(레디버튼)
-  const { play: playGame } = useSFX("/sounds/카운트다운-02.mp3"); // 게임시작 카운트다운
+
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때때
   const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방입장
+  const playHostSound = () => {
+    // 호스트용 사운드를 재생하는 코드
+    new Audio('/sounds/카운트다운-02.mp3').play();
+  };
+  
+  const playUserSound = () => {
+    // 일반 유저용 사운드를 재생하는 코드
+    new Audio("/sounds/clickeffect-02.mp3").play();
+  };
+  
 
 
   // 현재 참가자 수
@@ -91,12 +101,12 @@ export default function IntegratedRoom({
   const participantCount = users.length;
   const hasSentJoinRef = useRef<boolean>(false);
 
+
   // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
   useEffect(() => {
     axiosInstance
       .get(`/chatrooms/${roomId}`)
       .then((response) => {
-        console.log('API 호출 완료: ', response);
         // 응답이 배열 형태로 전달됨:
         // [ { "userId": "user1", "nickname": "Alice", "mainFishImage": "이미지경로", "isHost": true, "level": 5 }, ... ]
         const updatedUsers = response.data.map((member: any) => ({
@@ -107,7 +117,6 @@ export default function IntegratedRoom({
           ready: false,
           level: member.level,
         }));
-        console.log('updatedUsers:', updatedUsers);
         setUsers(updatedUsers);
       })
       .catch((error) =>
@@ -163,7 +172,6 @@ export default function IntegratedRoom({
 
   // [3] displayUsers: API에서 받아온 사용자 정보를 그대로 사용.
   const displayUsers = useMemo(() => users, [users]);
-  console.log('채팅방의 displayUsers:', displayUsers);
 
   // [4] Fish 리스트 생성: displayUsers 기반
   useEffect(() => {
@@ -491,46 +499,49 @@ export default function IntegratedRoom({
                         <option value='gameB'>Game B</option>
                       </select>
                       <button
-                        onClick={() => {
-                          playModal();
-                          const client = getStompClient();
-                          if (client && client.connected) {
-                            if (currentIsHost) {
-                              const destination =
-                                getGameDestination(selectedGame);
-                              client.publish({
-                                destination,
-                                body: JSON.stringify({
-                                  roomId,
-                                  gameType: selectedGame,
-                                }),
-                              });
-                            } else {
-                              client.publish({
-                                destination: myReady
-                                  ? '/app/chat.unready'
-                                  : '/app/chat.ready',
-                                body: JSON.stringify({
-                                  roomId,
-                                  sender: userName,
-                                }),
-                              });
-                            }
-                          }
-                        }}
-                        className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
-                          currentIsHost && !allNonHostReady
-                            ? 'opacity-50 cursor-not-allowed'
-                            : ''
-                        }`}
-                        disabled={currentIsHost ? !allNonHostReady : false}
-                      >
-                        {currentIsHost
-                          ? 'Start Game(F5)'
-                          : myReady
-                          ? 'Unready(F5)'
-                          : 'Ready(F5)'}
-                      </button>
+  onClick={() => {
+    // 조건에 따라 다른 사운드를 재생합니다.
+    if (currentIsHost) {
+      playHostSound(); // "Start Game(F5)" 사운드
+    } else {
+      playUserSound(); // "Ready(F5)" 또는 "Unready(F5)" 사운드
+    }
+
+    // 기존 로직 실행
+    const client = getStompClient();
+    if (client && client.connected) {
+      if (currentIsHost) {
+        const destination = getGameDestination(selectedGame);
+        client.publish({
+          destination,
+          body: JSON.stringify({
+            roomId,
+            gameType: selectedGame,
+          }),
+        });
+      } else {
+        client.publish({
+          destination: myReady ? '/app/chat.unready' : '/app/chat.ready',
+          body: JSON.stringify({
+            roomId,
+            sender: userName,
+          }),
+        });
+      }
+    }
+  }}
+  className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
+    currentIsHost && !allNonHostReady ? 'opacity-50 cursor-not-allowed' : ''
+  }`}
+  disabled={currentIsHost ? !allNonHostReady : false}
+>
+  {currentIsHost
+    ? 'Start Game(F5)'
+    : myReady
+    ? 'Unready(F5)'
+    : 'Ready(F5)'}
+</button>
+
                     </>
                   </div>
                 </div>
