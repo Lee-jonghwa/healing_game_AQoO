@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { connectStompClient, getStompClient } from '@/lib/stompclient';
-import axiosInstance from '@/services/axiosInstance';
-import { User } from '@/store/authAtom';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import ChatBox from './ChatBox';
-import Fish from './Fish';
-import FriendList from './FriendList';
-import Game from './Game';
-import GameA from './GameA';
-import GameB from './GameB';
-import ParticipantList from './ParticipantList';
+import { connectStompClient, getStompClient } from "@/lib/stompclient";
+import axiosInstance from "@/services/axiosInstance";
+import { User } from "@/store/authAtom";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import ChatBox from "./ChatBox";
+import Fish from "./Fish";
+import FriendList from "./FriendList";
+import Game from "./Game";
+import GameA from "./GameA";
+import GameB from "./GameB";
+import ParticipantList from "./ParticipantList";
 
 import { useSFX } from "@/hooks/useSFX";
 
@@ -22,7 +22,7 @@ interface Player {
   nickname: string;
 }
 
-type ScreenState = 'chat' | 'game';
+type ScreenState = "chat" | "game";
 
 interface RoomUpdate {
   roomId: string;
@@ -37,6 +37,9 @@ interface RoomUpdate {
   }[];
   players?: Player[];
   targetUser?: string;
+  // 드롭다운 동기화용 추가 필드 (서버에서 보내는 DropdownStateUpdate)
+  gameType?: string;
+  updatedBy?: string;
 }
 
 interface IntegratedRoomProps {
@@ -68,7 +71,7 @@ export default function IntegratedRoom({
   userName,
   user,
 }: IntegratedRoomProps) {
-  const [screen, setScreen] = useState<ScreenState>('chat');
+  const [screen, setScreen] = useState<ScreenState>("chat");
   const [users, setUsers] = useState<Member[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
@@ -77,23 +80,20 @@ export default function IntegratedRoom({
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>(
     {}
   );
-  const [selectedGame, setSelectedGame] = useState<string>('Game');
+  const [selectedGame, setSelectedGame] = useState<string>("Game");
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
-
-  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때때
-  const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방입장
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
+  const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방 입장 사운드
   const playHostSound = () => {
-    // 호스트용 사운드를 재생하는 코드
-    new Audio('/sounds/카운트다운-02.mp3').play();
+    // 호스트용 사운드 재생
+    new Audio("/sounds/카운트다운-02.mp3").play();
   };
-  
+
   const playUserSound = () => {
-    // 일반 유저용 사운드를 재생하는 코드
+    // 일반 유저용 사운드 재생
     new Audio("/sounds/clickeffect-02.mp3").play();
   };
-  
-
 
   // 현재 참가자 수
   const router = useRouter();
@@ -101,18 +101,16 @@ export default function IntegratedRoom({
   const participantCount = users.length;
   const hasSentJoinRef = useRef<boolean>(false);
 
-
   // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
   useEffect(() => {
     axiosInstance
       .get(`/chatrooms/${roomId}`)
       .then((response) => {
-        // 응답이 배열 형태로 전달됨:
-        // [ { "userId": "user1", "nickname": "Alice", "mainFishImage": "이미지경로", "isHost": true, "level": 5 }, ... ]
+        // 응답이 배열 형태로 전달됨
         const updatedUsers = response.data.map((member: any) => ({
           userName: member.userId,
           nickname: member.nickname,
-          mainFishImage: member.mainFishImage || '',
+          mainFishImage: member.mainFishImage || "",
           isHost: member.isHost,
           ready: false,
           level: member.level,
@@ -120,7 +118,7 @@ export default function IntegratedRoom({
         setUsers(updatedUsers);
       })
       .catch((error) =>
-        console.error('❌ 채팅방 멤버 정보 불러오기 실패:', error)
+        console.error("❌ 채팅방 멤버 정보 불러오기 실패:", error)
       );
   }, [roomId]);
 
@@ -138,7 +136,7 @@ export default function IntegratedRoom({
         if (!hasSentJoinRef.current) {
           const joinMessage = { roomId, sender: userName };
           client.publish({
-            destination: '/app/chat.joinRoom',
+            destination: "/app/chat.joinRoom",
             body: JSON.stringify(joinMessage),
           });
           hasSentJoinRef.current = true;
@@ -147,18 +145,23 @@ export default function IntegratedRoom({
           `/topic/room/${roomId}`,
           (messageFrame) => {
             const data: RoomUpdate = JSON.parse(messageFrame.body);
-            if (data.message === 'GAME_STARTED') {
+            if (data.message === "GAME_STARTED") {
               setGamePlayers(data.players ?? []);
-              setScreen('game');
-            } else if (data.message === 'USER_LIST') {
+              setScreen("game");
+            } else if (data.message === "USER_LIST") {
               setUsers(data.users ?? []);
-            } else if (data.message === 'USER_KICKED') {
+            } else if (data.message === "USER_KICKED") {
               if (data.targetUser === userName) {
-                router.replace('/main?status=kicked');
+                router.replace("/main?status=kicked");
               } else {
                 setUsers((prev) =>
                   prev.filter((u) => u.userName !== data.targetUser)
                 );
+              }
+            } else if (data.message === "GAME_DROPDOWN_UPDATED") {
+              // 드롭다운 동기화 메시지 수신 시 상태 업데이트
+              if (data.gameType) {
+                setSelectedGame(data.gameType);
               }
             }
           }
@@ -191,14 +194,14 @@ export default function IntegratedRoom({
     if (participantCount >= 6) {
       const electronAPI = (window as any).electronAPI;
       if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+        electronAPI.showAlert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
       } else {
-        alert('참가자가 최대 인원(6명)을 초과할 수 없습니다.');
+        alert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
       }
       return;
     }
     try {
-      const response = await axiosInstance.post('/chatrooms/invite', {
+      const response = await axiosInstance.post("/chatrooms/invite", {
         hostId: userName,
         guestId: memberId,
         roomId,
@@ -221,9 +224,9 @@ export default function IntegratedRoom({
     } catch (error) {
       const electronAPI = (window as any).electronAPI;
       if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert('초대 도중 오류가 발생했습니다.');
+        electronAPI.showAlert("초대 도중 오류가 발생했습니다.");
       } else {
-        alert('초대 도중 오류가 발생했습니다.');
+        alert("초대 도중 오류가 발생했습니다.");
       }
     }
   };
@@ -244,11 +247,11 @@ export default function IntegratedRoom({
 
   // [8] 게임 종료 후 대기 화면 복귀 콜백
   const handleResultConfirmed = async () => {
-    setScreen('chat');
+    setScreen("chat");
     const client = getStompClient();
     if (client && client.connected) {
       client.publish({
-        destination: '/app/chat.clearReady',
+        destination: "/app/chat.clearReady",
         body: JSON.stringify({ roomId, sender: userName }),
       });
     }
@@ -270,24 +273,24 @@ export default function IntegratedRoom({
     setTimeout(() => {
       setFishMessages((prev) => ({
         ...prev,
-        [key]: '',
+        [key]: "",
       }));
     }, 2000);
   };
 
   // Helper 함수: 게임에 따른 destination 반환
   const getGameDestination = (game: string) => {
-    if (game === 'Game') return '/app/game.start';
-    if (game === 'gameA') return '/app/game.start';
-    if (game === 'gameB') return '/app/game.start';
-    return '/app/game.start';
+    if (game === "Game") return "/app/game.start";
+    if (game === "gameA") return "/app/game.start";
+    if (game === "gameB") return "/app/game.start";
+    return "/app/game.start";
   };
 
   // [F5 키 동작 수정: ready/unready 또는 게임 시작 동작, 드롭다운 포함]
   const isRefreshRef = useRef(false);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'F5') {
+      if (event.key === "F5") {
         event.preventDefault();
         const client = getStompClient();
         if (!client || !client.connected) return;
@@ -299,17 +302,17 @@ export default function IntegratedRoom({
               body: JSON.stringify({ roomId, gameType: selectedGame }),
             });
           } else {
-            alert('아직 준비되지 않은 물고기가 있습니다.');
+            alert("아직 준비되지 않은 물고기가 있습니다.");
           }
         } else {
           if (myReady) {
             client.publish({
-              destination: '/app/chat.unready',
+              destination: "/app/chat.unready",
               body: JSON.stringify({ roomId, sender: userName }),
             });
           } else {
             client.publish({
-              destination: '/app/chat.ready',
+              destination: "/app/chat.ready",
               body: JSON.stringify({ roomId, sender: userName }),
             });
           }
@@ -317,23 +320,23 @@ export default function IntegratedRoom({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [roomId, userName, currentIsHost, myReady, allNonHostReady, selectedGame]);
 
   // 새로고침 키 감지
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        event.key === 'F5' ||
-        (event.ctrlKey && event.key.toLowerCase() === 'r') ||
-        (event.metaKey && event.key.toLowerCase() === 'r')
+        event.key === "F5" ||
+        (event.ctrlKey && event.key.toLowerCase() === "r") ||
+        (event.metaKey && event.key.toLowerCase() === "r")
       ) {
         isRefreshRef.current = true;
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -342,32 +345,32 @@ export default function IntegratedRoom({
         const client = getStompClient();
         if (client && client.connected) {
           client.publish({
-            destination: '/app/chat.leaveRoom',
+            destination: "/app/chat.leaveRoom",
             body: JSON.stringify({ roomId, sender: userName }),
           });
         }
       }
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [roomId, userName]);
 
   return (
     <>
       {!isConnected ? (
-        <div className='min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10'>
-          <p className='text-2xl font-bold text-gray-900'>로딩중...</p>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10">
+          <p className="text-2xl font-bold text-gray-900">로딩중...</p>
         </div>
       ) : (
         <>
-          {screen === 'chat' && (
+          {screen === "chat" && (
             <div
-              className='relative w-full h-full min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden'
+              className="relative w-full h-full min-h-screen flex items-center justify-center bg-gray-100 overflow-hidden"
               style={{
                 backgroundImage: "url('/chat_images/background.png')",
-                backgroundSize: 'cover',
-                backgroundAttachment: 'fixed',
-                backgroundPosition: 'center',
+                backgroundSize: "cover",
+                backgroundAttachment: "fixed",
+                backgroundPosition: "center",
               }}
             >
               {/* 물고기 렌더링, 말풍선 표시 */}
@@ -375,28 +378,29 @@ export default function IntegratedRoom({
                 <Fish
                   key={fish.fishId}
                   fish={fish}
-                  message={fishMessages[fish.fishName] || ''}
+                  message={fishMessages[fish.fishName] || ""}
                 />
               ))}
 
               {/* 오른쪽 패널 */}
-              <div className='absolute top-24 right-16 flex flex-col space-y-4'>
+              <div className="absolute top-24 right-16 flex flex-col space-y-4">
                 {/* 친구 목록 오버레이는 "친구 초대" 버튼의 왼쪽에 나타남 */}
-                <div className='flex flex-col space-y-4 w-[370px] items-center'>
-                  <div className='flex space-x-2 w-full'>
-                    {/* 친구 초대 버튼을 감싸는 영역을 relative로 처리 */}
-                    <div className='relative w-1/2'>
+                <div className="flex flex-col space-y-4 w-[370px] items-center">
+                  <div className="flex space-x-2 w-full">
+                    {/* 친구 초대 버튼 영역 */}
+                    <div className="relative w-1/2">
                       <button
                         onClick={() => {
                           playModal();
-                          setShowFriendList((prev) => !prev)}}
-                        className='w-full px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center'
+                          setShowFriendList((prev) => !prev);
+                        }}
+                        className="w-full px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
                       >
                         친구 초대
                       </button>
                       {showFriendList && (
-                        <div className='absolute right-full top-0 mr-2 w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg'>
-                          <div className='relative h-full'>
+                        <div className="absolute right-full top-0 mr-2 w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg">
+                          <div className="relative h-full">
                             {/* FriendList 컴포넌트 */}
                             <FriendList
                               userName={userName}
@@ -406,15 +410,14 @@ export default function IntegratedRoom({
                               users={displayUsers}
                               onInvite={(memberId) => {
                                 if (users.length >= 6) {
-                                  const electronAPI = (window as any)
-                                    .electronAPI;
+                                  const electronAPI = (window as any).electronAPI;
                                   if (electronAPI && electronAPI.showAlert) {
                                     electronAPI.showAlert(
-                                      '참가자가 최대 인원(6명)을 초과할 수 없습니다.'
+                                      "참가자가 최대 인원(6명)을 초과할 수 없습니다."
                                     );
                                   } else {
                                     alert(
-                                      '참가자가 최대 인원(6명)을 초과할 수 없습니다.'
+                                      "참가자가 최대 인원(6명)을 초과할 수 없습니다."
                                     );
                                   }
                                   return;
@@ -422,12 +425,13 @@ export default function IntegratedRoom({
                                 inviteFriend(memberId);
                               }}
                             />
-                            {/* 닫기 버튼이 FriendList 내부 우측 상단에 위치 */}
+                            {/* 닫기 버튼 */}
                             <button
                               onClick={() => {
                                 playModal();
-                                setShowFriendList(false)}}
-                              className='absolute top-2 right-2 text-gray-500 hover:text-black'
+                                setShowFriendList(false);
+                              }}
+                              className="absolute top-2 right-2 text-gray-500 hover:text-black"
                             >
                               ❌
                             </button>
@@ -441,13 +445,13 @@ export default function IntegratedRoom({
                         const client = getStompClient();
                         if (client && client.connected) {
                           client.publish({
-                            destination: '/app/chat.leaveRoom',
+                            destination: "/app/chat.leaveRoom",
                             body: JSON.stringify({ roomId, sender: userName }),
                           });
-                          router.replace('/main');
+                          router.replace("/main");
                         }
                       }}
-                      className='w-1/2 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center'
+                      className="w-1/2 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center"
                     >
                       나가기
                     </button>
@@ -462,7 +466,7 @@ export default function IntegratedRoom({
                         const client = getStompClient();
                         if (client && client.connected) {
                           client.publish({
-                            destination: '/app/chat.kickUser',
+                            destination: "/app/chat.kickUser",
                             body: JSON.stringify({
                               roomId,
                               targetUser: target,
@@ -474,7 +478,7 @@ export default function IntegratedRoom({
                     />
                   </div>
 
-                  <div className='p-3 bg-white/70 rounded shadow-md w-full'>
+                  <div className="p-3 bg-white/70 rounded shadow-md w-full">
                     <ChatBox
                       roomId={roomId}
                       users={displayUsers}
@@ -484,64 +488,81 @@ export default function IntegratedRoom({
                   </div>
 
                   {/* 드롭다운과 게임 시작 버튼 영역 */}
-                  <div className='w-full flex flex-col items-center space-y-2'>
+                  <div className="w-full flex flex-col items-center space-y-2">
                     <>
                       <select
                         value={selectedGame}
-                        onChange={(e) =>
-                          currentIsHost && setSelectedGame(e.target.value)
-                        }
-                        className='w-full px-4 py-2 border rounded'
+                        onChange={(e) => {
+                          if (currentIsHost) {
+                            const newGame = e.target.value;
+                            setSelectedGame(newGame);
+                            const client = getStompClient();
+                            if (client && client.connected) {
+                              client.publish({
+                                destination: "/app/chat.dropdown",
+                                body: JSON.stringify({
+                                  roomId,
+                                  sender: userName,
+                                  gameType: newGame,
+                                }),
+                              });
+                            }
+                          }
+                        }}
+                        className="w-full px-4 py-2 border rounded"
                         disabled={!currentIsHost}
                       >
-                        <option value='Game'>Game</option>
-                        <option value='gameA'>Game A</option>
-                        <option value='gameB'>Game B</option>
+                        <option value="Game">Game</option>
+                        <option value="gameA">Game A</option>
+                        <option value="gameB">Game B</option>
                       </select>
                       <button
-  onClick={() => {
-    // 조건에 따라 다른 사운드를 재생합니다.
-    if (currentIsHost) {
-      playHostSound(); // "Start Game(F5)" 사운드
-    } else {
-      playUserSound(); // "Ready(F5)" 또는 "Unready(F5)" 사운드
-    }
+                        onClick={() => {
+                          // 조건에 따라 다른 사운드 재생
+                          if (currentIsHost) {
+                            playHostSound();
+                          } else {
+                            playUserSound();
+                          }
 
-    // 기존 로직 실행
-    const client = getStompClient();
-    if (client && client.connected) {
-      if (currentIsHost) {
-        const destination = getGameDestination(selectedGame);
-        client.publish({
-          destination,
-          body: JSON.stringify({
-            roomId,
-            gameType: selectedGame,
-          }),
-        });
-      } else {
-        client.publish({
-          destination: myReady ? '/app/chat.unready' : '/app/chat.ready',
-          body: JSON.stringify({
-            roomId,
-            sender: userName,
-          }),
-        });
-      }
-    }
-  }}
-  className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
-    currentIsHost && !allNonHostReady ? 'opacity-50 cursor-not-allowed' : ''
-  }`}
-  disabled={currentIsHost ? !allNonHostReady : false}
->
-  {currentIsHost
-    ? 'Start Game(F5)'
-    : myReady
-    ? 'Unready(F5)'
-    : 'Ready(F5)'}
-</button>
-
+                          // 기존 로직 실행
+                          const client = getStompClient();
+                          if (client && client.connected) {
+                            if (currentIsHost) {
+                              const destination = getGameDestination(selectedGame);
+                              client.publish({
+                                destination,
+                                body: JSON.stringify({
+                                  roomId,
+                                  gameType: selectedGame,
+                                }),
+                              });
+                            } else {
+                              client.publish({
+                                destination: myReady
+                                  ? "/app/chat.unready"
+                                  : "/app/chat.ready",
+                                body: JSON.stringify({
+                                  roomId,
+                                  sender: userName,
+                                }),
+                              });
+                            }
+                          }
+                        }}
+                        className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
+                          currentIsHost && !allNonHostReady
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                        disabled={currentIsHost ? !allNonHostReady : false}
+                      >
+                        {currentIsHost
+                          ? "Start Game(F5)"
+                          : myReady
+                          ? "Unready(F5)"
+                          : "Ready(F5)"}
+                      </button>
                     </>
                   </div>
                 </div>
@@ -549,9 +570,9 @@ export default function IntegratedRoom({
             </div>
           )}
 
-          {screen === 'game' && (
-            <div className='w-full h-screen bg-cover bg-center'>
-              {selectedGame === 'Game' ? (
+          {screen === "game" && (
+            <div className="w-full h-screen bg-cover bg-center">
+              {selectedGame === "Game" ? (
                 <Game
                   roomId={roomId}
                   userName={userName}
@@ -559,7 +580,7 @@ export default function IntegratedRoom({
                   onResultConfirmed={handleResultConfirmed}
                   user={currentUser}
                 />
-              ) : selectedGame === 'gameA' ? (
+              ) : selectedGame === "gameA" ? (
                 <GameA
                   roomId={roomId}
                   userName={userName}
@@ -567,7 +588,7 @@ export default function IntegratedRoom({
                   onResultConfirmed={handleResultConfirmed}
                   user={currentUser}
                 />
-              ) : selectedGame === 'gameB' ? (
+              ) : selectedGame === "gameB" ? (
                 <GameB
                   roomId={roomId}
                   userName={userName}
