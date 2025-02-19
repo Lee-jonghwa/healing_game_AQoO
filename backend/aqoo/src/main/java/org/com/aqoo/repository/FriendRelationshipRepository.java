@@ -19,4 +19,9 @@ public interface FriendRelationshipRepository extends JpaRepository<FriendRelati
             "WHERE (f.friend1Id = :userId AND f.friend2Id = :friendId) " +
             "   OR (f.friend1Id = :friendId AND f.friend2Id = :userId)")
     Optional<FriendRelationship> findFriendship(@Param("userId") String userId, @Param("friendId") String friendId);
+
+    @Query("SELECT f FROM FriendRelationship f " +
+            "WHERE (f.friend1Id = :userId1 AND f.friend2Id = :userId2) " +
+            "   OR (f.friend1Id = :userId2 AND f.friend2Id = :userId1)")
+    List<FriendRelationship> findAllFriendshipsByUserIds(@Param("userId1") String userId1, @Param("userId2") String userId2);
 }
