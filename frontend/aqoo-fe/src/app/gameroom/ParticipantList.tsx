@@ -4,7 +4,14 @@ import { useEffect } from "react";
 import { useRecoilState } from "recoil";
 import { usersState, User } from "@/store/participantAtom";
 
-export default function ParticipantList() {
+import { useSFX } from "@/hooks/useSFX";
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+
+
+
+export default function ParticipantList() { 
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
+
   const [users, setUsers] = useRecoilState(usersState);
 
   const handleRemoveParticipant = (participant: User) => {
@@ -48,7 +55,9 @@ export default function ParticipantList() {
                 </div>
               </div>
               <button
-                onClick={() => handleRemoveParticipant(participant)}
+                onClick={() => {
+                  playModal();
+                  handleRemoveParticipant(participant)}}
                 className="px-3 py-1 bg-white text-black rounded border border-black cursor-pointer transition duration-300 hover:bg-red-500 hover:text-white"
               >
                 제거

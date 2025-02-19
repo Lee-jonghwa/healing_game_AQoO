@@ -4,6 +4,7 @@ import { UserInfo, AquariumData } from "@/types";
 
 import MyCollection from "./components/MyCollection";
 import Profile from "./components/Profile";
+import HowToPlay from "./components/HowToPlay"
 
 import { useUserFishCollectionTest } from "@/hooks/useUserFishCollection";
 import { useAllFishCollectionTest } from "@/hooks/useAllFishCollection";
@@ -14,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/services/axiosInstance";
 import { AxiosResponse } from "axios";
+
+import { useSFX } from "@/hooks/useSFX";
 
 export default function MyPage() {
   const { auth, logout } = useAuth();
@@ -30,8 +33,10 @@ export default function MyPage() {
   // 총 물고기
   const totalFishCount = userFishList.reduce((acc, fish) => acc + fish.cnt, 0) + customFishList.length;
 
-
   const [logoWidth, setLogoWidth] = useState<number>(0);
+
+  const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false)
+
 
   // 접속 유저의 정보 조회
   useEffect(() => {
@@ -43,16 +48,16 @@ export default function MyPage() {
         setUserInfo(response.data);
       })
       .catch((error) => {
-        console.error("❌ 유저 정보 불러오기 실패", error);
+        // console.error("❌ 유저 정보 불러오기 실패", error);
       });
   }, [auth.user?.id]);
 
   useEffect(() => {
-    console.log("Fetching aquarium data...");
+    // console.log("Fetching aquarium data...");
 
     if (!userInfo?.mainAquarium) return;
 
-    console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
+    // console.log("🐠 메인 아쿠아리움 ID:", userInfo.mainAquarium);
 
     axiosInstance
       .get(`/aquariums/${userInfo.mainAquarium}`)
@@ -69,10 +74,10 @@ export default function MyPage() {
         if (!bgUrl.startsWith("http")) {
           bgUrl = `${BACKGROUND_BASE_URL}/${bgUrl.replace(/^\/+/, "")}`;
         }
-        console.log("Setting background to:", bgUrl);
+        // console.log("Setting background to:", bgUrl);
         setBackground(bgUrl);
       })
-      .catch((err) => console.error("❌ 어항 정보 불러오기 실패", err));
+      .catch((err) => console.error("❌ 어항 정보 불러오기 실패"));
   }, [userInfo]);
 
   useEffect(() => {
@@ -107,11 +112,19 @@ export default function MyPage() {
       {/* 메인 컨테이너 (내 정보 & 도감) */}
       <div
         className="
-        relative z-10 h-screen w-[70%] max-w-8xl mx-auto
+        relative h-screen w-[90%] sm:w-[70%] max-w-8xl mx-auto
         flex flex-col items-center overflow-hidden
-        pt-12
+        pt-16 sm:pt-12
         "
       >
+        {/* 설정창 테스트 */}
+        {/* <button
+        onClick={() => setIsHowToPlayOpen(true)}
+        className="text-3xl"
+        >
+          ?
+        </button> */}
+        {isHowToPlayOpen && <HowToPlay isOpen={isHowToPlayOpen} onClose={() => setIsHowToPlayOpen(false)}/>}
         <Profile fishTotal={totalFishCount} />
         <MyCollection allFishList={allFishList} userFishList={userFishList} customFishList={customFishList} />
       </div>

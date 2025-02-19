@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import CollectionItemCard from "./CollectionItemCard";
 import axiosInstance from "@/services/axiosInstance";
+import { useSFX } from "@/hooks/useSFX"
 
 interface AggregatedFishData {
   fishName: string;
@@ -37,7 +38,7 @@ export default function TankFishCollection({
 
   const [selectedFish, setSelectedFish] = useState<AggregatedFishData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-
+  const { play: fishClick } = useSFX("/sounds/pop-02.mp3");
   const fetchData = useCallback(() => {
     if (!aquariumId) return;
     if (refresh === 0) {
@@ -99,6 +100,7 @@ export default function TankFishCollection({
   }, [aquariumId, refresh, fetchData]);
 
   const handleFishClick = (fishGroup: AggregatedFishData) => {
+    fishClick();
     setSelectedFish(fishGroup);
     setIsModalOpen(true);
   };
@@ -164,20 +166,20 @@ export default function TankFishCollection({
   if (!aquariumDetails || aquariumDetails.fishes.length === 0) return <div>어항에 물고기가 없습니다.</div>;
 
   return (
-      <div>
-            <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-            <div className="flex flex-wrap justify-start gap-4 ml-7">
-              {aquariumDetails.fishes.map((group) => (
-                  <div
-                    key={group.fishName}
-                    onClick={() => handleFishClick(group)}
-                    className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer m-1"
-                  >
-                    <CollectionItemCard name={group.fishName} count={group.cnt} imageSrc={group.imageSrc} />
-                  </div>
-                ))}
-              </div>
+    <div>
+      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+        <div className="flex flex-wrap justify-start gap-4 ml-7">
+          {aquariumDetails.fishes.map((group) => (
+            <div
+              key={group.fishName}
+              onClick={() => handleFishClick(group)}
+              className="w-full sm:w-1/2 md:w-1/3 lg:w-1/4 cursor-pointer m-1"
+            >
+              <CollectionItemCard name={group.fishName} count={group.cnt} imageSrc={group.imageSrc} />
             </div>
+          ))}
+        </div>
+      </div>
 
       {isModalOpen && selectedFish && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

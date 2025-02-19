@@ -114,7 +114,10 @@ export default function PushNotifications({
   };
 
   return (
-    <div className="relative w-[400px] h-[600px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4">
+    <div
+      className="relative w-[300px] h-[350px] sm:w-[400px] sm:h-[600px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex
+    flex-col"
+    >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">알림</h2>
         <button onClick={onClose} className="text-xl font-bold hover:text-red-500">
@@ -125,9 +128,9 @@ export default function PushNotifications({
       {loading ? (
         <p className="text-center text-gray-500">로딩 중...</p>
       ) : notifications.length === 0 ? (
-        <p className="text-center text-gray-500">최근 알림이 없습니다.</p>
+        <p className="text-center text-gray-500 text-sm sm:text-base">최근 알림이 없습니다.</p>
       ) : (
-        <div className="space-y-3 overflow-y-auto max-h-[500px] scrollbar-hide">
+        <div className="space-y-2 overflow-y-auto flex-grow scrollbar-hide">
           {notifications.map((notif) => (
             <NotificationItem
               key={notif.id}
@@ -217,29 +220,29 @@ function NotificationItem({
 
   return (
     <div
-      className="relative p-3 bg-white border rounded-lg flex items-center space-x-3 shadow cursor-pointer hover:bg-gray-100"
+      className="relative h-auto p-3 pb-2 sm:p-3 sm:pl-1 bg-white border rounded-lg flex items-center space-x-1 sm:space-x-2 shadow cursor-pointer hover:bg-gray-100"
       onClick={onFriendRequestClick}
     >
       {/* X 버튼 (더 작은 크기, 우측 상단으로 더 가까이 이동) */}
       <button
-        className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-transparent text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
+        className="absolute top-1 right-1 w-5 h-5 flex rounded-full bg-transparent text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
         onClick={(e) => {
           e.stopPropagation(); // 부모 클릭 이벤트 방지
           handleDelete(id); // X 버튼 클릭 시 삭제 함수 호출
         }}
       >
-        <span className="text-lg font-bold">×</span> {/* 글자 크기도 조금 줄였어 */}
+        <span className="text-lg font-bold">×</span>
       </button>
-      <div className="relative flex items-center">
+      <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
         <Image
           loader={customLoader}
           src={getIconSrc(type)}
           alt={type}
-          width={32}
-          height={32}
-          className="w-8 h-8 object-contain"
+          width={40}
+          height={40}
+          className="object-contain"
         />
-        {!status && <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full"></div>}
+        {!status && <div className="absolute top-2 left-2 w-3 h-3 bg-yellow-400 rounded-full"></div>}
       </div>
 
       {/* ✅ GAME INVITE일 때 입장 버튼 포함 */}
@@ -254,10 +257,10 @@ function NotificationItem({
       ) : (
         <div>
           <div className="flex items-end space-x-4">
-            <p className="font-bold">{getNotificationLabel(type)}</p>
+            <p className="font-bold sm:text-base text-xs">{getNotificationLabel(type)}</p>
             <p className="text-xs text-gray-400">{formatDate(createdAt)}</p> {/* 🔹 날짜 추가 */}
           </div>
-          <p className="text-sm text-gray-500">{message}</p>
+          <p className="sm:text-sm text-xs text-gray-500">{message}</p>
         </div>
       )}
     </div>
@@ -297,21 +300,19 @@ function GameInviteNotification({
 
   return (
     <div className="flex flex-col items-start justify-between w-full">
-      <div className="flex items-end w-full mb-2">
-        {" "}
-        {/* mb-2 추가로 날짜와 버튼의 아래 간격을 늘림 */}
-        <p className="font-bold text-red-500">게임 초대</p>
+      <div className="flex items-end w-full mb-2s">
+        <p className="sm:text-base text-xs font-bold text-red-500">게임 초대</p>
         <p className="text-xs text-gray-400 ml-5">{formatDate(createdAt)}</p>
-        {gameRoomId && (
-          <button
-            onClick={handleEnterGame}
-            className="px-3 py-1 bg-blue-500 text-white text-xs rounded-md ml-auto mr-10"
-          >
-            입장
-          </button>
-        )}
       </div>
-      <p className="text-sm text-gray-500">{message}</p>
+      <p className="sm:text-sm text-xs text-gray-500">{message}</p>
+      {gameRoomId && (
+        <button
+          onClick={handleEnterGame}
+          className="px-1 py-1 sm:px-3 sm:py-1 bg-blue-500 text-white text-xs rounded-md ml-auto mr-2 mt-2"
+        >
+          입장
+        </button>
+      )}
     </div>
   );
 }
@@ -372,7 +373,6 @@ function FriendRequestModal({
           <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded">
             취소
           </button>
-          {/* TODO 이미 친구면 수락버튼 못 누르게 해야 함 */}
           <button onClick={handleAcceptFriend} className="px-4 py-2 bg-green-500 text-white rounded">
             수락
           </button>
