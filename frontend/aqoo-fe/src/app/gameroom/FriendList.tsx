@@ -80,50 +80,93 @@ export default function FriendList() {
   };
 
   return (
-    <div className="relative w-96 h-[450px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col">
+    <div
+      className="relative w-full max-w-xs md:w-96 h-[350px] md:h-[450px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col"
+    >
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">친구 {myFriends.length}</h2>
       </div>
-
+  
       {/* 친구 리스트 */}
       <div className="space-y-3 overflow-y-auto overflow-x-hidden scrollbar-styled flex-grow">
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
-            <div
-              key={friend.friendId}
-              className="p-3 bg-white bg-opacity-80 border border-black rounded-lg flex items-center justify-between shadow-[2px_2px_0_rgba(0,0,0,0.3)] transform transition duration-300 hover:scale-105"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-300 rounded-full overflow-hidden"> 
-                    <img
-                      src={friend.mainFishImage}
-                      alt="친구의 대표 물고기"
-                      className="w-full h-full object-contain rounded-full"
-                    />
-                </div>
-                <div>
-                  <p className="text-xs">Lv. {friend.level}</p>
-                  <p className="font-bold">{friend.nickname}</p>
-                  <p className="text-xs">{friend.friendId}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  playModal();
-                  handleToggleParticipant(friend)}}
-                disabled={!users.some((u) => u.friendId === friend.friendId) && users.length >= 5}
-                className={`px-3 py-1 text-sm rounded-md border border-black cursor-pointer transition duration-300 ${
-                  users.some((u) => u.friendId === friend.friendId)
-                    ? "bg-white text-black hover:bg-red-500 hover:text-white"
-                    : "bg-white text-black hover:bg-blue-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                }`}
-              >
-                {users.some((u) => u.friendId === friend.friendId)
-                  ? "제거"
-                  : "추가"}
-              </button>
+        <div
+          key={friend.friendId}
+          className="
+            p-3
+            bg-white bg-opacity-80
+            border border-black
+            rounded-lg
+            flex items-center justify-between
+            shadow-[2px_2px_0_rgba(0,0,0,0.3)]
+            transform
+            transition
+            duration-300
+            hover:scale-105
+          "
+        >
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="w-12 h-12 bg-300 rounded-full overflow-hidden">
+              <img
+                src={friend.mainFishImage}
+                alt="친구의 대표 물고기"
+                className="w-full h-full object-contain rounded-full"
+              />
             </div>
+            <div className="min-w-0">
+              {/* Lv */}
+              <p className="text-[10px] md:text-xs whitespace-nowrap">
+                Lv. {friend.level}
+              </p>
+              {/* 닉네임 */}
+              <p
+                className="
+                  font-bold
+                  text-[10px] md:text-base
+                  whitespace-nowrap
+                  overflow-hidden
+                  text-ellipsis
+                "
+              >
+                {friend.nickname}
+              </p>
+              {/* friendId */}
+              <p className="text-[10px] md:text-xs whitespace-nowrap">
+                {friend.friendId}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              playModal();
+              handleToggleParticipant(friend);
+            }}
+            disabled={
+              !users.some((u) => u.friendId === friend.friendId) &&
+              users.length >= 5
+            }
+            className={`
+              px-2 py-1
+              text-[10px] md:text-sm
+              rounded-md
+              border border-black
+              cursor-pointer
+              transition
+              duration-300
+              whitespace-nowrap
+              ${
+                users.some((u) => u.friendId === friend.friendId)
+                  ? "bg-white text-black hover:bg-red-500 hover:text-white"
+                  : "bg-white text-black hover:bg-blue-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              }
+            `}
+          >
+            {users.some((u) => u.friendId === friend.friendId) ? "제거" : "추가"}
+          </button>
+        </div>
           ))
         ) : (
           <p className="text-center text-gray-500">아직 친구가 없습니다.</p>
@@ -156,4 +199,5 @@ export default function FriendList() {
       `}</style>
     </div>
   );
+  
 }
