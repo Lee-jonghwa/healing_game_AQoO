@@ -99,9 +99,9 @@ export default function Game({
   const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
 
   // 7)  효과음
-  const { play: pushSpacebar } = useSFX("/sounds/clickeffect-03.mp3"); // 스페이스바누를때
-  const { play: earnedExp} = useSFX("/sounds/짜잔.mp3"); // 게임끝나고 경험치 얻을 때
-  const { play: levelUp} = useSFX("/sounds/levelupRank.mp3"); // 레벨업할때
+  const { play: pushSpacebar } = useSFX("/sounds/clickeffect-03.mp3"); // 스페이스바 누를때
+  const { play: earnedExp } = useSFX("/sounds/짜잔.mp3"); // 게임 끝나고 경험치 얻을 때
+  const { play: levelUp } = useSFX("/sounds/levelupRank.mp3"); // 레벨업할때
 
   // -----------------------------
   // (A) 트랙 사이즈 측정
@@ -138,7 +138,7 @@ export default function Game({
     setHasCountdownFinished(true);
   }, [countdown]);
 
-  // 탭 이벤트 처리 (스페이스바 또는 클릭)
+  // 탭 이벤트 처리 (스페이스바 or 터치)
   const handleTap = useCallback(() => {
     pushSpacebar();
     if (!hasCountdownFinished || gameEnded) return;
@@ -167,13 +167,14 @@ export default function Game({
     [handleTap]
   );
 
+  // 데스크탑과 모바일 모두를 위해 터치 이벤트 리스너 추가
   useEffect(() => {
     if (hasCountdownFinished) {
       window.addEventListener('keyup', handleKeyPress);
-      window.addEventListener('click', handleTap);
+      window.addEventListener('touchend', handleTap);
       return () => {
         window.removeEventListener('keyup', handleKeyPress);
-        window.removeEventListener('click', handleTap);
+        window.removeEventListener('touchend', handleTap);
       };
     }
   }, [hasCountdownFinished, handleKeyPress, handleTap]);
@@ -587,8 +588,7 @@ export default function Game({
       })}
 
       <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>
-        Press the <span className='font-bold'>Spacebar</span> or touch anywhere
-        to tap!
+        Press the <span className='font-bold'>Spacebar</span> to tap!
       </p>
 
       {!hasCountdownFinished && (
@@ -621,7 +621,7 @@ export default function Game({
                 alt='스페이스바'
                 className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
               />
-              스페이스바 or 터치로 친구보다 먼저 Goal에 도착하세요!
+              스페이스바로 친구보다 먼저 Goal에 도착하세요!
             </p>
             <p className='mt-8 text-2xl text-gray-800'>
               {countdown} 초 후 게임 시작
