@@ -294,6 +294,7 @@ export default function Game({
     setShowExpModal(false);
     if (!myExpInfo) return;
     if (myExpInfo.userLevel > prevLevel) {
+      levelUp();
       setShowLevelUpModal(true);
       (async () => {
         try {
