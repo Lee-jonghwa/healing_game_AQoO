@@ -1,0 +1,22 @@
+{
+    "name": "AQoO",
+    "short_name": "AQoO",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#000000",
+    "description": "A Progressive Web App built with Next.js",
+    "icons": [
+      {
+        "src": "/icons/push-icon.png",
+        "sizes": "198x198",
+        "type": "image/png"
+      },
+      {
+        "src": "/icons/push-icon.png",
+        "sizes": "198x198",
+        "type": "image/png"
+      }
+    ]
+  }
+  
