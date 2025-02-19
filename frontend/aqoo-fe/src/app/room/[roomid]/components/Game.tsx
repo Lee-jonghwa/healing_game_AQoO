@@ -6,6 +6,7 @@ import { User } from '@/store/authAtom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSFX } from "@/hooks/useSFX";
+import { usePathname } from "next/navigation";
 import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 
 interface GameProps {

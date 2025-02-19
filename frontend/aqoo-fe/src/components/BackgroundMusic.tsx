@@ -7,12 +7,13 @@ import { bgMusicVolumeState } from "@/store/soundAtom";
 import { usePathname } from "next/navigation";
 import { useRecoilValue } from "recoil";
 import { useSound } from "@/hooks/useSound";
+import { screenStateAtom } from "@/store/screenStateAtom";
 
 // ✅ 특정 패턴으로 시작하는 페이지에 배경음악 설정
 const pageMusicPatterns: Record<string, string> = {
   "/mypage": "/sounds/bgm-2.mp3", // ✅ "/mypage"로 시작하는 모든 페이지
-  "/gameroom": "/sounds/bgm-1.mp3", // ✅ "/game"으로 시작하는 모든 페이지
-  "/room": "/sounds/bgm-2.mp3", // ✅ "/room"으로 시작하는 모든 페이지
+  "/gameroom": "/sounds/bgm-5.mp3", // ✅ "/game"으로 시작하는 모든 페이지
+  // "/room": "/sounds/bgm-2.mp3", // ✅ "/room"으로 시작하는 모든 페이지
 };
 
 // ✅ 특정한 페이지에 배경음악 설정 (정확한 경로 매칭)
@@ -25,6 +26,8 @@ const pageMusicMap: Record<string, string> = {
 const BackgroundMusic = () => {
   const pathname = usePathname(); // ✅ 현재 페이지 경로 가져오기
   const volume = useRecoilValue(bgMusicVolumeState) / 100; // 0~1로 변환
+  const screenState = useRecoilValue(screenStateAtom);
+  
 
   // ✅ 특정 패턴에 해당하는 배경음악 찾기
   let currentMusic = pageMusicMap.default;
@@ -39,8 +42,22 @@ const BackgroundMusic = () => {
   if (pageMusicMap[pathname]) {
     currentMusic = pageMusicMap[pathname];
   }
+
+  // 추가: screenState에 따라 배경음악 덮어쓰기
+  if (screenState === "game") {
+    currentMusic = "/sounds/game.mp3"; // 게임 화면용 배경음악
+  } else if (screenState === "chat") {
+    currentMusic = "/sounds/bgm-5.mp3"; // 채팅 화면용 배경음악
+  }
+
   const { play, setVolume } = useSound(currentMusic, true, volume);
   const hasPlayed = useRef(false);
+
+  // // 특정 상황에서 hasPlayed 리셋 (원하는 조건에 따라 조절)
+  // useEffect(() => {
+  //   // 예를 들어, screenState가 바뀌면 리셋
+  //   hasPlayed.current = false;
+  // }, [screenState, pathname]);
 
   useEffect(() => {
     if (!hasPlayed.current) {

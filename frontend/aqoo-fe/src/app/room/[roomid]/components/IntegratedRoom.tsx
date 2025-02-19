@@ -14,6 +14,11 @@ import GameB from "./GameB";
 import ParticipantList from "./ParticipantList";
 
 import { useSFX } from "@/hooks/useSFX";
+import { useRecoilState } from "recoil";
+import { screenStateAtom } from "@/store/screenStateAtom";
+import BackgroundMusic from "@/components/BackgroundMusic";
+
+type ScreenState = "chat" | "game";
 
 interface Player {
   userName: string;
@@ -21,8 +26,6 @@ interface Player {
   totalPressCount: number;
   nickname: string;
 }
-
-type ScreenState = "chat" | "game";
 
 interface RoomUpdate {
   roomId: string;
@@ -83,6 +86,8 @@ export default function IntegratedRoom({
   const [selectedGame, setSelectedGame] = useState<string>("Game");
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
+
+  const [screenState, setScreenState] = useRecoilState(screenStateAtom);
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
   const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방 입장 사운드
   const playHostSound = () => {
@@ -101,6 +106,8 @@ export default function IntegratedRoom({
   const participantCount = users.length;
   const hasSentJoinRef = useRef<boolean>(false);
 
+
+  
   // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
   useEffect(() => {
     axiosInstance
@@ -355,8 +362,19 @@ export default function IntegratedRoom({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [roomId, userName]);
 
+  // 화면 전환 시 Recoil Atom 업데이트
+  useEffect(() => {
+    setScreenState(screen);
+  }, [screen, setScreenState]);
+
+  // 예시: 화면 전환 버튼 (필요에 따라 위치 및 디자인 조정)
+  const toggleScreen = () => {
+    setScreen((prev) => (prev === "chat" ? "game" : "chat"));
+  };
+
   return (
     <>
+      <BackgroundMusic />
       {!isConnected ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10">
           <p className="text-2xl font-bold text-gray-900">로딩중...</p>
@@ -373,6 +391,7 @@ export default function IntegratedRoom({
                 backgroundPosition: "center",
               }}
             >
+              
               {/* 물고기 렌더링, 말풍선 표시 */}
               {fishes.map((fish) => (
                 <Fish
@@ -537,11 +556,12 @@ export default function IntegratedRoom({
                                   gameType: selectedGame,
                                 }),
                               });
+                              // 게임 시작 시 화면 상태를 "game"으로 전환합니다.
+                              setScreen("game");
+                              setScreenState("game"); // Recoil 상태 업데이트 (필요한 경우)
                             } else {
                               client.publish({
-                                destination: myReady
-                                  ? "/app/chat.unready"
-                                  : "/app/chat.ready",
+                                destination: myReady ? "/app/chat.unready" : "/app/chat.ready",
                                 body: JSON.stringify({
                                   roomId,
                                   sender: userName,
@@ -549,6 +569,7 @@ export default function IntegratedRoom({
                               });
                             }
                           }
+                          
                         }}
                         className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
                           currentIsHost && !allNonHostReady
