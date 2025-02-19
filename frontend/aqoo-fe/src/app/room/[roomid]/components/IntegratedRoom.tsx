@@ -96,7 +96,6 @@ export default function IntegratedRoom({
     axiosInstance
       .get(`/chatrooms/${roomId}`)
       .then((response) => {
-        console.log('API 호출 완료: ', response);
         // 응답이 배열 형태로 전달됨:
         // [ { "userId": "user1", "nickname": "Alice", "mainFishImage": "이미지경로", "isHost": true, "level": 5 }, ... ]
         const updatedUsers = response.data.map((member: any) => ({
@@ -107,7 +106,6 @@ export default function IntegratedRoom({
           ready: false,
           level: member.level,
         }));
-        console.log('updatedUsers:', updatedUsers);
         setUsers(updatedUsers);
       })
       .catch((error) =>
@@ -163,7 +161,6 @@ export default function IntegratedRoom({
 
   // [3] displayUsers: API에서 받아온 사용자 정보를 그대로 사용.
   const displayUsers = useMemo(() => users, [users]);
-  console.log('채팅방의 displayUsers:', displayUsers);
 
   // [4] Fish 리스트 생성: displayUsers 기반
   useEffect(() => {

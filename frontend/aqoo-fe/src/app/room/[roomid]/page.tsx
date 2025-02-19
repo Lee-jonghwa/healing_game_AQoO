@@ -97,7 +97,6 @@ export default function RoomPage({ params }: RoomPageProps) {
     return null;
     // 이미 위에서 alert, replace 등 처리했으므로 return null
   }
-  console.log('currentUser:', currentUser);
 
   // (6) 유저 정보와 roomId, userName 등을 통합하여 하위 컴포넌트로 넘김
   return (

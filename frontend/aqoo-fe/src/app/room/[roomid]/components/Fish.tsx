@@ -28,7 +28,6 @@ export default function Fish({ fish, message }: FishProps) {
     if (message && message.trim() !== '') {
       setShowMessage(true);
       setCurrentMessage(message);
-      console.log(`💬 Message updated: "${message}" for ${fish.fishName}`);
 
       // 이전 타이머 클리어
       if (timerRef.current) {
@@ -36,7 +35,6 @@ export default function Fish({ fish, message }: FishProps) {
       }
 
       timerRef.current = setTimeout(() => {
-        console.log(`💨 [DEBUG] Message cleared for ${fish.fishName}`);
         setShowMessage(false);
         setCurrentMessage(null);
         timerRef.current = null;
