@@ -75,8 +75,8 @@ export default function ChatBox({ roomId, users, currentUser, onNewMessage }: Ch
   };
 
   return (
-    <div className="border rounded p-4 bg-white flex flex-col w-full h-full">
-      <div className="flex-grow overflow-y-auto min-h-0 p-4 custom-scrollbar">
+    <div className="sm:border rounded sm:p-3 p-1 sm:bg-white flex flex-col w-full h-full ">
+      <div className="flex-grow overflow-y-auto min-h-0 sm:p-4 p-2 custom-scrollbar">
         {messages.map((msg, index) => {
           if (msg.sender === "SYSTEM") {
             return (
@@ -91,15 +91,17 @@ export default function ChatBox({ roomId, users, currentUser, onNewMessage }: Ch
               : msg.nickname || users.find((u) => u.userName === msg.sender)?.nickname || msg.sender;
           return (
             <div key={index} className={`mb-4 ${msg.sender === currentUser.id ? "text-right" : "text-left"}`}>
-              {msg.sender !== currentUser.id && <p className="text-sm text-gray-600 mb-2"> {displayNickname} </p>}
-              <span className="bg-gray-100 p-2">{msg.content}</span>
+              {msg.sender !== currentUser.id && (
+                <p className="sm:text-sm text-xs sm:text-gray-600 text-gray-100 mb-2"> {displayNickname} </p>
+              )}
+              <span className="sm:text-base text-sm bg-gray-100 p-2">{msg.content}</span>
             </div>
           );
         })}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex items-center  rounded-lg scrollbar-hide">
+      <div className="flex items-center  rounded-lg scrollbar-hide 0">
         <input
           type="text"
           value={newMessage}
@@ -110,12 +112,12 @@ export default function ChatBox({ roomId, users, currentUser, onNewMessage }: Ch
               sendMessage();
             }
           }}
-          className="flex-grow p-3 text-sm focus:outline-none focus:shadow-sm border-[1px] bg-gray-50  sm:text-sm text-xs"
+          className="flex-grow p-3 focus:outline-none focus:shadow-sm bg-gray-50 sm:text-sm text-xs"
           placeholder="채팅을 입력해 주세요"
         />
         <button
           onClick={sendMessage}
-          className="w-[25%] p-3 bg-blue-300 border-[1px]  hover:bg-blue-400 transition-colors rounded sm:text-sm text-xs"
+          className="w-[25%] p-3 bg-blue-300  hover:bg-blue-400 transition-colors  sm:text-sm text-xs"
         >
           보내기
         </button>

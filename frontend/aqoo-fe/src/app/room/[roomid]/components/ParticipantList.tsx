@@ -33,8 +33,8 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
         onClick={() => setIsOpen((prev) => !prev)}
         className="w-full px-2 rounded transition-colors text-center flex justify-between"
       >
-        <span className="text-lg">참가자 리스트 </span>
-        <span className="ml-4 mr-auto text-lg">{users.length}</span>
+        <span className="sm:text-lg text-base">참가자 리스트 </span>
+        <span className="ml-4 mr-auto sm:text-lg text-bas">{users.length}</span>
         {isOpen ? "▲" : "▼"}
       </button>
 
@@ -52,7 +52,7 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
               return (
                 <li
                   key={member.userName}
-                  className="flex justify-between items-center px-4 py-2 border rounded bg-gray-50"
+                  className="flex justify-between items-center px-4 sm:py-2 py-1 border rounded bg-gray-50"
                 >
                   <div className="text-gray-900 font-medium flex items-center space-x-2">
                     <div className="w-10 h-10 bg-300 rounded-full overflow-hidden">
@@ -62,9 +62,9 @@ export default function ParticipantList({ users, currentUser, currentIsHost, onK
                         className="w-full h-full object-contain rounded-full"
                       />
                     </div>
-                    <div>{displayName}</div>
+                    <div className="sm:text-base text-sm">{displayName}</div>
                   </div>
-                  {member.ready && <span className="text-green-700 font-bold">Ready</span>}
+                  {member.ready && <span className="text-green-700 font-bold sm:text-base text-sm">Ready</span>}
                   {currentIsHost && member.userName !== currentUser?.id && (
                     <button
                       onClick={() => onKickUser(member.userName)}

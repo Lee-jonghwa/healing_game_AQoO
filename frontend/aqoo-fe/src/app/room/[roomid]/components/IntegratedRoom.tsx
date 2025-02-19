@@ -362,12 +362,19 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                           playModal();
                           setShowFriendList((prev) => !prev);
                         }}
-                        className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
+                        className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center sm:text-base text-sm"
                       >
                         친구 초대
                       </button>
                       {showFriendList && (
-                        <div className="absolute right-full top-0 mr-2 w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg">
+                        <div
+                          className={`absolute  shadow-md p-4 rounded-lg z-50 
+                          ${
+                            window.innerWidth < 640
+                              ? "top-10 left-10 transform -translate-x-10 -translate-y-10 max-w-[350px] bg-white"
+                              : "right-full top-0 mr-2 w-[320px] h-[550px] bg-white/70"
+                          }`}
+                        >
                           <div className="relative h-full">
                             {/* FriendList 컴포넌트 */}
                             <FriendList
@@ -415,7 +422,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                           router.replace("/main");
                         }
                       }}
-                      className="w-1/2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center"
+                      className="w-1/2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center sm:text-base text-sm"
                     >
                       나가기
                     </button>
@@ -444,7 +451,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                   </div>
 
                   {/* 채팅창 div */}
-                  <div className="flex-grow overflow-hidden min-h-0 flex flex-col bg-white/70 rounded shadow-md p-2">
+                  <div className="flex-grow overflow-hidden min-h-0 flex flex-col sm:bg-white/70 rounded shadow-md sm:p-2 p-1">
                     <ChatBox
                       roomId={roomId}
                       users={displayUsers}
@@ -459,7 +466,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                       <select
                         value={selectedGame}
                         onChange={(e) => currentIsHost && setSelectedGame(e.target.value)}
-                        className="w-full px-4 py-2 border rounded mt-2"
+                        className="w-full px-4 py-2 border rounded sm:mt-2 mt-1"
                         disabled={!currentIsHost}
                       >
                         <option value="Game">Game</option>
