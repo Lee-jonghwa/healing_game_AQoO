@@ -107,7 +107,7 @@ export default function GameRoomPage() {
                       mx-auto">
   
         {/* 데스크탑: 친구 리스트와 참가자 리스트를 감싼 박스 */}
-        <div className="hidden md:flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px] relative">
+        <div className="hidden md:flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px] relative justify-center items-center">
           {/* 데스크탑: 절대 위치로 방 만들기 제목 */}
           <div className="absolute top-[-40px] left-1/2 transform -translate-x-1/2 px-6 py-2 bg-white/70 border border-black rounded-lg shadow-lg">
             <h1 className="text-3xl font-bold text-black text-center">🎮 방 만들기 🕹️</h1>
