@@ -80,7 +80,7 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
               border border-black bg-white [box-shadow:1px_1px_0px_1px_rgba(0,0,0,0.25)_inset]
             "
           >
-            <Image
+            <img
               src={
                 userData.mainFishImage.startsWith("http") ? userData.mainFishImage : `images/${userData.mainFishImage}`
               }
