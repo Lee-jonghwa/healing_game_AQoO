@@ -16,7 +16,10 @@ import ParticipantList from "./ParticipantList";
 import { useSFX } from "@/hooks/useSFX";
 import { useRecoilState } from "recoil";
 import { screenStateAtom } from "@/store/screenStateAtom";
+import { selectedGameAtom } from "@/store/gameAtom";
 import BackgroundMusic from "@/components/BackgroundMusic";
+
+
 
 type ScreenState = "chat" | "game";
 
@@ -74,7 +77,7 @@ export default function IntegratedRoom({
   userName,
   user,
 }: IntegratedRoomProps) {
-  const [screen, setScreen] = useState<ScreenState>("chat");
+  const [screen, setScreen] = useState<"chat" | "game">("chat");
   const [users, setUsers] = useState<Member[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
@@ -83,13 +86,14 @@ export default function IntegratedRoom({
   const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>(
     {}
   );
-  const [selectedGame, setSelectedGame] = useState<string>("Game");
+  const [selectedGame, setSelectedGame] = useRecoilState(selectedGameAtom);
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
-
+// 배경음악, 효과음 관련 코드
   const [screenState, setScreenState] = useRecoilState(screenStateAtom);
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
   const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방 입장 사운드
+  
   const playHostSound = () => {
     // 호스트용 사운드 재생
     new Audio("/sounds/카운트다운-02.mp3").play();
@@ -100,12 +104,17 @@ export default function IntegratedRoom({
     new Audio("/sounds/clickeffect-02.mp3").play();
   };
 
+  const handleStartGame = () => {
+    setScreen("game");
+    setScreenState("game"); 
+  };
+  
+
   // 현재 참가자 수
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User>(user);
   const participantCount = users.length;
   const hasSentJoinRef = useRef<boolean>(false);
-
 
   
   // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
@@ -367,14 +376,11 @@ export default function IntegratedRoom({
     setScreenState(screen);
   }, [screen, setScreenState]);
 
-  // 예시: 화면 전환 버튼 (필요에 따라 위치 및 디자인 조정)
-  const toggleScreen = () => {
-    setScreen((prev) => (prev === "chat" ? "game" : "chat"));
-  };
 
   return (
     <>
       <BackgroundMusic />
+
       {!isConnected ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10">
           <p className="text-2xl font-bold text-gray-900">로딩중...</p>
