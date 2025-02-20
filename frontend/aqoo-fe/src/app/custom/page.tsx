@@ -2,17 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useAuth } from "@/hooks/useAuth";
-import axiosInstance from "@/services/axiosInstance";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import MenuButton from "../main/MenuButton";
 import GuideModal from "@/app/custom/GuideModal";
+import Image from "next/image";
+import MenuButton from "../main/MenuButton";
+import axiosInstance from "@/services/axiosInstance";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
 
 export default function CustomFishPages() {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const { showToast } = useToast();
 
   const [viewportHeight, setViewportHeight] = useState("100vh");
 
@@ -338,29 +340,19 @@ export default function CustomFishPages() {
   // ✅ API 요청을 위한 `handleSaveDrawing` 함수
   const handleSaveDrawing = async () => {
     if (!fishName.trim()) {
-      const electronAPI = (window as any).electronAPI;
-      if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert("물고기 이름을 입력해주세요!");
-      } else {
-        alert("물고기 이름을 입력해주세요!");
-      }
+      showToast("물고기 이름을 입력해주세요!", "info");
       return;
     }
 
     // 🔹 특수문자 검사
     const allowedRegex = /^[가-힣a-zA-Z0-9]*$/;
     if (!allowedRegex.test(fishName)) {
-      alert("물고기 이름에는 한글, 영어, 숫자만 사용할 수 있습니다!");
+      showToast("물고기 이름에는 한글, 영어, 숫자만 사용할 수 있습니다!", "warning");
       return;
     }
 
     if (!fishSize) {
-      const electronAPI = (window as any).electronAPI;
-      if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert("물고기 크기를 선택해주세요!");
-      } else {
-        alert("물고기 크기를 선택해주세요!");
-      }
+      showToast("물고기 크기를 선택해주세요!", "warning");
       return;
     }
 
@@ -392,31 +384,16 @@ export default function CustomFishPages() {
 
         // 서버에서 중복된 이름일 경우 "이미 존재하는 이름입니다."라는 문자열을 반환하는 경우
         if (typeof response.data === "string" && response.data.includes("이미 존재하는 이름입니다")) {
-          const electronAPI = (window as any).electronAPI;
-          if (electronAPI && electronAPI.showAlert) {
-            electronAPI.showAlert("이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!");
-          } else {
-            alert("이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!");
-          }
+          showToast("이미 존재하는 물고기 이름입니다. 다른 이름을 입력해주세요!", "warning");
           setFishName(""); // 기존 입력값 초기화 (선택)
           return;
         }
 
-        const electronAPI = (window as any).electronAPI;
-        if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert("그림이 저장되었습니다!");
-        } else {
-          alert("그림이 저장되었습니다!");
-        }
+        showToast("그림이 저장되었습니다!", "success");
         router.push("/mypage/fishtank");
       } catch (error: any) {
         console.error("🚨 오류:", error);
-        const electronAPI = (window as any).electronAPI;
-        if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert("저장 중 오류가 발생했습니다.");
-        } else {
-          alert("저장 중 오류가 발생했습니다.");
-        }
+        showToast("저장 중 오류가 발생했습니다.", "error");
       }
     }, "image/png");
   };

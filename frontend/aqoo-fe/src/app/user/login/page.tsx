@@ -55,7 +55,6 @@ export default function LoginPage() {
    */
   const handleSocialLogin = (provider: "google" | "naver") => {
     if (provider === "naver") {
-      // alert("추후 서비스 예정입니다.");
       showToast("추후 서비스 예정입니다.", "info");
       return;
     }

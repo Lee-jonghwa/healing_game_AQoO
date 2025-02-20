@@ -8,6 +8,7 @@ import axios from "axios";
 import axiosInstance from "@/services/axiosInstance";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 export default function FishTicketModal({
   onClose,
@@ -22,6 +23,8 @@ export default function FishTicketModal({
   refreshUserInfo: () => void; // ✅ 유저 정보 갱신 함수 추가
   isFirstLogin: boolean; // ✅ 첫 로그인 여부를 받아서 UI 조정
 }) {
+  const { showToast } = useToast();
+
   const router = useRouter();
   const [step, setStep] = useState<"select" | "gacha">("select");
   const [fish, setFish] = useState<GotchaFish | null>(null);
@@ -33,7 +36,7 @@ export default function FishTicketModal({
 
   const handleGacha = async () => {
     if (fishTicket <= 0) {
-      alert("물고기 티켓이 부족합니다!"); // ✅ 티켓 부족 시 알림
+      showToast("물고기 티켓이 부족합니다!", "warning"); // ✅ 티켓 부족 시 알림
       return;
     }
 

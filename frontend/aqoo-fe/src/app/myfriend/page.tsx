@@ -1,15 +1,18 @@
 "use client";
 
 import "@/lib/firebase"; // Firebase 초기화
-import React, { useEffect, useState, Suspense } from "react";
+
+import React, { Suspense, useEffect, useState } from "react";
 import axios, { AxiosResponse } from "axios";
-import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+
 import CollectionItemCard from "./components/CollectionItemCard"; // 물고기 카드 컴포넌트
 import Fish from "@/components/Fish"; // 물고기 움직임 로직을 포함한 컴포넌트
+import Link from "next/link";
 import { authAtom } from "@/store/authAtom";
-import { useRecoilValue } from "recoil";
 import axiosInstance from "@/services/axiosInstance";
+import { useRecoilValue } from "recoil";
+import { useToast } from "@/hooks/useToast";
 
 // 타입 정의
 interface FishData {
@@ -48,6 +51,8 @@ interface GetFriendFishResponseDto {
 }
 
 function FriendFishContent() {
+  const { showToast } = useToast();
+
   const auth = useRecoilValue(authAtom);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -90,8 +95,7 @@ function FriendFishContent() {
         .get(`/aquariums/${friendUserInfo.mainAquarium}`)
         .then((res: AxiosResponse<AquariumData>) => {
           setAquariumData(res.data);
-          const bgUrl =
-            "https://i12e203.p.ssafy.io/images" + res.data.aquariumBackground;
+          const bgUrl = "https://i12e203.p.ssafy.io/images" + res.data.aquariumBackground;
           setBackground(bgUrl);
         })
         .catch((err) => console.error("어항 정보 불러오기 실패:", err))
@@ -114,9 +118,7 @@ function FriendFishContent() {
             setFishes([]);
           }
         })
-        .catch((err) =>
-          console.error("친구 물고기 데이터 불러오기 실패:", err)
-        );
+        .catch((err) => console.error("친구 물고기 데이터 불러오기 실패:", err));
     }
   }, [friendUserInfo?.mainAquarium]);
 
@@ -142,14 +144,14 @@ function FriendFishContent() {
       .post(`/aquariums/friendFish`, payload)
       .then((res: AxiosResponse<GetFriendFishResponseDto>) => {
         const { message, success } = res.data;
-        alert(message);
+        showToast(message);
         if (success) {
           setFishes((prev) => prev.filter((f) => f.fishId !== fish.fishId));
         }
       })
       .catch((error) => {
         console.error("친구 물고기 가져오기 실패:", error);
-        alert("물고기를 가져오는 데 실패했습니다.");
+        showToast("물고기를 가져오는 데 실패했습니다.", "error");
       });
   };
 
@@ -164,28 +166,24 @@ function FriendFishContent() {
     axiosInstance
       .post(`/friends/request`, payload)
       .then((res: AxiosResponse<{ relationshipId: number }>) => {
-        alert("친구 요청을 보냈습니다.");
+        showToast("친구 요청을 보냈습니다.", "success");
       })
       .catch((error) => {
         console.error("친구 요청 실패:", error);
         const errorMessage = error.response?.data?.error || "친구 요청에 실패했습니다.";
-        alert(errorMessage);
+        showToast(errorMessage, "error");
       });
   };
 
   if (loading) return <div>로딩 중...</div>;
-  if (!friendUserInfo || !aquariumData)
-    return <div>데이터를 불러오는데 실패했습니다.</div>;
+  if (!friendUserInfo || !aquariumData) return <div>데이터를 불러오는데 실패했습니다.</div>;
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <title>친구의 아쿠아리움</title>
 
       {/* 배경 이미지 */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${background})` }}
-      ></div>
+      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${background})` }}></div>
 
       {/* 친구 어항정보 헤더 */}
       <div className="absolute top-20 left-10 z-50 text-white p-2 px-5 bg-black/30 rounded flex flex-col gap-2">
@@ -195,10 +193,7 @@ function FriendFishContent() {
         <p>어항 이름: {aquariumData.aquariumName}</p>
         {/* 친구 추가 버튼 추가 */}
         {!isFriendExist && (
-          <button
-            onClick={handleSendFriendRequest}
-            className="mt-2 px-4 py-1 bg-blue-500 text-white rounded"
-          >
+          <button onClick={handleSendFriendRequest} className="mt-2 px-4 py-1 bg-blue-500 text-white rounded">
             친구 추가
           </button>
         )}
@@ -215,10 +210,7 @@ function FriendFishContent() {
 
       {/* 친구 물고기 보기 버튼 */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-        <button
-          onClick={() => setShowFishList(true)}
-          className="bg-blue-500 text-white p-2 rounded"
-        >
+        <button onClick={() => setShowFishList(true)} className="bg-blue-500 text-white p-2 rounded">
           친구 물고기 보기
         </button>
       </div>
@@ -235,26 +227,17 @@ function FriendFishContent() {
           >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">친구의 커스텀 물고기</h2>
-              <button
-                onClick={() => setShowFishList(false)}
-                className="text-red-500"
-              >
+              <button onClick={() => setShowFishList(false)} className="text-red-500">
                 닫기
               </button>
             </div>
             {/* 커스텀 물고기가 없는 경우 문구 출력 */}
-            {sortedFishes.every((fish) =>
-              ["COMMON", "RARE", "EPIC"].includes(fish.rarity)
-            ) ? (
-              <div className="text-center text-gray-500">
-                커스텀 물고기가 없습니다.
-              </div>
+            {sortedFishes.every((fish) => ["COMMON", "RARE", "EPIC"].includes(fish.rarity)) ? (
+              <div className="text-center text-gray-500">커스텀 물고기가 없습니다.</div>
             ) : (
               <div className="grid grid-cols-4 gap-2">
                 {sortedFishes.map((fish, index) => {
-                  const isEnabled = !["COMMON", "RARE", "EPIC"].includes(
-                    fish.rarity
-                  );
+                  const isEnabled = !["COMMON", "RARE", "EPIC"].includes(fish.rarity);
 
                   // 희귀도가 COMMON, RARE, EPIC인 경우 렌더링하지 않음
                   if (["COMMON", "RARE", "EPIC"].includes(fish.rarity)) {
@@ -263,11 +246,7 @@ function FriendFishContent() {
 
                   return (
                     <div key={index} className="flex flex-col items-center">
-                      <CollectionItemCard
-                        name={fish.fishName}
-                        count={1}
-                        imageSrc={fish.fishImage}
-                      />
+                      <CollectionItemCard name={fish.fishName} count={1} imageSrc={fish.fishImage} />
                       <button
                         onClick={() => {
                           if (isEnabled) {
@@ -276,9 +255,7 @@ function FriendFishContent() {
                         }}
                         disabled={!isEnabled}
                         className={`mt-1 px-2 py-1 rounded text-xs ${
-                          isEnabled
-                            ? "bg-green-500 text-white"
-                            : "bg-gray-400 text-white cursor-not-allowed"
+                          isEnabled ? "bg-green-500 text-white" : "bg-gray-400 text-white cursor-not-allowed"
                         }`}
                       >
                         가져오기

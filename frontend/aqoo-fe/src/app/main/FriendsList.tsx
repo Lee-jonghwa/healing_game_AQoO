@@ -11,6 +11,7 @@ import { debounce } from "lodash";
 import { useAuth } from "@/hooks/useAuth";
 import { useInput } from "@/hooks/useInput";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
 
 // ✅ 친구 목록을 가져오는 함수 (외부에서도 사용할 수 있도록 분리)
 export const fetchFriends = async (userId: string) => {
@@ -33,6 +34,8 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const [isSearchTriggered, setIsSearchTriggered] = useState(false); // 검색 여부
 
+  const { showToast } = useToast();
+
   // dummy Friend 객체 (랜덤방문 셀)
   const dummyFriend: Friend = {
     friendId: "random",
@@ -50,16 +53,14 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
         const randomUserId = res.data; // 응답으로 랜덤한 한 사용자의 id만 반환
 
         if (randomUserId) {
-          // alert(`랜덤 방문: ${randomUserId} (사용자 ID)`);
-          // 예를 들어 해당 사용자 페이지로 이동할 수도 있습니다.
           router.push(`/myfriend?friendId=${randomUserId}&isFriendExist=false`);
         } else {
-          alert("방문할 비친구 사용자가 없습니다.");
+          showToast("친구가 아닌 사용자가 없습니다!", "warning");
         }
       })
       .catch((error) => {
         console.error("랜덤 방문 요청 실패:", error);
-        alert("랜덤 방문 요청 실패");
+        showToast("랜덤 방문 요청 실패", "error");
       });
   };
 
@@ -91,7 +92,7 @@ export default function FriendsList({ onClose, userId }: { onClose: () => void; 
         setSearchResults((prev) => prev.map((user) => (user.friendId === friendId ? { ...user, isFriend: 1 } : user)));
       })
       .catch((error) => {
-        alert("친구 추가에 실패했습니다. 다시 시도하세요.");
+        showToast("친구 추가에 실패했습니다. 다시 시도하세요.", "error");
         console.error("친구 추가 요청 실패", error);
       });
   };

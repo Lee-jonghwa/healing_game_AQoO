@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import CollectionItemCard from "../components/CollectionItemCard";
 import Modal from "./Modal";
-import { useAuth } from "@/hooks/useAuth";
-import axiosInstance from "@/services/axiosInstance"; // axiosInstance 임포트
-import { useRecoilState } from "recoil";
 import { authAtom } from "@/store/authAtom";
-// 타이틀 밖에 띄우기
+import axiosInstance from "@/services/axiosInstance"; // axiosInstance 임포트
 import { createPortal } from "react-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useRecoilState } from "recoil";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
+
+// 타이틀 밖에 띄우기
 
 interface FishData {
   fishTypeId: number;
@@ -77,6 +80,8 @@ function ModalTitlePortal({ title, containerRect }: ModalTitlePortalProps) {
 }
 
 export default function MyFishChangeModal({ onClose, userData }: MyFishChangeModalProps) {
+  const { showToast } = useToast();
+
   const [selectedFishId, setSelectedFishId] = useState<number | null>(null);
   const [selectedFishImage, setSelectedFishImage] = useState<string | null>(null);
   const [fishList, setFishList] = useState<FishData[]>([]);
@@ -158,7 +163,7 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
   // 완료 버튼 클릭 시 대표 물고기 변경 API 호출 및 낙관적 업데이트 적용
   const handleConfirm = async () => {
     if (!selectedFishImage) {
-      alert("대표 물고기를 선택해주세요.");
+      showToast("대표 물고기를 선택해주세요.", "warning");
       return;
     }
     setIsLoading(true);
@@ -184,12 +189,12 @@ export default function MyFishChangeModal({ onClose, userData }: MyFishChangeMod
         } as any,
       });
       playSuccess();
-      alert("대표 물고기 변경 성공!");
+      showToast("대표 물고기 변경 성공!", "success");
       // 서버와 동기화하기 위해 fetchUser()를 호출
       await fetchUser();
       onClose();
     } catch (error) {
-      alert("대표 물고기 변경에 실패했습니다.");
+      showToast("대표 물고기 변경에 실패했습니다.", "error");
       // console.error(error);
     } finally {
       setIsLoading(false);

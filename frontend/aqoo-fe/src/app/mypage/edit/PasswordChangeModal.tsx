@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+
 import Modal from "./Modal";
-import { useAuth } from "@/hooks/useAuth";
 import axiosInstance from "@/services/axiosInstance";
+import { useAuth } from "@/hooks/useAuth";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 interface PasswordChangeModalProps {
   onClose: () => void;
 }
 
 export default function PasswordChangeModal({ onClose }: PasswordChangeModalProps) {
-  // axiosInstance에 이미 baseURL과 기본 헤더가 설정되어 있으므로 별도 설정 불필요
+  const { showToast } = useToast();
+
   const { auth } = useAuth();
   const userId = localStorage.getItem("userId") || auth.user?.id || "";
 
@@ -20,14 +23,14 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3")
+  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3");
 
   const wrapOnSuccess = (originalOnClick?: () => void) => () => {
     playSuccess();
     if (originalOnClick) {
-      originalOnClick()
+      originalOnClick();
     }
-  }
+  };
 
   // 입력값 검증: 새 비밀번호와 확인이 일치하는지, 현재 비밀번호와 새 비밀번호가 다른지 확인
   useEffect(() => {
@@ -63,12 +66,12 @@ export default function PasswordChangeModal({ onClose }: PasswordChangeModalProp
       // console.log("응답 상태 코드:", response.status);
       // console.log("응답 데이터:", response.data);
 
-      playSuccess()
-      alert(response.data.message);
+      playSuccess();
+      showToast(response.data.message, "success");
       onClose();
     } catch (error: any) {
       // console.error("비밀번호 변경 중 오류 발생:", error);
-      // alert("비밀번호 변경 실패: " + (error.message || "알 수 없는 오류"));
+      showToast("비밀번호 변경 실패: " + (error.message || "알 수 없는 오류"), "error");
     }
   };
 

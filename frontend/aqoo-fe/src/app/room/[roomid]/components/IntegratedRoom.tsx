@@ -12,13 +12,12 @@ import GameB from "./GameB";
 import ParticipantList from "./ParticipantList";
 import { User } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
-import { useRouter } from "next/navigation";
-import { useSFX } from "@/hooks/useSFX";
-import { useRecoilState } from "recoil";
 import { screenStateAtom } from "@/store/screenStateAtom";
 import { selectedGameAtom } from "@/store/gameAtom";
-
-
+import { useRecoilState } from "recoil";
+import { useRouter } from "next/navigation";
+import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 type ScreenState = "chat" | "game";
 
@@ -71,11 +70,9 @@ export interface Member {
   level: number;
 }
 
-export default function IntegratedRoom({
-  roomId,
-  userName,
-  user,
-}: IntegratedRoomProps) {
+export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
+  const { showToast } = useToast();
+
   const [screen, setScreen] = useState<"chat" | "game">("chat");
   const [users, setUsers] = useState<Member[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
@@ -89,11 +86,10 @@ export default function IntegratedRoom({
   const [selectedGame, setSelectedGame] = useState<string>("Game");
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
-// 배경음악, 효과음 관련 코드
+  // 배경음악, 효과음 관련 코드
   const [screenState, setScreenState] = useRecoilState(screenStateAtom);
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
   const { play: entranceRoom } = useSFX("/sounds/샤라랑-01.mp3"); // 채팅방 입장 사운드
-  
 
   // 현재 참가자 수
   const router = useRouter();
@@ -108,14 +104,10 @@ export default function IntegratedRoom({
       console.log("🎵 참가자 추가됨! 효과음 실행");
       entranceRoom(); // 참가자 등장 효과음 실행
     }
-  
+
     prevUsersRef.current = users;
   }, [users]);
-  
-  
 
-
-  
   // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
   useEffect(() => {
     axiosInstance
@@ -202,12 +194,7 @@ export default function IntegratedRoom({
   // [5] 친구 초대 함수
   const inviteFriend = async (memberId: string) => {
     if (participantCount >= 6) {
-      const electronAPI = (window as any).electronAPI;
-      if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-      } else {
-        alert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-      }
+      showToast("참가자가 최대 인원(6명)을 초과할 수 없습니다.", "warning");
       return;
     }
     try {
@@ -217,27 +204,12 @@ export default function IntegratedRoom({
         roomId,
       });
       if (response.status >= 200 && response.status < 300) {
-        const electronAPI = (window as any).electronAPI;
-        if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert(`${memberId}님을 초대했습니다.`);
-        } else {
-          alert(`${memberId}님을 초대했습니다.`);
-        }
+        showToast(`${memberId}님을 초대했습니다.`, "success");
       } else {
-        const electronAPI = (window as any).electronAPI;
-        if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert(`${memberId} 초대에 실패했습니다.`);
-        } else {
-          alert(`${memberId} 초대에 실패했습니다.`);
-        }
+        showToast(`${memberId} 초대에 실패했습니다.`, "error");
       }
     } catch (error) {
-      const electronAPI = (window as any).electronAPI;
-      if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert("초대 도중 오류가 발생했습니다.");
-      } else {
-        alert("초대 도중 오류가 발생했습니다.");
-      }
+      showToast("초대 도중 오류가 발생했습니다.", "error");
     }
   };
 
@@ -303,7 +275,7 @@ export default function IntegratedRoom({
               body: JSON.stringify({ roomId, gameType: selectedGame }),
             });
           } else {
-            alert("아직 준비되지 않은 물고기가 있습니다.");
+            showToast("아직 준비되지 않은 물고기가 있습니다.", "info");
           }
         } else {
           if (myReady) {
@@ -361,7 +333,6 @@ export default function IntegratedRoom({
     setScreenState(screen);
   }, [screen, setScreenState]);
 
-
   return (
     <>
       {!isConnected ? (
@@ -380,7 +351,6 @@ export default function IntegratedRoom({
                 backgroundPosition: "center",
               }}
             >
-              
               {/* 물고기 렌더링, 말풍선 표시 */}
               {fishes.map((fish) => (
                 <Fish key={fish.fishId} fish={fish} message={fishMessages[fish.fishName] || ""} />
@@ -422,12 +392,8 @@ export default function IntegratedRoom({
                               users={displayUsers}
                               onInvite={(memberId) => {
                                 if (users.length >= 6) {
-                                  const electronAPI = (window as any).electronAPI;
-                                  if (electronAPI && electronAPI.showAlert) {
-                                    electronAPI.showAlert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-                                  } else {
-                                    alert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-                                  }
+                                  showToast("참가자가 최대 인원(6명)을 초과할 수 없습니다.", "warning");
+
                                   return;
                                 }
                                 inviteFriend(memberId);
@@ -560,7 +526,6 @@ export default function IntegratedRoom({
                               });
                             }
                           }
-                          
                         }}
                         className={`w-full px-6 py-3 text-xl rounded transition-colors 
                           ${
