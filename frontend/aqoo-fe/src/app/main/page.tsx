@@ -295,10 +295,11 @@ export default function MainPage() {
   };
 
   const onOverlayModalConfirm = (selected: { fishImage: string; size: string; count: number }[]) => {
-    // 각 항목을 "fishImage:size:count:" 형식으로 만든 후, 전체 문자열 뒤에 투명도 값을 추가
-    const overlayParam = selected
-      .map((item) => `${item.fishImage}:${item.size}:${item.count}:`)
-      .join(",") + transparency;
+    // 각 항목을 "fishImage:size:count" 형식으로 변환하고, 이를 콤마로 연결한 후 "|" 구분자로 투명도 값을 추가
+    const overlayParam = 
+      selected
+        .map((item) => `${item.fishImage}:${item.size}:${item.count}`)
+        .join(",") + "|" + transparency;
     (window as any).electronAPI.toggleOverlay(overlayParam);
     setOverlayActive(true);
     setShowOverlayModal(false);
