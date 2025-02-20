@@ -54,6 +54,8 @@ interface FishOverlayModalProps {
   fishList: FishData[];
   transparency: number;
   setTransparency: (val: number) => void;
+  selectedMonitorId: number;
+  setSelectedMonitorId: (id: number) => void;
   onConfirm: (
     selected: { fishImage: string; size: string; count: number }[]
   ) => void;
@@ -143,6 +145,8 @@ function FishOverlayModal({
   fishList,
   transparency,
   setTransparency,
+  selectedMonitorId,
+  setSelectedMonitorId,
   onConfirm,
   onClose,
 }: FishOverlayModalProps) {
@@ -153,7 +157,6 @@ function FishOverlayModal({
 
   // 모니터 관련 상태
   const [monitors, setMonitors] = useState<DisplayInfo[]>([]);
-  const [selectedMonitorId, setSelectedMonitorId] = useState<number>(0);
 
   // 전달받은 fishList 데이터를 fishName 기준으로 그룹화
   useEffect(() => {
@@ -245,6 +248,14 @@ function FishOverlayModal({
         <h2 className="text-xl font-bold mb-4">
           항상 화면에서 함께 하고픈 물고기를 골라주세요!
         </h2>
+        {/* 모니터가 2개 이상이면 선택 UI 표출 */}
+        {monitors.length >= 2 && (
+          <MonitorSelection
+            selectedMonitorId={selectedMonitorId}
+            setSelectedMonitorId={setSelectedMonitorId}
+            displays={monitors}
+          />
+        )}
         <div className="max-h-60 overflow-y-auto mb-4 custom-scrollbar">
           {groupedFish.length === 0 ? (
             <div>선택 가능한 물고기가 없습니다.</div>
@@ -388,6 +399,8 @@ export default function MainPage() {
   const [overlayActive, setOverlayActive] = useState(false);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
 
+  const [selectedMonitorId, setSelectedMonitorId] = useState<number>(0);
+
   // Electron 감지
   const isElectron =
     typeof navigator !== "undefined" &&
@@ -417,7 +430,7 @@ export default function MainPage() {
         .join(",") +
       "|" +
       transparency;
-    (window as any).electronAPI.toggleOverlay(overlayParam);
+    (window as any).electronAPI.toggleOverlay(overlayParam, selectedMonitorId);
     setOverlayActive(true);
     setShowOverlayModal(false);
   };
@@ -753,6 +766,8 @@ export default function MainPage() {
           fishList={fishes}
           transparency={transparency}
           setTransparency={setTransparency}
+          selectedMonitorId={selectedMonitorId}
+          setSelectedMonitorId={setSelectedMonitorId}
           onConfirm={onOverlayModalConfirm}
           onClose={onOverlayModalClose}
         />
