@@ -12,9 +12,14 @@ import GameB from "./GameB";
 import ParticipantList from "./ParticipantList";
 import { User } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
+import { screenStateAtom } from "@/store/screenStateAtom";
+import { selectedGameAtom } from "@/store/gameAtom";
+import { useRecoilState } from "recoil";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useToast } from "@/hooks/useToast";
+
+type ScreenState = "chat" | "game";
 
 interface Player {
   userName: string;
@@ -22,8 +27,6 @@ interface Player {
   totalPressCount: number;
   nickname: string;
 }
-
-type ScreenState = "chat" | "game";
 
 interface RoomUpdate {
   roomId: string;
@@ -70,7 +73,7 @@ export interface Member {
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
   const { showToast } = useToast();
 
-  const [screen, setScreen] = useState<ScreenState>("chat");
+  const [screen, setScreen] = useState<"chat" | "game">("chat");
   const [users, setUsers] = useState<Member[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
   const [currentIsHost, setCurrentIsHost] = useState(false);
@@ -83,14 +86,27 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   const [selectedGame, setSelectedGame] = useState<string>("Game");
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
+  // 배경음악, 효과음 관련 코드
+  const [screenState, setScreenState] = useRecoilState(screenStateAtom);
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
-  const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방 입장 사운드
+  const { play: entranceRoom } = useSFX("/sounds/샤라랑-01.mp3"); // 채팅방 입장 사운드
 
   // 현재 참가자 수
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User>(user);
   const participantCount = users.length;
   const hasSentJoinRef = useRef<boolean>(false);
+
+  const prevUsersRef = useRef<Member[]>([]); // 이전 참가자 리스트 저장
+
+  useEffect(() => {
+    if (users.length > prevUsersRef.current.length) {
+      console.log("🎵 참가자 추가됨! 효과음 실행");
+      entranceRoom(); // 참가자 등장 효과음 실행
+    }
+
+    prevUsersRef.current = users;
+  }, [users]);
 
   // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
   useEffect(() => {
@@ -312,6 +328,11 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [roomId, userName]);
 
+  // 화면 전환 시 Recoil Atom 업데이트
+  useEffect(() => {
+    setScreenState(screen);
+  }, [screen, setScreenState]);
+
   return (
     <>
       {!isConnected ? (
@@ -492,6 +513,9 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                                   gameType: selectedGame,
                                 }),
                               });
+                              // 게임 시작 시 화면 상태를 "game"으로 전환합니다.
+                              setScreen("game");
+                              setScreenState("game"); // Recoil 상태 업데이트 (필요한 경우)
                             } else {
                               client.publish({
                                 destination: myReady ? "/app/chat.unready" : "/app/chat.ready",

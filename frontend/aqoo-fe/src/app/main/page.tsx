@@ -39,6 +39,12 @@ interface GroupedFish {
   size: string;
 }
 
+// 모니터 정보 타입 (DisplayInfo)
+interface DisplayInfo {
+  id: number;
+  bounds: { x: number; y: number; width: number; height: number };
+}
+
 // 오버레이에 띄울 물고기 선택 모달 (그룹화된 데이터를 사용)
 interface FishOverlayModalProps {
   fishList: FishData[];
@@ -46,6 +52,38 @@ interface FishOverlayModalProps {
   setTransparency: (val: number) => void;
   onConfirm: (selected: { fishImage: string; size: string; count: number }[]) => void;
   onClose: () => void;
+}
+
+// 모니터 선택 UI 컴포넌트
+function MonitorSelection({
+  selectedMonitorId,
+  setSelectedMonitorId,
+  displays,
+}: {
+  selectedMonitorId: number;
+  setSelectedMonitorId: (id: number) => void;
+  displays: DisplayInfo[];
+}) {
+  return (
+    <div className="mb-4 p-2 border border-gray-300 rounded">
+      <label htmlFor="monitorSelect" className="block mb-1">
+        오버레이를 띄울 모니터 선택
+      </label>
+      <select
+        id="monitorSelect"
+        value={selectedMonitorId}
+        onChange={(e) => setSelectedMonitorId(parseInt(e.target.value, 10))}
+        className="w-full p-2 border rounded"
+      >
+        {displays.map((display) => (
+          <option key={display.id} value={display.id}>
+            모니터 {display.id} (해상도: {display.bounds.width} x{" "}
+            {display.bounds.height})
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 }
 
 // 일렉트론 전용 모달 내 투명도 조절 슬라이더더
@@ -100,6 +138,10 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
   const [selectedCounts, setSelectedCounts] = useState<Record<string, number>>({});
   const { showToast } = useToast();
 
+  // 모니터 관련 상태
+  const [monitors, setMonitors] = useState<DisplayInfo[]>([]);
+  const [selectedMonitorId, setSelectedMonitorId] = useState<number>(0);
+
   // 전달받은 fishList 데이터를 fishName 기준으로 그룹화
   useEffect(() => {
     const groups: Record<string, GroupedFish> = {};
@@ -125,6 +167,23 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
     });
     setSelectedCounts(initCounts);
   }, [fishList]);
+
+  // 모니터 정보 가져오기 (2개 이상일 경우 선택 UI 표출)
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      (window as any).electronAPI?.getDisplays
+    ) {
+      (window as any).electronAPI
+        .getDisplays()
+        .then((displays: DisplayInfo[]) => {
+          setMonitors(displays);
+          if (displays.length > 0) {
+            setSelectedMonitorId(displays[0].id);
+          }
+        });
+    }
+  }, []);
 
   // 전체 선택 개수 계산
   const totalSelected = Object.values(selectedCounts).reduce((a, b) => a + b, 0);
@@ -242,7 +301,7 @@ export default function MainPage() {
   const [selectedAquariumId, setSelectedAquariumId] = useState<number | null>(null);
 
   const [viewportHeight, setViewportHeight] = useState("100vh");
-  const [transparency, setTransparency] = useState(1); // 투명도 상태 선언
+  const [transparency, setTransparency] = useState(75); // 투명도 상태 선언
 
   useEffect(() => {
     const updateHeight = () => {
