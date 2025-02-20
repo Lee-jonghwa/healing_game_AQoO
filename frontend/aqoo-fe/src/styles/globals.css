@@ -168,8 +168,8 @@ html {
 }
 
 .custom-toast-info {
-  background-color: #95cfff !important; /* 파란색 */
-  color: black !important;
+  background-color: #0077d8 !important; /* 파란색 */
+  color: #ffffff !important;
 }
 
 /* ✅ 진행바 색상 */

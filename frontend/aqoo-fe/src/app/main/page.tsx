@@ -77,8 +77,7 @@ function MonitorSelection({
       >
         {displays.map((display) => (
           <option key={display.id} value={display.id}>
-            모니터 {display.id} (해상도: {display.bounds.width} x{" "}
-            {display.bounds.height})
+            모니터 {display.id} (해상도: {display.bounds.width} x {display.bounds.height})
           </option>
         ))}
       </select>
@@ -170,18 +169,13 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
 
   // 모니터 정보 가져오기 (2개 이상일 경우 선택 UI 표출)
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      (window as any).electronAPI?.getDisplays
-    ) {
-      (window as any).electronAPI
-        .getDisplays()
-        .then((displays: DisplayInfo[]) => {
-          setMonitors(displays);
-          if (displays.length > 0) {
-            setSelectedMonitorId(displays[0].id);
-          }
-        });
+    if (typeof window !== "undefined" && (window as any).electronAPI?.getDisplays) {
+      (window as any).electronAPI.getDisplays().then((displays: DisplayInfo[]) => {
+        setMonitors(displays);
+        if (displays.length > 0) {
+          setSelectedMonitorId(displays[0].id);
+        }
+      });
     }
   }, []);
 
@@ -302,6 +296,8 @@ export default function MainPage() {
 
   const [viewportHeight, setViewportHeight] = useState("100vh");
   const [transparency, setTransparency] = useState(75); // 투명도 상태 선언
+
+  const { showToast } = useToast();
 
   useEffect(() => {
     const updateHeight = () => {
@@ -579,6 +575,7 @@ export default function MainPage() {
   useEffect(() => {
     if (newNotifications) {
       playPush();
+      showToast("알림이 도착했어요!", "info");
     }
   }, [newNotifications]);
 
