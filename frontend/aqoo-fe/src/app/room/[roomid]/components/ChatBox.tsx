@@ -2,6 +2,7 @@
 
 import { getStompClient } from '@/lib/stompclient';
 import { useEffect, useRef, useState } from 'react';
+import { useSFX } from "@/hooks/useSFX";
 
 interface ChatMessage {
   roomId: string;
@@ -28,6 +29,8 @@ export default function ChatBox({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
+
 
   // 메시지가 업데이트될 때마다 스크롤을 맨 아래로 이동
   useEffect(() => {
@@ -81,6 +84,7 @@ export default function ChatBox({
     } else {
       onNewMessage(currentUser.nickname, newMessage);
     }
+
   };
 
   return (
@@ -132,7 +136,9 @@ export default function ChatBox({
           placeholder='Type your message...'
         />
         <button
-          onClick={sendMessage}
+          onClick={() => {
+            playModal();
+            sendMessage}}
           className='w-[25%] p-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors'
         >
           Send

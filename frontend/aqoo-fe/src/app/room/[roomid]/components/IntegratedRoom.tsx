@@ -17,9 +17,9 @@ import { useSFX } from "@/hooks/useSFX";
 import { useRecoilState } from "recoil";
 import { screenStateAtom } from "@/store/screenStateAtom";
 import { selectedGameAtom } from "@/store/gameAtom";
-import BackgroundMusic from "@/components/BackgroundMusic";
 
 
+``
 
 type ScreenState = "chat" | "game";
 
@@ -92,7 +92,7 @@ export default function IntegratedRoom({
 // 배경음악, 효과음 관련 코드
   const [screenState, setScreenState] = useRecoilState(screenStateAtom);
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
-  const { play: entranceRoom } = useSFX("/sounds/샤라랑.mp3"); // 채팅방 입장 사운드
+  const { play: entranceRoom } = useSFX("/sounds/샤라랑-01.mp3"); // 채팅방 입장 사운드
   
   const playHostSound = () => {
     // 호스트용 사운드 재생
@@ -104,17 +104,26 @@ export default function IntegratedRoom({
     new Audio("/sounds/clickeffect-02.mp3").play();
   };
 
-  const handleStartGame = () => {
-    setScreen("game");
-    setScreenState("game"); 
-  };
-  
 
   // 현재 참가자 수
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User>(user);
   const participantCount = users.length;
   const hasSentJoinRef = useRef<boolean>(false);
+
+  const prevUsersRef = useRef<Member[]>([]); // 이전 참가자 리스트 저장
+
+  useEffect(() => {
+    if (users.length > prevUsersRef.current.length) {
+      console.log("🎵 참가자 추가됨! 효과음 실행");
+      entranceRoom(); // 참가자 등장 효과음 실행
+    }
+  
+    prevUsersRef.current = users;
+  }, [users]);
+  
+  
+
 
   
   // [1] 채팅방 멤버 정보 조회: API (/chatrooms/{roomId})
@@ -379,8 +388,6 @@ export default function IntegratedRoom({
 
   return (
     <>
-      <BackgroundMusic />
-
       {!isConnected ? (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10">
           <p className="text-2xl font-bold text-gray-900">로딩중...</p>

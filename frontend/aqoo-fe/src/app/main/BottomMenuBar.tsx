@@ -217,7 +217,9 @@ export default function BottomMenuBar({
               />
               {newNotifications && <div className="notification-dot absolute top-2 right-2" />}
             </div>
-            <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => router.push("/gameroom")} />
+            <MenuButton icon="/icon/gameIcon.png" label="Game" onClick={() => {
+              playModal();
+              router.push("/gameroom")}} />
             <MenuButton
               icon="/icon/fishticketIcon.png"
               label="Ticket"

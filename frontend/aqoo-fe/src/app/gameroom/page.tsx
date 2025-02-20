@@ -9,7 +9,8 @@ import { usersState } from "@/store/participantAtom";
 import axiosInstance from "@/services/axiosInstance";
 
 import { useSFX } from "@/hooks/useSFX";
-import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+import { useSound } from "@/hooks/useSound"; // useSound import 추가
+
 
 
 
@@ -30,8 +31,10 @@ export default function GameRoomPage() {
   const [userName, setUserName] = useState<string | null>(null);
   
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
-
+  const { stop: stopMusic } = useSound(""); // ✅ 음악 정지를 위한 stop() 함
   // 클라이언트 사이드에서만 localStorage에 접근하여 사용자 이름을 설정
+  
+  
   useEffect(() => {
     const storedUserName = getLocalStorageItem("loggedInUser", "guest");
     setUserName(storedUserName);
@@ -49,6 +52,7 @@ export default function GameRoomPage() {
       return;
     }
 
+    stopMusic();
     setLoading(true);
     try {
       // 채팅방 생성 API 호출
