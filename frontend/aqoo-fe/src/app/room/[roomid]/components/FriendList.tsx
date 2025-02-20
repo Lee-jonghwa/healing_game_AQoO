@@ -2,6 +2,8 @@
 
 import axiosInstance from '@/services/axiosInstance';
 import { useEffect, useState } from 'react';
+import { useSFX } from "@/hooks/useSFX";
+
 
 // API가 반환하는 친구 정보 타입
 export interface Friend {
@@ -86,6 +88,8 @@ export default function FriendList({
       friend.friendId.includes(searchQuery)
   );
 
+  const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
+
   return (
     <div className='relative p-4 bg-transparent w-[300px] h-[500px] flex flex-col'>
       {isHost && (
@@ -118,7 +122,9 @@ export default function FriendList({
                   </div>
                   <button
                     disabled={isJoined || isInvited || participantCount >= 6}
-                    onClick={() => handleInvite(friend.friendId)}
+                    onClick={() => {
+                      playModal();
+                      handleInvite(friend.friendId)}}
                     className={`ml-2 px-3 py-1 text-sm text-white rounded transition-colors ${
                       isJoined
                         ? 'bg-gray-400 cursor-not-allowed'
