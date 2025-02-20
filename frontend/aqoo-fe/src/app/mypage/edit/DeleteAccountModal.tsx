@@ -24,17 +24,18 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
   const userId = auth.user?.id || "";
   const [confirmId, setConfirmId] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
-  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3")
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3");
+  const { play: playSuccess } = useSFX("/sounds/성공알림-02.mp3");
 
-  const wrapOnClick = (originalOnClick?: () => void):React.MouseEventHandler<HTMLButtonElement> => 
+  const wrapOnClick =
+    (originalOnClick?: () => void): React.MouseEventHandler<HTMLButtonElement> =>
     (event) => {
-      event.preventDefault()
-      playSuccess()
+      event.preventDefault();
+      playSuccess();
       if (originalOnClick) {
-      originalOnClick()
-    }
-  }
+        originalOnClick();
+      }
+    };
   useEffect(() => {
     if (confirmId && confirmId !== userId) {
       setErrorMessage("입력하신 아이디가 일치하지 않습니다.");
@@ -44,7 +45,7 @@ export default function DeleteAccountModal({ onClose, userData }: DeleteAccountM
   }, [confirmId, userId]);
 
   const handleDeleteAccount = async () => {
-    playClick()
+    playClick();
     if (confirmId !== userId) return;
 
     try {

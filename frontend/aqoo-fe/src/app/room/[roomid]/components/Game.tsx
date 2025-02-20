@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { getStompClient } from '@/lib/stompclient';
-import axiosInstance from '@/services/axiosInstance';
-import { User } from '@/store/authAtom';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { getStompClient } from "@/lib/stompclient";
+import axiosInstance from "@/services/axiosInstance";
+import { User } from "@/store/authAtom";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useSFX } from "@/hooks/useSFX";
 
@@ -79,6 +79,24 @@ export default function Game({
   const [winner, setWinner] = useState<string | null>(null);
   const [finishOrder, setFinishOrder] = useState<string[]>([]);
 
+  // <-- finishOrder snapshot 추가 (요구사항 수정)
+  // finishOrder 스냅샷 시 userName이 아닌 매칭되는 nickname을 저장합니다.
+  const [finishOrderSnapshot, setFinishOrderSnapshot] = useState<string[]>([]);
+  useEffect(() => {
+    if (
+      gameEnded &&
+      finishOrder.length > 0 &&
+      finishOrderSnapshot.length === 0
+    ) {
+      const snapshot = finishOrder.map((user) => {
+        const player = players.find((p) => p.userName === user);
+        return player ? player.nickname : user;
+      });
+      setFinishOrderSnapshot(snapshot);
+    }
+  }, [gameEnded, finishOrder, finishOrderSnapshot, players]);
+  // ------------------------------
+
   const [isTapping, setIsTapping] = useState(false);
   const [windEffects, setWindEffects] = useState<Record<string, boolean>>({});
 
@@ -99,9 +117,9 @@ export default function Game({
   const laneHeight = laneAreaHeight ? laneAreaHeight / totalLanes : 120;
 
   // 7)  효과음
-  const { play: pushSpacebar } = useSFX("/sounds/clickeffect-03.mp3"); // 스페이스바누를때
-  const { play: earnedExp} = useSFX("/sounds/짜잔.mp3"); // 게임끝나고 경험치 얻을 때
-  const { play: levelUp} = useSFX("/sounds/levelupRank.mp3"); // 레벨업할때
+  const { play: pushSpacebar } = useSFX("/sounds/clickeffect-03.mp3"); // 스페이스바 누를때
+  const { play: earnedExp } = useSFX("/sounds/짜잔.mp3"); // 게임 끝나고 경험치 얻을 때
+  const { play: levelUp } = useSFX("/sounds/levelupRank.mp3"); // 레벨업할때
 
   // -----------------------------
   // (A) 트랙 사이즈 측정
@@ -114,8 +132,8 @@ export default function Game({
       }
     }
     updateDims();
-    window.addEventListener('resize', updateDims);
-    return () => window.removeEventListener('resize', updateDims);
+    window.addEventListener("resize", updateDims);
+    return () => window.removeEventListener("resize", updateDims);
   }, []);
 
   // STOMP 전송 함수
@@ -138,7 +156,20 @@ export default function Game({
     setHasCountdownFinished(true);
   }, [countdown]);
 
-  // 탭 이벤트 처리 (스페이스바 또는 클릭)
+  // 기존 카운트다운 useEffect 아래에 추가:
+  useEffect(() => {
+    if (hasCountdownFinished) {
+      const client = getStompClient();
+      if (client && client.connected) {
+        client.publish({
+          destination: "/app/chat.clearReady",
+          body: JSON.stringify({ roomId, sender: userName }),
+        });
+      }
+    }
+  }, [hasCountdownFinished, roomId, userName]);
+
+  // 탭 이벤트 처리 (스페이스바 or 터치)
   const handleTap = useCallback(() => {
     pushSpacebar();
     if (!hasCountdownFinished || gameEnded) return;
@@ -151,7 +182,7 @@ export default function Game({
     setTimeout(() => setIsTapping(false), 300);
 
     // nickname 필드로 전송 (fallback 로직 제거)
-    publishMessage('/app/game.press', {
+    publishMessage("/app/game.press", {
       roomId,
       userName,
       pressCount: 1,
@@ -160,20 +191,21 @@ export default function Game({
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
-      if (e.code !== 'Space') return;
+      if (e.code !== "Space") return;
       e.preventDefault();
       handleTap();
     },
     [handleTap]
   );
 
+  // 데스크탑과 모바일 모두를 위해 터치 이벤트 리스너 추가
   useEffect(() => {
     if (hasCountdownFinished) {
-      window.addEventListener('keyup', handleKeyPress);
-      window.addEventListener('click', handleTap);
+      window.addEventListener("keyup", handleKeyPress);
+      window.addEventListener("touchend", handleTap);
       return () => {
-        window.removeEventListener('keyup', handleKeyPress);
-        window.removeEventListener('click', handleTap);
+        window.removeEventListener("keyup", handleKeyPress);
+        window.removeEventListener("touchend", handleTap);
       };
     }
   }, [hasCountdownFinished, handleKeyPress, handleTap]);
@@ -185,7 +217,7 @@ export default function Game({
       const sub = client.subscribe(`/topic/room/${roomId}`, (message) => {
         const data: RoomResponse = JSON.parse(message.body);
         setPlayers(data.players ?? []);
-        if (data.message === 'GAME_ENDED') {
+        if (data.message === "GAME_ENDED") {
           setGameEnded(true);
           setWinner(data.winner || null);
           if (data.finishOrder) {
@@ -241,7 +273,7 @@ export default function Game({
         players[0]
       );
       setWinner(maxPlayer?.nickname || null);
-      publishMessage('/app/game.end', { roomId });
+      publishMessage("/app/game.end", { roomId });
     }
   }, [gameTime, players, hasStarted, gameEnded]);
 
@@ -249,7 +281,7 @@ export default function Game({
   useEffect(() => {
     if (hasCountdownFinished && !hasStarted) {
       setTimeout(() => {
-        window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space' }));
+        window.dispatchEvent(new KeyboardEvent("keyup", { code: "Space" }));
       }, 0);
     }
   }, [hasCountdownFinished, hasStarted]);
@@ -265,13 +297,13 @@ export default function Game({
     setMyEarnedExp(earnedExp);
     (async () => {
       try {
-        const response = await axiosInstance.post('/users/exp-up', {
+        const response = await axiosInstance.post("/users/exp-up", {
           userId: userName,
           earnedExp,
         });
         setMyExpInfo(response.data);
       } catch (err) {
-        console.error('경험치 지급 에러:', err);
+        console.error("경험치 지급 에러:", err);
       }
     })();
   }, [gameEnded, finishOrder, userName]);
@@ -302,7 +334,7 @@ export default function Game({
           const ticketData: TicketResponse = ticketRes.data;
           setMyTicket(ticketData.fishTicket);
         } catch (err) {
-          console.error('티켓 증가 에러:', err);
+          console.error("티켓 증가 에러:", err);
         }
       })();
     }
@@ -314,42 +346,35 @@ export default function Game({
 
   if (gameEnded) {
     return (
-      <div className='flex items-center justify-center min-h-screen bg-gradient-to-br'>
-        <div className='bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4'>
-          <h1 className='text-4xl font-extrabold text-gray-800 mb-6'>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br">
+        <div className="bg-white/80 shadow-xl rounded-2xl p-10 text-center max-w-md w-full mx-4">
+          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
             Game Over
           </h1>
-          <p className='text-xl text-gray-600 mb-6'>
-            Winner:{' '}
-            <span className='font-bold text-gray-900'>
-              {winner || 'No Winner'}
+          <p className="text-xl text-gray-600 mb-6">
+            Winner:{" "}
+            <span className="font-bold text-gray-900">
+              {winner || "No Winner"}
             </span>
           </p>
-          {finishOrder.length > 0 && (
-            <div className='mb-8'>
-              <h2 className='text-3xl font-bold text-gray-800 mb-4'>
+          {finishOrderSnapshot.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">
                 전체 순위
               </h2>
-              <div className='bg-gray-100 rounded-lg shadow-md p-4'>
-                <ol className='divide-y divide-gray-300'>
-                  {finishOrder.map((name, index) => {
-                    const matchingPlayer = players.find(
-                      (p) => p.userName === name
-                    );
-                    return (
-                      <li
-                        key={name}
-                        className='py-2 flex justify-between items-center'
-                      >
-                        <span className='font-semibold text-gray-700'>
-                          {index + 1}.
-                        </span>
-                        <span className='text-gray-900'>
-                          {matchingPlayer ? matchingPlayer.nickname : name}
-                        </span>
-                      </li>
-                    );
-                  })}
+              <div className="bg-gray-100 rounded-lg shadow-md p-4">
+                <ol className="divide-y divide-gray-300">
+                  {finishOrderSnapshot.map((nickname, index) => (
+                    <li
+                      key={nickname}
+                      className="py-2 flex justify-between items-center"
+                    >
+                      <span className="font-semibold text-gray-700">
+                        {index + 1}.
+                      </span>
+                      <span className="text-gray-900">{nickname}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
             </div>
@@ -357,35 +382,35 @@ export default function Game({
 
           <button
             onClick={handleResultCheck}
-            className='w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300'
+            className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition duration-300"
           >
             채팅방으로 돌아가기
           </button>
         </div>
 
         {showExpModal && myExpInfo && (
-          <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
-            <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
-              <h2 className='text-2xl font-extrabold text-blue-700 mb-4'>
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+            <div className="relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center">
+              <h2 className="text-2xl font-extrabold text-blue-700 mb-4">
                 경험치 획득!
               </h2>
-              <p className='text-lg text-gray-700 mb-2'>
+              <p className="text-lg text-gray-700 mb-2">
                 획득 경험치: <strong>+{myEarnedExp}</strong>
               </p>
-              <p className='text-lg text-gray-700 mb-2'>
+              <p className="text-lg text-gray-700 mb-2">
                 현재 레벨: <strong>{myExpInfo.userLevel}</strong>
               </p>
-              <p className='text-md text-gray-600'>
-                경험치:{' '}
+              <p className="text-md text-gray-600">
+                경험치:{" "}
                 <strong>
                   {myExpInfo.curExp} / {myExpInfo.expToNextLevel}
                 </strong>
                 &nbsp;({myExpInfo.expProgress}%)
               </p>
-              <div className='mt-6'>
+              <div className="mt-6">
                 <button
                   onClick={handleExpModalClose}
-                  className='px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors'
+                  className="px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors"
                 >
                   확인
                 </button>
@@ -395,30 +420,30 @@ export default function Game({
         )}
 
         {showLevelUpModal && (
-          <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50'>
-            <div className='relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center'>
-              <h2 className='text-3xl font-extrabold text-black mb-2 flex justify-center items-center'>
-                🎉 <span className='mx-2'>레벨 업!</span> 🎉
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
+            <div className="relative bg-white w-[350px] p-8 rounded-lg shadow-xl text-center">
+              <h2 className="text-3xl font-extrabold text-black mb-2 flex justify-center items-center">
+                🎉 <span className="mx-2">레벨 업!</span> 🎉
               </h2>
-              <p className='text-lg font-medium text-gray-700 mt-3'>
-                레벨{' '}
-                <span className='text-blue-500 font-bold'>
+              <p className="text-lg font-medium text-gray-700 mt-3">
+                레벨{" "}
+                <span className="text-blue-500 font-bold">
                   {myExpInfo?.userLevel}
-                </span>{' '}
+                </span>{" "}
                 달성!
               </p>
-              <hr className='my-4 border-gray-300' />
-              <p className='text-lg font-medium text-gray-600 mb-6'>
+              <hr className="my-4 border-gray-300" />
+              <p className="text-lg font-medium text-gray-600 mb-6">
                 티켓 +3
                 {myTicket !== null && (
-                  <span className='text-gray-700 ml-1'>
+                  <span className="text-gray-700 ml-1">
                     (현재 {myTicket}개)
                   </span>
                 )}
               </p>
               <button
                 onClick={handleLevelUpModalClose}
-                className='px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors'
+                className="px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors"
               >
                 확인
               </button>
@@ -431,20 +456,20 @@ export default function Game({
 
   return (
     <div
-      className='w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden'
+      className="w-full h-screen bg-cover bg-center bg-no-repeat relative overflow-hidden"
       style={{ backgroundImage: "url('/chat_images/game_bg.gif')" }}
       ref={trackRef}
     >
       {!gameEnded && hasArrived && !modalDismissed && (
-        <div className='absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30'>
-          <div className='bg-white p-8 rounded-lg shadow-lg text-center'>
-            <h2 className='text-2xl font-bold mb-4'>결승점 도착!</h2>
-            <p className='text-xl mb-4'>
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
+          <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-4">결승점 도착!</h2>
+            <p className="text-xl mb-4">
               다른 물고기들이 도착할 때까지 기다려주세요!
             </p>
             <button
               onClick={() => setModalDismissed(true)}
-              className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded'
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded"
             >
               확인
             </button>
@@ -454,16 +479,16 @@ export default function Game({
 
       {trackDims.height > 0 && (
         <div
-          className='absolute pointer-events-none'
+          className="absolute pointer-events-none"
           style={{
             left: trackDims.width ? trackDims.width * 0.1 : 95,
             top: laneAreaTopOffset,
             height: laneAreaHeight,
           }}
         >
-          <div className='h-full border-l-4 border-green-500'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <span className='text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+          <div className="h-full border-l-4 border-green-500"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">
               Start
             </span>``
           </div>
@@ -472,16 +497,16 @@ export default function Game({
 
       {trackDims.width > 0 && (
         <div
-          className='absolute pointer-events-none'
+          className="absolute pointer-events-none"
           style={{
             left: trackDims.width ? trackDims.width * 0.9 : 0,
             top: laneAreaTopOffset,
             height: laneAreaHeight,
           }}
         >
-          <div className='h-full border-l-4 border-red-500'></div>
-          <div className='absolute inset-0 flex items-center justify-center'>
-            <span className='text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded'>
+          <div className="h-full border-l-4 border-red-500"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-red-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">
               Goal
             </span>
           </div>
@@ -489,7 +514,7 @@ export default function Game({
       )}
 
       {hasCountdownFinished && !gameEnded && (
-        <div className='absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800'>
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/80 px-4 py-2 rounded text-xl text-gray-800">
           Time: {gameTime}s
         </div>
       )}
@@ -497,13 +522,13 @@ export default function Game({
       {trackDims.height > 0 && (
         <>
           <div
-            className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+            className="absolute left-0 w-full border-t border-gray-300 pointer-events-none"
             style={{ top: `${laneAreaTopOffset}px`, zIndex: 2 }}
           />
           {Array.from({ length: totalLanes - 1 }).map((_, i) => (
             <div
               key={i}
-              className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+              className="absolute left-0 w-full border-t border-gray-300 pointer-events-none"
               style={{
                 top: `${laneAreaTopOffset + (i + 1) * laneHeight}px`,
                 zIndex: 2,
@@ -511,7 +536,7 @@ export default function Game({
             />
           ))}
           <div
-            className='absolute left-0 w-full border-t border-gray-300 pointer-events-none'
+            className="absolute left-0 w-full border-t border-gray-300 pointer-events-none"
             style={{
               top: `${laneAreaTopOffset + laneAreaHeight}px`,
               zIndex: 2,
@@ -541,43 +566,43 @@ export default function Game({
         return (
           <div
             key={player.nickname}
-            className='absolute'
+            className="absolute"
             style={{ top: `${topPos}px`, left: `${leftPos}px`, zIndex: 10 }}
           >
             <div
-              className='relative'
+              className="relative"
               style={{ width: `${fishSize}px`, height: `${fishSize}px` }}
             >
               <img
                 src={player.mainFishImage}
                 alt={`${player.nickname}의 대표 물고기`}
                 style={{ width: fishSize, height: fishSize }}
-                className='object-contain scale-x-[-1]'
+                className="object-contain scale-x-[-1]"
               />
               {(player.nickname === userName
                 ? isTapping
                 : windEffects[player.nickname]) && (
                 <img
-                  src='/chat_images/wind_overlay.png'
-                  alt='Wind effect'
+                  src="/chat_images/wind_overlay.png"
+                  alt="Wind effect"
                   style={{
                     width: fishSize * 0.4,
                     height: fishSize * 0.4,
-                    position: 'absolute',
-                    top: '50%',
+                    position: "absolute",
+                    top: "50%",
                     left: `-${fishSize * 0.4}px`,
-                    transform: 'translateY(-50%) scaleX(-1)',
+                    transform: "translateY(-50%) scaleX(-1)",
                   }}
-                  className='object-contain pointer-events-none'
+                  className="object-contain pointer-events-none"
                 />
               )}
             </div>
             <span
-              className='absolute text-xl font-medium text-gray-900 whitespace-nowrap'
+              className="absolute text-xl font-medium text-gray-900 whitespace-nowrap"
               style={{
                 top: `${fishSize - 16}px`,
-                left: '50%',
-                transform: 'translateX(-50%)',
+                left: "50%",
+                transform: "translateX(-50%)",
               }}
             >
               {player.nickname}
@@ -586,44 +611,43 @@ export default function Game({
         );
       })}
 
-      <p className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900'>
-        Press the <span className='font-bold'>Spacebar</span> or touch anywhere
-        to tap!
+      <p className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-2xl text-gray-900">
+        Press the <span className="font-bold">Spacebar</span> to tap!
       </p>
 
       {!hasCountdownFinished && (
-        <div className='absolute inset-0 flex flex-col justify-center items-center bg-white/80 z-20 p-4'>
-          <div className='max-w-6xl w-full text-center bg-white/90 border-2 border-gray-600 rounded-lg shadow-lg p-6'>
-            <h3 className='mb-4 text-lg sm:text-lg md:text-2xl lg:text-3xl font-bold flex items-center justify-center'>
+        <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/80 z-20 p-4">
+          <div className="max-w-6xl w-full text-center bg-white/90 border-2 border-gray-600 rounded-lg shadow-lg p-6">
+            <h3 className="mb-4 text-lg sm:text-lg md:text-2xl lg:text-3xl font-bold flex items-center justify-center">
               <img
-                src='/chat_images/game_stick.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                src="/chat_images/game_stick.png"
+                alt="스페이스바"
+                className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
               />
               게임 설명
               <img
-                src='/chat_images/game_stick.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                src="/chat_images/game_stick.png"
+                alt="스페이스바"
+                className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
               />
             </h3>
-            <p className='text-lg md:text-xl lg:text-5xl font-medium text-gray-800 mt-4'>
+            <p className="text-lg md:text-xl lg:text-5xl font-medium text-gray-800 mt-4">
               물고기 경주에 오신 걸 환영합니다!
             </p>
-            <p className='text-md md:text-lg lg:text-4xl text-gray-700 mt-4'>
+            <p className="text-md md:text-lg lg:text-4xl text-gray-700 mt-4">
               물고기 경주는 친구들과 함께
               <br />
               누가 먼저 Goal에 도착하는지 대결하는 게임입니다.
             </p>
-            <p className='text-md md:text-lg lg:text-4xl text-gray-700 mt-4 flex items-center justify-center'>
+            <p className="text-md md:text-lg lg:text-4xl text-gray-700 mt-4 flex items-center justify-center">
               <img
-                src='/chat_images/spacebar.png'
-                alt='스페이스바'
-                className='w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block'
+                src="/chat_images/spacebar.png"
+                alt="스페이스바"
+                className="w-10 sm:w-12 md:w-14 lg:w-16 xl:w-20 h-auto mx-2 inline-block"
               />
-              스페이스바 or 터치로 친구보다 먼저 Goal에 도착하세요!
+              스페이스바로 친구보다 먼저 Goal에 도착하세요!
             </p>
-            <p className='mt-8 text-2xl text-gray-800'>
+            <p className="mt-8 text-2xl text-gray-800">
               {countdown} 초 후 게임 시작
             </p>
           </div>

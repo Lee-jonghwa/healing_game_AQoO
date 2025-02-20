@@ -1,10 +1,8 @@
 "use client";
 
 import { connectStompClient, getStompClient } from "@/lib/stompclient";
-import axiosInstance from "@/services/axiosInstance";
-import { User } from "@/store/authAtom";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+
 import ChatBox from "./ChatBox";
 import Fish from "./Fish";
 import FriendList from "./FriendList";
@@ -12,14 +10,15 @@ import Game from "./Game";
 import GameA from "./GameA";
 import GameB from "./GameB";
 import ParticipantList from "./ParticipantList";
-
+import { User } from "@/store/authAtom";
+import axiosInstance from "@/services/axiosInstance";
+import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useRecoilState } from "recoil";
 import { screenStateAtom } from "@/store/screenStateAtom";
 import { selectedGameAtom } from "@/store/gameAtom";
 
 
-``
 
 type ScreenState = "chat" | "game";
 
@@ -83,10 +82,11 @@ export default function IntegratedRoom({
   const [currentIsHost, setCurrentIsHost] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [fishes, setFishes] = useState<FishData[]>([]);
-  const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>(
-    {}
-  );
-  const [selectedGame, setSelectedGame] = useRecoilState(selectedGameAtom);
+
+  const { play: playHostSound } = useSFX("/sounds/카운트다운-02.mp3");
+  const { play: playUserSound } = useSFX("/sounds/clickeffect-02.mp3");
+  const [fishMessages, setFishMessages] = useState<{ [key: string]: string }>({});
+  const [selectedGame, setSelectedGame] = useState<string>("Game");
   const [showFriendList, setShowFriendList] = useState<boolean>(false);
 
 // 배경음악, 효과음 관련 코드
@@ -94,16 +94,6 @@ export default function IntegratedRoom({
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3"); // 버튼 누를 때 효과음
   const { play: entranceRoom } = useSFX("/sounds/샤라랑-01.mp3"); // 채팅방 입장 사운드
   
-  const playHostSound = () => {
-    // 호스트용 사운드 재생
-    new Audio("/sounds/카운트다운-02.mp3").play();
-  };
-
-  const playUserSound = () => {
-    // 일반 유저용 사운드 재생
-    new Audio("/sounds/clickeffect-02.mp3").play();
-  };
-
 
   // 현재 참가자 수
   const router = useRouter();
@@ -142,9 +132,8 @@ export default function IntegratedRoom({
         }));
         setUsers(updatedUsers);
       })
-      .catch((error) =>
-        console.error("❌ 채팅방 멤버 정보 불러오기 실패:", error)
-      );
+
+      .catch((error) => console.error("❌ 채팅방 멤버 정보 불러오기 실패:", error));
   }, [roomId]);
 
   // [2] STOMP 연결 활성화 및 메시지 구독
@@ -166,31 +155,27 @@ export default function IntegratedRoom({
           });
           hasSentJoinRef.current = true;
         }
-        const subscription = client.subscribe(
-          `/topic/room/${roomId}`,
-          (messageFrame) => {
-            const data: RoomUpdate = JSON.parse(messageFrame.body);
-            if (data.message === "GAME_STARTED") {
-              setGamePlayers(data.players ?? []);
-              setScreen("game");
-            } else if (data.message === "USER_LIST") {
-              setUsers(data.users ?? []);
-            } else if (data.message === "USER_KICKED") {
-              if (data.targetUser === userName) {
-                router.replace("/main?status=kicked");
-              } else {
-                setUsers((prev) =>
-                  prev.filter((u) => u.userName !== data.targetUser)
-                );
-              }
-            } else if (data.message === "GAME_DROPDOWN_UPDATED") {
-              // 드롭다운 동기화 메시지 수신 시 상태 업데이트
-              if (data.gameType) {
-                setSelectedGame(data.gameType);
-              }
+
+        const subscription = client.subscribe(`/topic/room/${roomId}`, (messageFrame) => {
+          const data: RoomUpdate = JSON.parse(messageFrame.body);
+          if (data.message === "GAME_STARTED") {
+            setGamePlayers(data.players ?? []);
+            setScreen("game");
+          } else if (data.message === "USER_LIST") {
+            setUsers(data.users ?? []);
+          } else if (data.message === "USER_KICKED") {
+            if (data.targetUser === userName) {
+              router.replace("/main?status=kicked");
+            } else {
+              setUsers((prev) => prev.filter((u) => u.userName !== data.targetUser));
+            }
+          } else if (data.message === "GAME_DROPDOWN_UPDATED") {
+            // 드롭다운 동기화 메시지 수신 시 상태 업데이트
+            if (data.gameType) {
+              setSelectedGame(data.gameType);
             }
           }
-        );
+        });
         clearInterval(intervalId);
         return () => subscription.unsubscribe();
       }
@@ -264,22 +249,13 @@ export default function IntegratedRoom({
 
   // [7] ready / start 관련 상태 계산
   const myReady = users.find((u) => u.userName === userName)?.ready;
-  const nonHostUsers = currentIsHost
-    ? users.filter((u) => u.userName !== userName)
-    : users.filter((u) => !u.isHost);
-  const allNonHostReady =
-    nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
+  const nonHostUsers = currentIsHost ? users.filter((u) => u.userName !== userName) : users.filter((u) => !u.isHost);
+  const allNonHostReady = nonHostUsers.length === 0 || nonHostUsers.every((u) => u.ready);
 
   // [8] 게임 종료 후 대기 화면 복귀 콜백
   const handleResultConfirmed = async () => {
     setScreen("chat");
-    const client = getStompClient();
-    if (client && client.connected) {
-      client.publish({
-        destination: "/app/chat.clearReady",
-        body: JSON.stringify({ roomId, sender: userName }),
-      });
-    }
+
     const response = await axiosInstance.get(`/users/${userName}`);
     if (response.status >= 200 && response.status < 300) {
       const updatedUser: User = response.data;
@@ -407,31 +383,35 @@ export default function IntegratedRoom({
               
               {/* 물고기 렌더링, 말풍선 표시 */}
               {fishes.map((fish) => (
-                <Fish
-                  key={fish.fishId}
-                  fish={fish}
-                  message={fishMessages[fish.fishName] || ""}
-                />
+                <Fish key={fish.fishId} fish={fish} message={fishMessages[fish.fishName] || ""} />
               ))}
 
-              {/* 오른쪽 패널 */}
-              <div className="absolute top-24 right-16 flex flex-col space-y-4">
-                {/* 친구 목록 오버레이는 "친구 초대" 버튼의 왼쪽에 나타남 */}
-                <div className="flex flex-col space-y-4 w-[370px] items-center">
+              {/* 오른쪽 패널 전체 */}
+              <div className="absolute top-20 sm:right-16 flex flex-col space-y-4 w-[370px] h-[90vh]">
+                {/* 참가자 리스트 + 채팅창 + 버튼 묶은 div */}
+                <div className="flex flex-col justify-between h-full w-full">
+                  {/* 초대 및 나가기 버튼 div */}
                   <div className="flex space-x-2 w-full">
-                    {/* 친구 초대 버튼 영역 */}
-                    <div className="relative w-1/2">
+                    {/* 친구 초대 버튼을 감싸는 영역을 relative로 처리 */}
+                    <div className="relative w-1/2 space-x-2">
                       <button
                         onClick={() => {
                           playModal();
                           setShowFriendList((prev) => !prev);
                         }}
-                        className="w-full px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center"
+                        className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-center sm:text-base text-sm"
                       >
                         친구 초대
                       </button>
                       {showFriendList && (
-                        <div className="absolute right-full top-0 mr-2 w-[320px] h-[550px] bg-white/70 shadow-md p-4 rounded-lg">
+                        <div
+                          className={`absolute  shadow-md p-4 rounded-lg z-50 
+                          ${
+                            window.innerWidth < 640
+                              ? "top-10 left-10 transform -translate-x-10 -translate-y-10 max-w-[350px] bg-white"
+                              : "right-full top-0 mr-2 w-[320px] h-[550px] bg-white/70"
+                          }`}
+                        >
                           <div className="relative h-full">
                             {/* FriendList 컴포넌트 */}
                             <FriendList
@@ -444,13 +424,9 @@ export default function IntegratedRoom({
                                 if (users.length >= 6) {
                                   const electronAPI = (window as any).electronAPI;
                                   if (electronAPI && electronAPI.showAlert) {
-                                    electronAPI.showAlert(
-                                      "참가자가 최대 인원(6명)을 초과할 수 없습니다."
-                                    );
+                                    electronAPI.showAlert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
                                   } else {
-                                    alert(
-                                      "참가자가 최대 인원(6명)을 초과할 수 없습니다."
-                                    );
+                                    alert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
                                   }
                                   return;
                                 }
@@ -483,13 +459,14 @@ export default function IntegratedRoom({
                           router.replace("/main");
                         }
                       }}
-                      className="w-1/2 px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center"
+                      className="w-1/2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-center sm:text-base text-sm"
                     >
                       나가기
                     </button>
                   </div>
 
-                  <div>
+                  {/* 참가자 리스트 div */}
+                  <div className="transition-all duration-300 my-2">
                     <ParticipantList
                       users={displayUsers}
                       currentUser={currentUser}
@@ -510,7 +487,8 @@ export default function IntegratedRoom({
                     />
                   </div>
 
-                  <div className="p-3 bg-white/70 rounded shadow-md w-full">
+                  {/* 채팅창 div */}
+                  <div className="flex-grow overflow-hidden min-h-0 flex flex-col sm:bg-white/70 rounded shadow-md sm:p-2 p-1">
                     <ChatBox
                       roomId={roomId}
                       users={displayUsers}
@@ -520,7 +498,7 @@ export default function IntegratedRoom({
                   </div>
 
                   {/* 드롭다운과 게임 시작 버튼 영역 */}
-                  <div className="w-full flex flex-col items-center space-y-2">
+                  <div className="w-full flex flex-col items-center space-y-2 flex-shrink-0 mb-4">
                     <>
                       <select
                         value={selectedGame}
@@ -584,18 +562,18 @@ export default function IntegratedRoom({
                           }
                           
                         }}
-                        className={`w-full px-6 py-3 bg-yellow-300 text-white text-xl rounded ${
-                          currentIsHost && !allNonHostReady
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
+                        className={`w-full px-6 py-3 text-xl rounded transition-colors 
+                          ${
+                            currentIsHost
+                              ? "bg-yellow-300" // Start Game 버튼 (방장)
+                              : myReady
+                              ? "bg-green-600 hover:bg-green-700 text-white" // Unready 버튼 (진한 초록)
+                              : "bg-green-400 hover:bg-green-500" // Ready 버튼 (연한 초록)
+                          }
+                          ${currentIsHost && !allNonHostReady ? "opacity-50 cursor-not-allowed" : ""}`}
                         disabled={currentIsHost ? !allNonHostReady : false}
                       >
-                        {currentIsHost
-                          ? "Start Game(F5)"
-                          : myReady
-                          ? "Unready(F5)"
-                          : "Ready(F5)"}
+                        {currentIsHost ? "Start Game(F5)" : myReady ? "Unready(F5)" : "Ready(F5)"}
                       </button>
                     </>
                   </div>

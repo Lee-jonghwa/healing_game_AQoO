@@ -168,7 +168,8 @@ function FriendFishContent() {
       })
       .catch((error) => {
         console.error("친구 요청 실패:", error);
-        alert("친구 요청에 실패했습니다.");
+        const errorMessage = error.response?.data?.error || "친구 요청에 실패했습니다.";
+        alert(errorMessage);
       });
   };
 
