@@ -139,3 +139,40 @@ html {
   opacity: 0;
   transform: translateY(-20px);
 }
+
+/* ✅ react-toastify 스타일 커스텀 */
+.custom-toast {
+  font-family: "NeoDunggeunmoPro", Arial, sans-serif !important;
+  border-radius: 8px !important;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1) !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  width: fit-content !important; /* ✅ 텍스트 길이에 맞게 */
+  min-width: unset !important; /* ✅ 기본 min-width 제거 */
+}
+
+/* ✅ 개별 스타일 */
+.custom-toast-success {
+  background-color: #8fee7c !important; /* 핑크색 */
+  color: black !important;
+}
+
+.custom-toast-error {
+  background-color: #ffb6ed !important; /* 빨간색 */
+  color: black !important;
+}
+
+.custom-toast-warning {
+  background-color: #ff9800 !important; /* 주황색 */
+  color: black !important;
+}
+
+.custom-toast-info {
+  background-color: #2196f3 !important; /* 파란색 */
+  color: white !important;
+}
+
+/* ✅ 진행바 색상 */
+.custom-toast-progress {
+  background-color: #ffffff !important;
+}
