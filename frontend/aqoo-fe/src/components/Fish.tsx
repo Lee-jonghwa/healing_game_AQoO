@@ -104,7 +104,7 @@ export default function Fish({ fish, handleIncreaseExp, }: FishProps) {
     const bottomMargin = 100;
     const upperLimit = height * 0.2;
 
-    const randomStartX = Math.random() * (width - 2 * safeMargin) + safeMargin;
+    const randomStartX = Math.random() * (width - fishWidth) + safeMargin;
     const randomStartY = Math.random() * (height - bottomMargin - 50) + 50;
 
     gsap.set(fishRef.current, {
@@ -135,7 +135,7 @@ export default function Fish({ fish, handleIncreaseExp, }: FishProps) {
         newX = safeMargin;
         moveDistanceX = Math.abs(moveDistanceX);
       }
-      if (newX > width - safeMargin) {
+      if (newX > width - safeMargin - fishWidth) {
         newX = width - safeMargin - fishWidth;
         moveDistanceX = -Math.abs(moveDistanceX);
       }
