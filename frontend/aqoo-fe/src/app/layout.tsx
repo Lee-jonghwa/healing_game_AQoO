@@ -36,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           `}
         </Script>
       </head>
-      <body className="w-full min-h-screen sm:overflow-auto">
+      <body className="w-full min-h-screen sm:overflow-auto custom-scrollbar">
         <div className="relative w-full min-h-screen overflow-x-hidden">
           <RecoilProvider>
             <BackgroundMusic />

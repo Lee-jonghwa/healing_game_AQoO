@@ -29,6 +29,8 @@ export default function GameRoomPage() {
   const router = useRouter();
   const [userName, setUserName] = useState<string | null>(null);
 
+  const [background, setBackground] = useState("/background-1.png");
+
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
   const { stop: stopMusic } = useSound(""); // ✅ 음악 정지를 위한 stop() 함
   // 클라이언트 사이드에서만 localStorage에 접근하여 사용자 이름을 설정
@@ -89,19 +91,34 @@ export default function GameRoomPage() {
 
   return (
     <div
-      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('/chat_images/background.png')" }}
-    >
+    className="absolute inset-0 bg-cover bg-center w-full h-full"
+    style={{
+      backgroundImage: `url(${background})`,
+      backgroundSize: "cover", // ✅ 배경이 뷰포트 전체를 덮도록 설정
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+      height: "auto", // ✅ 컨텐츠 길이에 맞게 자동 조정
+      minHeight: "100vh", // ✅ 최소 높이를 100vh로 설정하여 모바일에서도 유지
+    }}
+  >
+
       {/* 배경 */}
-      <div className="absolute inset-0 bg-white opacity-20"></div>
+      <div className="absolute inset-0 bg-white opacity-20 w-full h-full"></div>
 
       {/* 전체 컨테이너 - 반응형 최대 너비 적용 */}
       <div
-        className="relative z-0 flex flex-col items-center p-4 w-full
+        className="relative z-0 flex flex-col items-center p-4 w-full h-full
                       max-w-sm  /* 기본: 최대 너비를 작게 */
                       sm:max-w-md  /* sm 사이즈부터 중간 크기 */
                       md:max-w-4xl  /* md 사이즈부터 기존 크기 적용 */
-                      mx-auto"
+                      mx-auto
+                      sm:overflow-hidden  /* 데스크탑에서는 스크롤 제거 */
+                      lg:overflow-hidden
+                      overflow-auto    /* 모바일에서는 스크롤 가능 */
+                      custom-scrollbar
+                      
+                      "
+        
       >
         <div className="hidden md:flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px] relative justify-center items-center md:mt-20">
           {/* 데스크탑: 절대 위치로 방 만들기 제목 */}
