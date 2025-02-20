@@ -242,7 +242,6 @@ export default function CleanComponent({
     }
 
     if (count.current === 3) {
-      // alert("청소에 성공했어요! 🐟");
       showToast("청소에 성공했어요! 🐟", "success");
 
       playClear();
@@ -453,7 +452,7 @@ export default function CleanComponent({
             </p>
             <button
               onClick={() => {
-                alert("청소에 성공했어요! 🐟");
+                showToast("청소에 성공했어요! 🐟", "success");
                 playClear();
                 count.current = 0;
                 handleCleanSuccess();

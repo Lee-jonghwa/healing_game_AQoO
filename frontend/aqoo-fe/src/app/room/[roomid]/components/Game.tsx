@@ -6,7 +6,7 @@ import { User } from "@/store/authAtom";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useSFX } from "@/hooks/useSFX";
-import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
+
 
 interface GameProps {
   roomId: string;
@@ -490,7 +490,7 @@ export default function Game({
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-green-500 font-bold text-lg bg-white/70 px-2 py-1 rounded">
               Start
-            </span>
+            </span>``
           </div>
         </div>
       )}
