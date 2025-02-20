@@ -99,7 +99,8 @@ export default function Fish({ fish, handleIncreaseExp, }: FishProps) {
     const size = fish.size ?? "S"; // size가 없으면 "S"로 기본값 설정
     const { width: fishWidth, height: fishHeight } = getSize(size);
 
-    const safeMargin = (fishWidth - 70) / 2 + 90; // 물고기 사이즈에 맞는 safeMargin 계산
+    //const safeMargin = (fishWidth - 70) / 2 + 90; // 물고기 사이즈에 맞는 safeMargin 계산
+    const safeMargin = 0;
     const bottomMargin = 100;
     const upperLimit = height * 0.2;
 
@@ -135,7 +136,7 @@ export default function Fish({ fish, handleIncreaseExp, }: FishProps) {
         moveDistanceX = Math.abs(moveDistanceX);
       }
       if (newX > width - safeMargin) {
-        newX = width - safeMargin;
+        newX = width - safeMargin - fishWidth;
         moveDistanceX = -Math.abs(moveDistanceX);
       }
       if (newY < 50) newY = 50 + Math.random() * 30;
