@@ -88,7 +88,7 @@ mysql -u root -p aqoo; < aqoodump.sql
 
 ### 3.2 ERD
 
-![ERD-20.png](ERD-20.png)
+![b49f9898-72ff-4379-9a6c-75aeb7e99d1e_Export-cffeb074-74d5-491f-9d50-4c6cb2010959/ERD-20.png](ERD-20.png)
 
 ## 4. 시스템 아키텍처 및 기술 스택
 
