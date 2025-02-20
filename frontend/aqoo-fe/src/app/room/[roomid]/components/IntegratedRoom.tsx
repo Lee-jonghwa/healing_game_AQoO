@@ -13,13 +13,10 @@ import ParticipantList from "./ParticipantList";
 import { User } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { screenStateAtom } from "@/store/screenStateAtom";
-import { selectedGameAtom } from "@/store/gameAtom";
 import { useRecoilState } from "recoil";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useToast } from "@/hooks/useToast";
-
-type ScreenState = "chat" | "game";
 
 interface Player {
   userName: string;

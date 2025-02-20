@@ -7,6 +7,7 @@ import IntegratedRoom from "./components/IntegratedRoom";
 import { User } from "@/store/authAtom"; // <-- User 인터페이스
 import { fetchUser } from "@/services/authService"; // <-- import fetchUser
 import { useToast } from "@/hooks/useToast";
+import axiosInstance from "@/services/axiosInstance";
 
 interface RoomPageProps {
   params: { roomid: string };
@@ -54,38 +55,28 @@ export default function RoomPage({ params }: RoomPageProps) {
   }, [router]);
 
   // (3) 채팅방 존재 여부 체크 로직
-  // function showAlert(message: string) {
-  //   // Electron 환경이면 native dialog 사용, 아니면 기존 alert 호출
-  //   const electronAPI = (window as any).electronAPI;
-  //   if (electronAPI && electronAPI.showAlert) {
-  //     electronAPI.showAlert(message);
-  //   } else {
-  //     alert(message);
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   async function checkRoomExistence() {
-  //     try {
-  //       const res = await fetch(`/api/v1/chatrooms/${roomid}`);
-  //       if (res.ok) {
-  //         setRoomExists(true);
-  //       } else {
-  //         setRoomExists(false);
-  //         showAlert('해당 채팅방은 존재하지 않습니다.');
-  //         router.replace('/main');
-  //       }
-  //     } catch (error) {
-  //       console.error('방 존재 여부 확인 중 오류:', error);
-  //       setRoomExists(false);
-  //       showAlert('채팅방 정보를 불러오는데 실패했습니다.');
-  //       router.replace('/main');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   checkRoomExistence();
-  // }, [roomid, router]);
+  useEffect(() => {
+    async function checkRoomExistence() {
+      try {
+        const res = await axiosInstance.get(`/api/v1/chatrooms/${roomid}`);
+        if (res.status === 200) {
+          setRoomExists(true);
+        } else {
+          setRoomExists(false);
+          showToast('해당 채팅방은 존재하지 않습니다.', "info");
+          router.replace('/main');
+        }
+      } catch (error) {
+        setRoomExists(false);
+        showToast('채팅방 정보를 불러오는데 실패했습니다.', "info");
+        router.replace('/main');
+      } finally {
+        setLoading(false);
+      }
+    }
+    checkRoomExistence();
+  }, [roomid, router]);
+  
 
   // (4) 로딩 중 화면
   if (loading) {
