@@ -156,9 +156,9 @@ public class AquariumService {
         aquarium.setAquariumBackgroundId(requestDto.getAquariumBack());
 
         // 기본값 설정
-        aquarium.setLastFedTime(LocalDateTime.now().minusHours(feedInterval+1));
-        aquarium.setLastWaterChangeTime(LocalDateTime.now().minusHours(waterInterval+1));
-        aquarium.setLastCleanedTime(LocalDateTime.now().minusHours(cleanInterval+1));
+        aquarium.setLastFedTime(LocalDateTime.now().minusMinutes(feedInterval * 2));
+        aquarium.setLastWaterChangeTime(LocalDateTime.now().minusMinutes(waterInterval * 2));
+        aquarium.setLastCleanedTime(LocalDateTime.now().minusMinutes(cleanInterval * 2));
 
         return aquariumRepository.save(aquarium);
     }
