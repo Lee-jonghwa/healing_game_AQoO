@@ -9,6 +9,7 @@ import axiosInstance from "@/services/axiosInstance";
 import { fetchFriends } from "@/app/main/FriendsList";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인된 유저 정보 가져오기
 import { useRouter } from "next/navigation"; // ✅ next/navigation에서 import
+import { useToast } from "@/hooks/useToast";
 
 const customLoader = ({ src }: { src: string }) => src;
 
@@ -24,6 +25,8 @@ export default function PushNotifications({
   onClose: () => void;
   setNewNotifications: (newNotifications: boolean) => void;
 }) {
+  const { showToast } = useToast();
+
   const { auth } = useAuth(); // ✅ 로그인된 사용자 정보 가져오기
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -144,7 +147,7 @@ export default function PushNotifications({
                         setSelectedFriendRequest({ notificationId: notif.id, relationshipId: notif.data });
                         setShowFriendRequestModal(true);
                       } else {
-                        alert("이미 친구입니다."); // isFriend가 false일 때 알림 창 표시
+                        showToast("이미 친구입니다.", "info"); // isFriend가 false일 때 알림 창 표시
                       }
                     }
                   : undefined

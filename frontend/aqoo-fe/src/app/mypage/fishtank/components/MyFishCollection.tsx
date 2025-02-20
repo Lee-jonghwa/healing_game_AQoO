@@ -7,6 +7,7 @@ import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { useRecoilValue } from "recoil";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 interface MyFish {
   fishName: string;
@@ -30,6 +31,8 @@ export default function MyFishCollection({
   onFishAdded,
   maxFishCount = 40, // 기본값: 40마리 제한
 }: MyFishCollectionProps) {
+  const { showToast } = useToast();
+
   const auth = useRecoilValue(authAtom);
   const [myFishList, setMyFishList] = useState<MyFish[]>([]);
   const [selectedFish, setSelectedFish] = useState<MyFish | null>(null);
@@ -93,7 +96,6 @@ export default function MyFishCollection({
   }, [auth.user?.id, refresh, fetchData, fetchCurrentFishCount]);
 
   const handleFishClick = (fish: MyFish) => {
-
     fishClick();
 
     setSelectedFish(fish);
@@ -110,7 +112,7 @@ export default function MyFishCollection({
 
     // 현재 어항에 있는 물고기가 40마리 이상이면 추가 불가
     if (currentFishCount >= maxFishCount) {
-      alert(`어항에 물고기를 더 추가할 수 없습니다. (최대 ${maxFishCount}마리)`);
+      showToast(`어항에 물고기를 더 추가할 수 없습니다. (최대 ${maxFishCount}마리)`, "warning");
       setIsModalOpen(false);
       setSelectedFish(null);
       return;

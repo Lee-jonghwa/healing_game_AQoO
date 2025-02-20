@@ -1,25 +1,25 @@
 "use client";
 
-import { UserInfo, AquariumData } from "@/types";
-import React, { useEffect, useState, Suspense, useRef } from "react";
-import { useForm, SubmitHandler, UseFormRegister, UseFormSetValue, UseFormHandleSubmit } from "react-hook-form";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { useRecoilState } from "recoil";
-import { authAtom } from "@/store/authAtom";
+import { AquariumData, UserInfo } from "@/types";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { SubmitHandler, UseFormHandleSubmit, UseFormRegister, UseFormSetValue, useForm } from "react-hook-form";
 
+import { AxiosResponse } from "axios";
+import Buttons from "./Buttons";
+import DeleteAccountModal from "./DeleteAccountModal";
+import Image from "next/image";
 import InputField from "./InputField";
 import ModalButtons from "./ModalButtons";
-import Buttons from "./Buttons";
-import PasswordChangeModal from "./PasswordChangeModal";
-import DeleteAccountModal from "./DeleteAccountModal";
 import MyFishChangeModal from "./MyFishChangeModal";
-
+import PasswordChangeModal from "./PasswordChangeModal";
 import { ProfileFormInputs } from "@/types";
+import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
-import { AxiosResponse } from "axios";
+import { useAuth } from "@/hooks/useAuth";
+import { useRecoilState } from "recoil";
+import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 /**
  * Suspense 리소스를 위한 헬퍼 함수
@@ -73,6 +73,8 @@ function ProfileForm({
   setValue: UseFormSetValue<ProfileFormInputs>;
   handleSubmit: UseFormHandleSubmit<ProfileFormInputs>;
 }) {
+  const { showToast } = useToast();
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full">
       <div className="flex flex-col gap-1 sm:gap-4 ">
@@ -124,16 +126,16 @@ function EditProfilePage() {
   const userDataResourceRef = useRef<{ read: () => any } | null>(null);
   const [userDataResource, setUserDataResource] = useState<{ read: () => any } | null>(null);
 
-  const { play: playClick } = useSFX("/sounds/pop-01.mp3")
+  const { showToast } = useToast();
+
+  const { play: playClick } = useSFX("/sounds/pop-01.mp3");
 
   const wrapOnClick = (originalOnClick?: () => void) => () => {
     playClick();
     if (originalOnClick) {
-      originalOnClick()
+      originalOnClick();
     }
-  }
-
-
+  };
 
   // 접속 유저의 정보 조회
   useEffect(() => {
@@ -245,10 +247,10 @@ function EditProfilePage() {
           } as any)
       );
 
-      alert("회원 정보 수정 성공!");
+      showToast("회원 정보 수정 성공!", "success");
       router.push("/mypage/edit");
     } catch (error) {
-      alert("회원 정보 수정 실패");
+      showToast("회원 정보 수정 실패", "error");
       // console.error(error);
     } finally {
       setIsLoading(false);

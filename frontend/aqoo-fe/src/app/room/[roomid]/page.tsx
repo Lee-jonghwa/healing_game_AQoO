@@ -1,20 +1,24 @@
-'use client';
+"use client";
 
-import { fetchUser } from '@/services/authService'; // <-- import fetchUser
-import { User } from '@/store/authAtom'; // <-- User 인터페이스
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import IntegratedRoom from './components/IntegratedRoom';
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import IntegratedRoom from "./components/IntegratedRoom";
+import { User } from "@/store/authAtom"; // <-- User 인터페이스
+import { fetchUser } from "@/services/authService"; // <-- import fetchUser
+import { useToast } from "@/hooks/useToast";
 
 interface RoomPageProps {
   params: { roomid: string };
 }
 
 export default function RoomPage({ params }: RoomPageProps) {
+  const { showToast } = useToast();
+
   const { roomid } = params;
 
   const searchParams = useSearchParams();
-  const userName = searchParams.get('userName') || '';
+  const userName = searchParams.get("userName") || "";
   const router = useRouter();
 
   // (1) 유저 정보를 저장할 상태
@@ -31,15 +35,15 @@ export default function RoomPage({ params }: RoomPageProps) {
         const userData = await fetchUser();
         if (!userData) {
           // 로그인 상태가 아니거나, 사용자 정보를 가져올 수 없는 경우
-          alert('로그인 정보가 없습니다. 메인 페이지로 돌아갑니다.');
-          router.replace('/main');
+          showToast("로그인 정보가 없습니다. 메인 페이지로 돌아갑니다.", "error");
+          router.replace("/main");
           return;
         }
 
         // 정상적으로 유저 정보를 받아오면 set
         setCurrentUser(userData);
       } catch (error) {
-        console.error('유저 정보 로딩 중 오류:', error);
+        console.error("유저 정보 로딩 중 오류:", error);
         // 오류 처리 후 메인 페이지 등으로 리다이렉트할지 결정
       } finally {
         setLoading(false);
@@ -86,8 +90,8 @@ export default function RoomPage({ params }: RoomPageProps) {
   // (4) 로딩 중 화면
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-100 p-6'>
-        <p className='text-2xl font-bold text-gray-900'>로딩중...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
+        <p className="text-2xl font-bold text-gray-900">로딩중...</p>
       </div>
     );
   }
@@ -101,7 +105,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   // (6) 유저 정보와 roomId, userName 등을 통합하여 하위 컴포넌트로 넘김
   return (
     <div
-      className='relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center'
+      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center"
       style={{ backgroundImage: "url('/chat_images/background.png')" }}
     >
       {/* roomId, userName 뿐 아니라 currentUser 전체를 넘겨줄 수도 있음 */}
