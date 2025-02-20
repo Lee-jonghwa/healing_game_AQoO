@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #171717;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "NeoDunggeunmoPro", Arial, Helvetica, sans-serif;
+
+  /* 기본 커서 */
+  cursor: url("https://cur.cursors-4u.net/cursors/cur-2/cur223.cur"), auto;
+}
+
+/* ✅ 버튼, 링크 등에 다른 커서 적용 */
+button,
+a {
+  cursor: url("https://cur.cursors-4u.net/cursors/cur-2/cur223.cur"), pointer;
+}
+
+/* ✅ 입력 필드에서 기본 커서 유지 */
+input,
+textarea {
+  cursor: text;
+}
+
+/* ✅ 스크롤 시에도 커서 유지 */
+html {
+  cursor: url("https://cur.cursors-4u.net/cursors/cur-2/cur223.cur"), auto;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* 스크롤바 전체 영역 */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px; /* 스크롤바 너비 */
+    height: 8px; /* 가로 스크롤바 높이 */
+  }
+
+  /* 스크롤바 트랙 (배경) */
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f3f4f6; /* Light Gray */
+    border-radius: 10px;
+  }
+
+  /* 스크롤바 핸들 (움직이는 부분) */
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4a90e2; /* Blue */
+    border-radius: 10px;
+    border: 2px solid #f3f4f6; /* 배경과 맞춤 */
+  }
+
+  /* 스크롤바 핸들 Hover 시 */
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #357ab7; /* Darker Blue */
+  }
+}
+
+@font-face {
+  font-family: "NeoDunggeunmoPro";
+  src: url("/NeoDunggeunmoPro-Regular.woff") format("woff");
+
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* styles.css 또는 globals.css */
+@keyframes ping {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1.2);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 1;
+  }
+}
+
+.ping-animation {
+  animation: ping 1s infinite;
+}
+
+/* 동그라미 스타일 */
+.notification-dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: rgb(244, 73, 5); /* 노란색 */
+  border-radius: 50%;
+  animation: ping 1s infinite;
+}
+
+@keyframes fadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeInSlideUp {
+  animation: fadeInSlideUp 0.7s ease-out forwards;
+}
+
+.exp-effect {
+  position: absolute;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.exp-effect.fade-out {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* ✅ react-toastify 스타일 커스텀 */
+.custom-toast {
+  font-family: "NeoDunggeunmoPro", Arial, sans-serif !important;
+  border-radius: 8px !important;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1) !important;
+  padding: 12px 16px !important;
+  font-size: 14px !important;
+  width: fit-content !important; /* ✅ 텍스트 길이에 맞게 */
+  min-width: unset !important; /* ✅ 기본 min-width 제거 */
+}
+
+/* ✅ 개별 스타일 */
+.custom-toast-success {
+  background-color: #8fee7c !important; /* 핑크색 */
+  color: black !important;
+}
+
+.custom-toast-error {
+  background-color: #ffb6ed !important; /* 빨간색 */
+  color: black !important;
+}
+
+.custom-toast-warning {
+  background-color: #ffbb00 !important; /* 주황색 */
+  color: black !important;
+}
+
+.custom-toast-info {
+  background-color: #0077d8 !important; /* 파란색 */
+  color: #ffffff !important;
+}
+
+/* ✅ 진행바 색상 */
+.custom-toast-progress {
+  background-color: #ffffff !important;
+}

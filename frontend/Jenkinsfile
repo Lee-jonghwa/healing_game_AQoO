@@ -1,0 +1,72 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "frontend-app:latest"
+        CONTAINER_NAME = "frontend"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'frontend',
+                    url: 'https://lab.ssafy.com/s12-webmobile1-sub1/S12P11E203.git',
+                    credentialsId: 'ssafy203'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('frontend') { // Dockerfile이 위치한 frontend 디렉토리로 이동
+                    sh "docker build -t ${DOCKER_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    echo "Deploying container with name: ${CONTAINER_NAME}"
+                    sh "docker stop ${CONTAINER_NAME} || true"
+                    sh "docker rm ${CONTAINER_NAME} || true"
+                    sh """
+                        docker run -d --name ${CONTAINER_NAME} --network host \
+                        -p 3000:3000 ${DOCKER_IMAGE}
+                    """
+                }
+            }
+        }
+
+        stage('Clean-up') {
+            steps {
+                script {
+                    echo "Cleaning up unused resources..."
+                    
+                    // 1. 중간 빌드 단계에서 생성된 파일 삭제
+                    sh """
+                        rm -rf frontend/aqoo-fe/node_modules
+                        rm -rf frontend/aqoo-fe/.next
+                        rm -rf frontend/aqoo-fe/package-lock.json
+                    """
+                    
+                    // 2. 사용되지 않는 Docker 이미지를 정리
+                    sh "docker image prune -f"
+
+                    // 3. 사용되지 않는 Docker 컨테이너, 네트워크, 볼륨 정리 (필요 시)
+                    sh "docker container prune -f"
+                    sh "docker volume prune -f"
+                    sh "docker network prune -f"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+    }
+}
