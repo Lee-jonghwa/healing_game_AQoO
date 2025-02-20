@@ -7,6 +7,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import InputField from "@/app/user/find-password/components/InputField";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/useToast";
 
 interface RequestFormInputs {
   userId: string;
@@ -18,6 +19,8 @@ interface VerifyFormInputs {
 }
 
 function FindPasswordPageContent() {
+  const { showToast } = useToast();
+
   const router = useRouter();
   const API_BASE_URL = "https://i12e203.p.ssafy.io/api/v1";
   const {
@@ -79,7 +82,7 @@ function FindPasswordPageContent() {
           message: "인증번호가 잘못되었습니다.",
         });
       } else {
-        alert("인증번호 확인 중 오류가 발생했습니다.");
+        showToast("인증번호 확인 중 오류가 발생했습니다.", "error");
       }
     } finally {
       setIsVerifying(false);

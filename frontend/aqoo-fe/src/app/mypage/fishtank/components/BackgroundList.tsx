@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import axiosInstance from "@/services/axiosInstance";
-import BackgroundItemCard from "./BackgroundItemCard";
+import { useEffect, useState } from "react";
+
 import { BADFLAGS } from "dns";
+import BackgroundItemCard from "./BackgroundItemCard";
+import axiosInstance from "@/services/axiosInstance";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 interface Background {
   id: number;
@@ -18,6 +20,9 @@ interface BackgroundListProps {
 
 export default function BackgroundList({ aquariumId, onBackgroundChange }: BackgroundListProps) {
   const [backgrounds, setBackgrounds] = useState<Background[]>([]);
+
+  const { showToast } = useToast();
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [selectedBackgroundId, setSelectedBackgroundId] = useState<number | null>(null);
@@ -52,10 +57,11 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
       })
       .then(() => {
         onBackgroundChange(newBgUrl);
-        alert("배경화면이 변경되었습니다.");
+        showToast("배경화면이 변경되었습니다.", "success");
       })
       .catch((error) => {
-        console.error("배경 변경 실패", error);
+        showToast("배경 변경 실패!", "error");
+        // console.error("배경 변경 실패", error);
       });
   };
 
@@ -83,7 +89,7 @@ export default function BackgroundList({ aquariumId, onBackgroundChange }: Backg
                 onMouseLeave={() => setHoveredIndex(null)}
                 onClick={() => {
                   playModal();
-                  handleBackgroundSelect(bg.id, bg.imageUrl)
+                  handleBackgroundSelect(bg.id, bg.imageUrl);
                 }}
               />
             );

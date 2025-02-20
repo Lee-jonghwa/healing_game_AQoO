@@ -163,13 +163,13 @@ html {
 }
 
 .custom-toast-warning {
-  background-color: #ff9800 !important; /* 주황색 */
+  background-color: #ffbb00 !important; /* 주황색 */
   color: black !important;
 }
 
 .custom-toast-info {
-  background-color: #2196f3 !important; /* 파란색 */
-  color: white !important;
+  background-color: #95cfff !important; /* 파란색 */
+  color: black !important;
 }
 
 /* ✅ 진행바 색상 */

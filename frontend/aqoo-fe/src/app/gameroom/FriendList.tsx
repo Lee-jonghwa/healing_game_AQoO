@@ -1,15 +1,14 @@
 "use client";
 
 import { User, usersState } from "@/store/participantAtom";
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 import { useEffect, useState } from "react";
+
+import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth";
 import { useRecoilState } from "recoil";
-import axiosInstance from "@/services/axiosInstance";
-
 import { useSFX } from "@/hooks/useSFX";
-import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
-
-
+import { useToast } from "@/hooks/useToast";
 
 interface Friend {
   id: string; // 친구 관계 아이디
@@ -20,6 +19,8 @@ interface Friend {
 }
 
 export default function FriendList() {
+  const { showToast } = useToast();
+
   const { auth } = useAuth();
   console.log("useAuth에서 가져온 사용자 정보", auth);
 
@@ -28,7 +29,6 @@ export default function FriendList() {
   const [myFriends, setMyFriends] = useState<Friend[]>([]);
   const [users, setUsers] = useRecoilState(usersState);
 
-  
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
 
   // 클라이언트 사이드에서만 localStorage 접근
@@ -66,7 +66,7 @@ export default function FriendList() {
     } else {
       // 추가되어 있지 않으면 추가 전에 최대 참가자 수(5명) 확인
       if (users.length >= 5) {
-        alert("참가자는 최대 5명을 초과할 수 없습니다.");
+        showToast("참가자는 최대 6명을 초과할 수 없습니다.", "warning");
         return;
       }
       const newUser: User = {
@@ -80,21 +80,19 @@ export default function FriendList() {
   };
 
   return (
-    <div
-      className="relative w-full max-w-xs md:w-96 h-[350px] md:h-[450px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col"
-    >
+    <div className="relative w-full max-w-xs md:w-96 h-[350px] md:h-[450px] bg-white bg-opacity-70 border border-black rounded-lg shadow-lg p-4 flex flex-col">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">친구 {myFriends.length}</h2>
       </div>
-  
+
       {/* 친구 리스트 */}
       <div className="space-y-3 overflow-y-auto overflow-x-hidden scrollbar-styled flex-grow">
         {myFriends.length > 0 ? (
           myFriends.map((friend) => (
-        <div
-          key={friend.friendId}
-          className="
+            <div
+              key={friend.friendId}
+              className="
             p-3
             bg-white bg-opacity-80
             border border-black
@@ -106,49 +104,42 @@ export default function FriendList() {
             duration-300
             hover:scale-105
           "
-        >
-          <div className="flex items-center space-x-3 min-w-0">
-            <div className="w-12 h-12 bg-300 rounded-full overflow-hidden">
-              <img
-                src={friend.mainFishImage}
-                alt="친구의 대표 물고기"
-                className="w-full h-full object-contain rounded-full"
-              />
-            </div>
-            <div className="min-w-0">
-              {/* Lv */}
-              <p className="text-[10px] md:text-xs whitespace-nowrap">
-                Lv. {friend.level}
-              </p>
-              {/* 닉네임 */}
-              <p
-                className="
+            >
+              <div className="flex items-center space-x-3 min-w-0">
+                <div className="w-12 h-12 bg-300 rounded-full overflow-hidden">
+                  <img
+                    src={friend.mainFishImage}
+                    alt="친구의 대표 물고기"
+                    className="w-full h-full object-contain rounded-full"
+                  />
+                </div>
+                <div className="min-w-0">
+                  {/* Lv */}
+                  <p className="text-[10px] md:text-xs whitespace-nowrap">Lv. {friend.level}</p>
+                  {/* 닉네임 */}
+                  <p
+                    className="
                   font-bold
                   text-[10px] md:text-base
                   whitespace-nowrap
                   overflow-hidden
                   text-ellipsis
                 "
-              >
-                {friend.nickname}
-              </p>
-              {/* friendId */}
-              <p className="text-[10px] md:text-xs whitespace-nowrap">
-                {friend.friendId}
-              </p>
-            </div>
-          </div>
+                  >
+                    {friend.nickname}
+                  </p>
+                  {/* friendId */}
+                  <p className="text-[10px] md:text-xs whitespace-nowrap">{friend.friendId}</p>
+                </div>
+              </div>
 
-          <button
-            onClick={() => {
-              playModal();
-              handleToggleParticipant(friend);
-            }}
-            disabled={
-              !users.some((u) => u.friendId === friend.friendId) &&
-              users.length >= 5
-            }
-            className={`
+              <button
+                onClick={() => {
+                  playModal();
+                  handleToggleParticipant(friend);
+                }}
+                disabled={!users.some((u) => u.friendId === friend.friendId) && users.length >= 5}
+                className={`
               px-2 py-1
               text-[10px] md:text-sm
               rounded-md
@@ -163,10 +154,10 @@ export default function FriendList() {
                   : "bg-white text-black hover:bg-blue-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               }
             `}
-          >
-            {users.some((u) => u.friendId === friend.friendId) ? "제거" : "추가"}
-          </button>
-        </div>
+              >
+                {users.some((u) => u.friendId === friend.friendId) ? "제거" : "추가"}
+              </button>
+            </div>
           ))
         ) : (
           <p className="text-center text-gray-500">아직 친구가 없습니다.</p>
@@ -199,5 +190,4 @@ export default function FriendList() {
       `}</style>
     </div>
   );
-  
 }

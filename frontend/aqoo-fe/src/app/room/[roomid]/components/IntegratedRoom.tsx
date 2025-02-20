@@ -14,6 +14,7 @@ import { User } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 interface Player {
   userName: string;
@@ -67,6 +68,8 @@ export interface Member {
 }
 
 export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoomProps) {
+  const { showToast } = useToast();
+
   const [screen, setScreen] = useState<ScreenState>("chat");
   const [users, setUsers] = useState<Member[]>([]);
   const [gamePlayers, setGamePlayers] = useState<Player[]>([]);
@@ -175,12 +178,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   // [5] 친구 초대 함수
   const inviteFriend = async (memberId: string) => {
     if (participantCount >= 6) {
-      const electronAPI = (window as any).electronAPI;
-      if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-      } else {
-        alert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-      }
+      showToast("참가자가 최대 인원(6명)을 초과할 수 없습니다.", "warning");
       return;
     }
     try {
@@ -190,27 +188,12 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
         roomId,
       });
       if (response.status >= 200 && response.status < 300) {
-        const electronAPI = (window as any).electronAPI;
-        if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert(`${memberId}님을 초대했습니다.`);
-        } else {
-          alert(`${memberId}님을 초대했습니다.`);
-        }
+        showToast(`${memberId}님을 초대했습니다.`, "success");
       } else {
-        const electronAPI = (window as any).electronAPI;
-        if (electronAPI && electronAPI.showAlert) {
-          electronAPI.showAlert(`${memberId} 초대에 실패했습니다.`);
-        } else {
-          alert(`${memberId} 초대에 실패했습니다.`);
-        }
+        showToast(`${memberId} 초대에 실패했습니다.`, "error");
       }
     } catch (error) {
-      const electronAPI = (window as any).electronAPI;
-      if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert("초대 도중 오류가 발생했습니다.");
-      } else {
-        alert("초대 도중 오류가 발생했습니다.");
-      }
+      showToast("초대 도중 오류가 발생했습니다.", "error");
     }
   };
 
@@ -276,7 +259,7 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
               body: JSON.stringify({ roomId, gameType: selectedGame }),
             });
           } else {
-            alert("아직 준비되지 않은 물고기가 있습니다.");
+            showToast("아직 준비되지 않은 물고기가 있습니다.", "info");
           }
         } else {
           if (myReady) {
@@ -388,12 +371,8 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
                               users={displayUsers}
                               onInvite={(memberId) => {
                                 if (users.length >= 6) {
-                                  const electronAPI = (window as any).electronAPI;
-                                  if (electronAPI && electronAPI.showAlert) {
-                                    electronAPI.showAlert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-                                  } else {
-                                    alert("참가자가 최대 인원(6명)을 초과할 수 없습니다.");
-                                  }
+                                  showToast("참가자가 최대 인원(6명)을 초과할 수 없습니다.", "warning");
+
                                   return;
                                 }
                                 inviteFriend(memberId);

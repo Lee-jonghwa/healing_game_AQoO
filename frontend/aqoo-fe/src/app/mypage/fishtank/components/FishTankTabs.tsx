@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import FishTankTabContent from "./FishTankTabContent";
-import { useRecoilValue } from "recoil";
 import { authAtom } from "@/store/authAtom";
 import axiosInstance from "@/services/axiosInstance";
 import { fetchUser } from "@/services/authService";
+import { useRecoilValue } from "recoil";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 interface AquariumTab {
   id: number;
@@ -20,6 +22,8 @@ interface FishTankTabsProps {
 
 export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) {
   const auth = useRecoilValue(authAtom);
+  const { showToast } = useToast();
+
   const router = useRouter();
   const { play: playModal } = useSFX("/sounds/clickeffect-03.mp3");
   // 탭 배열 (어항 목록)
@@ -50,7 +54,7 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
           }
         })
         .catch((error) => {
-          console.error("Error fetching user info:", error);
+          // console.error("Error fetching user info:", error);
         });
 
       // 어항 목록 가져오기
@@ -68,14 +72,15 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
           }
         })
         .catch((error) => {
-          console.error("Error fetching aquariums:", error);
+          showToast("어항 목록 가져오기 실패! 재시도해주세요", "error");
+          // console.error("Error fetching aquariums:", error);
         });
     }
   }, [auth.user?.id]);
 
   const handleAddTank = () => {
     if (tabs.length >= 5) {
-      alert("어항은 최대 5개까지 생성 가능합니다.");
+      showToast("어항은 최대 5개까지 생성 가능합니다.", "info");
       return;
     }
     const newTabName = `어항 ${tabs.length + 1}`;
@@ -93,10 +98,11 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
           };
           setTabs([...tabs, newTab]);
           setSelectedIndex(tabs.length);
+          showToast("어항 생성 성공!", "success");
         })
         .catch((error) => {
-          console.error("Error creating aquarium:", error);
-          alert("어항 생성 실패");
+          // console.error("Error creating aquarium:", error);
+          showToast("어항 생성 실패", "error");
         });
     }
   };
@@ -129,8 +135,8 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
         newTabs[editingIndex] = { ...newTabs[editingIndex], name: editingName };
         setTabs(newTabs);
       } catch (error) {
-        console.error("Error updating aquarium name:", error);
-        alert("어항 이름 수정 실패");
+        // console.error("Error updating aquarium name:", error);
+        showToast("어항 이름 수정 실패", "error");
       }
       setEditingIndex(null);
     }
@@ -157,7 +163,7 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
     if (tabToDelete) {
       // 대표 어항 삭제 방지 로직
       if (mainAquariumId === tabToDelete.id) {
-        alert("대표 어항은 삭제할 수 없습니다.");
+        showToast("대표 어항은 삭제할 수 없습니다.", "warning");
         setShowDeleteModal(false);
         setTabToDelete(null);
         return;
@@ -180,8 +186,8 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
           setRefreshMyFish((prev) => prev + 1);
         })
         .catch((error) => {
-          console.error("Error deleting aquarium:", error);
-          alert("어항 삭제 실패");
+          // console.error("Error deleting aquarium:", error);
+          showToast("어항 삭제 실패", "error");
         });
     }
   };
@@ -194,10 +200,11 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
         userId: auth.user.id,
         aquariumId: tabs[selectedIndex].id,
       });
-      alert("대표 어항 설정이 완료되었습니다.");
+      showToast("대표 어항 설정이 완료되었습니다.", "success");
       setMainAquariumId(tabs[selectedIndex].id);
     } catch (error) {
-      console.error("Error setting main aquarium:", error);
+      showToast("대표 어항 설정");
+      // console.error("Error setting main aquarium:", error);
     }
   };
 
@@ -217,10 +224,7 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
       <div className="flex items-end">
         <div className="flex flex-wrap ml-2 w-full">
           {tabs.map((tab, idx) => (
-            <div
-              key={tab.id}
-              className="relative flex-1 sm:flex-none sm:w-40 h-10 mr-2 min-w-[80px]"
-            >
+            <div key={tab.id} className="relative flex-1 sm:flex-none sm:w-40 h-10 mr-2 min-w-[80px]">
               {editingIndex === idx ? (
                 <input
                   type="text"
@@ -234,16 +238,13 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
               ) : (
                 <button
                   onClick={() => handleTabClick(idx)}
-                  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] ${selectedIndex === idx
-                    ? "!bg-[#A3D8FF]"
-                    : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"
-                    }`}
+                  className={`w-full h-10 cursor-pointer inline-flex items-center justify-center rounded-t-xl border-t border-r border-l border-[#1c5e8d] shadow-inner text-[#070707] text-lg font-[NeoDunggeunmo_Pro] ${
+                    selectedIndex === idx ? "!bg-[#A3D8FF]" : "bg-white hover:bg-[#d1e9ff] hover:text-[#1c5e8d]"
+                  }`}
                   title={selectedIndex === idx ? "클릭하여 이름 수정" : ""}
                 >
                   {selectedIndex === idx && !editingIndex && (
-                    <span className="mr-1 text-[#1c5e8d] hover:text-[#070707] cursor-pointer text-sm">
-                      ✎
-                    </span>
+                    <span className="mr-1 text-[#1c5e8d] hover:text-[#070707] cursor-pointer text-sm">✎</span>
                   )}
                   {tab.name}
                 </button>
@@ -306,9 +307,7 @@ export default function FishTankTabs({ onBackgroundChange }: FishTankTabsProps) 
             onBackgroundChange={onBackgroundChange}
           />
         ) : (
-          <div className="flex justify-center items-center h-full">
-            어항 정보가 없습니다.
-          </div>
+          <div className="flex justify-center items-center h-full">어항 정보가 없습니다.</div>
         )}
       </div>
 

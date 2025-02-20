@@ -1,19 +1,16 @@
 "use client";
 
+import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
 import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
 import FriendList from "@/app/gameroom/FriendList";
 import ParticipantList from "@/app/gameroom/ParticipantList";
-import { useRecoilState } from "recoil";
-import { useRouter, usePathname } from "next/navigation";
-import { usersState } from "@/store/participantAtom";
 import axiosInstance from "@/services/axiosInstance";
-
+import { useRecoilState } from "recoil";
 import { useSFX } from "@/hooks/useSFX";
-import { bgMusicVolumeState, sfxVolumeState } from "@/store/soundAtom";
-
-
-
-
+import { useToast } from "@/hooks/useToast";
+import { usersState } from "@/store/participantAtom";
 
 // localStorage에 안전하게 접근하는 헬퍼 함수
 const getLocalStorageItem = (key: string, defaultValue: string = "guest"): string => {
@@ -24,11 +21,13 @@ const getLocalStorageItem = (key: string, defaultValue: string = "guest"): strin
 };
 
 export default function GameRoomPage() {
+  const { showToast } = useToast();
+
   const [participants, setParticipants] = useRecoilState(usersState);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [userName, setUserName] = useState<string | null>(null);
-  
+
   const { play: playModal } = useSFX("/sounds/clickeffect-02.mp3");
 
   // 클라이언트 사이드에서만 localStorage에 접근하여 사용자 이름을 설정
@@ -40,12 +39,12 @@ export default function GameRoomPage() {
   // 채팅방 생성 핸들러
   const handleCreateRoom = async () => {
     if (participants.length === 0) {
-      alert("⚠ 참가자를 한 명 이상 추가해주세요.");
+      showToast("⚠ 참가자를 한 명 이상 추가해주세요.", "warning");
       return;
     }
 
     if (!userName) {
-      alert("⚠ 사용자 이름을 확인할 수 없습니다.");
+      showToast("⚠ 사용자 이름을 확인할 수 없습니다.", "error");
       return;
     }
 
@@ -53,11 +52,9 @@ export default function GameRoomPage() {
     try {
       // 채팅방 생성 API 호출
       const response = await axiosInstance.post(`/chatrooms?userId=${encodeURIComponent(userName)}`);
-      
+
       const data = response.data;
       const roomId = data.roomId;
-      console.log("Created roomId:", roomId);
-      console.log("participants:", participants);
 
       // 참가자 목록을 순회하며 초대 API 호출 (호스트 제외)
       for (const participant of participants) {
@@ -70,11 +67,6 @@ export default function GameRoomPage() {
             guestId: participant.friendId, // 초대할 참가자 (participant의 식별자)
             roomId: roomId,
           });
-          if (inviteResponse.status >= 200 && inviteResponse.status < 300) {
-            console.log(`${participant.friendId}님 초대 성공`);
-          } else {
-            console.error(`${participant.friendId}님 초대 실패`);
-          }
         } catch (inviteError) {
           console.error(`${participant.friendId}님 초대 중 에러 발생:`, inviteError);
         }
@@ -85,7 +77,8 @@ export default function GameRoomPage() {
     } catch (error) {
       console.error("❌ Error creating room:", error);
       const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류 발생";
-      alert(`채팅방 생성 실패: ${errorMessage}`);
+
+      showToast(`채팅방 생성 실패: ${errorMessage}`, "error");
     } finally {
       setLoading(false);
     }
@@ -98,14 +91,15 @@ export default function GameRoomPage() {
     >
       {/* 배경 */}
       <div className="absolute inset-0 bg-white opacity-20"></div>
-  
+
       {/* 전체 컨테이너 - 반응형 최대 너비 적용 */}
-      <div className="relative z-0 flex flex-col items-center p-4 w-full
+      <div
+        className="relative z-0 flex flex-col items-center p-4 w-full
                       max-w-sm  /* 기본: 최대 너비를 작게 */
                       sm:max-w-md  /* sm 사이즈부터 중간 크기 */
                       md:max-w-4xl  /* md 사이즈부터 기존 크기 적용 */
-                      mx-auto">
-  
+                      mx-auto"
+      >
         {/* 데스크탑: 친구 리스트와 참가자 리스트를 감싼 박스 */}
         <div className="hidden md:flex gap-6 p-6 bg-white bg-opacity-30 border border-black rounded-lg shadow-lg w-[800px] h-[500px] relative justify-center items-center">
           {/* 데스크탑: 절대 위치로 방 만들기 제목 */}
@@ -115,7 +109,7 @@ export default function GameRoomPage() {
           <FriendList />
           <ParticipantList />
         </div>
-  
+
         {/* 모바일 전용 박스 (md:hidden) */}
         <div className="block md:hidden relative mt-16">
           {/* 박스 자체 */}
@@ -138,13 +132,13 @@ export default function GameRoomPage() {
             >
               🎮 방 만들기 🕹️
             </h1>
-  
+
             {/* 박스 내부에 친구 리스트와 참가자 리스트 */}
             <FriendList />
             <ParticipantList />
           </div>
         </div>
-  
+
         {/* 버튼 컨테이너 */}
         <div className="flex w-full justify-center md:justify-end mt-6 mb-10">
           <button
@@ -167,5 +161,5 @@ export default function GameRoomPage() {
         </div>
       </div>
     </div>
-  );  
+  );
 }

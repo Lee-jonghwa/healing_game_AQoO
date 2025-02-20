@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import InputField from "@/app/user/join/components/InputField";
 import axios from "axios";
+import { useToast } from "@/hooks/useToast";
 
 interface JoinFormInputs {
   email: string;
@@ -16,6 +17,8 @@ interface JoinFormInputs {
 }
 
 function JoinPageContent() {
+  const { showToast } = useToast();
+
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -60,7 +63,7 @@ function JoinPageContent() {
   const onSubmit: SubmitHandler<JoinFormInputs> = async (data) => {
     // 일반 가입인 경우, 비밀번호와 비밀번호 확인이 일치하는지 검증합니다.
     if (!isSocialJoin && data.password !== data.pw) {
-      alert("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+      showToast("비밀번호와 비밀번호 확인이 일치하지 않습니다.", "warning");
       return;
     }
 
@@ -76,11 +79,12 @@ function JoinPageContent() {
     try {
       // axios를 사용하여 회원가입 API 호출 (전체 경로: BASE_URL + /auth/register)
       const response = await axios.post("https://i12e203.p.ssafy.io/api/v1/auth/register", requestBody);
-      console.log("회원가입 성공:", response.data);
+      // console.log("회원가입 성공:", response.data);
+      showToast("회원가입 성공!", "success");
       router.push("/user/login");
     } catch (error: any) {
       console.error("회원가입 실패:", error);
-      alert(error.message);
+      showToast("회원가입 실패 : " + error.message, "error");
     }
   };
 
