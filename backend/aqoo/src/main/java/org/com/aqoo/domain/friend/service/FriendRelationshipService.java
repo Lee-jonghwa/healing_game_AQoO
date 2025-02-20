@@ -89,14 +89,33 @@ public class FriendRelationshipService {
     public String acceptFriendRequest(int relationshipId) throws Exception {
         Optional<FriendRelationship> relationship = friendRelationshipRepository.findById(relationshipId);
 
+
+
         if (relationship.isPresent()) {
+
             FriendRelationship friendRelationship = relationship.get();
+            String userId1 = friendRelationship.getFriend1Id();
+            String userId2 = friendRelationship.getFriend2Id();
+
+            //두 개는 아닌지 판단
+
+            List<FriendRelationship> friendships = friendRelationshipRepository.findAllFriendshipsByUserIds(userId1, userId2);
+
+
+            // 첫 번째 데이터를 남기고 나머지는 삭제
+            FriendRelationship primaryFriendship = friendships.get(0);
+            for (int i = 1; i < friendships.size(); i++) {
+                friendRelationshipRepository.delete(friendships.get(i));
+            }
+
+
             // 상태가 이미 ACCEPTED라면, 친구 요청을 수락할 필요 없음
-            if ("ACCEPTED".equals(friendRelationship.getStatus())) {
+            if ("ACCEPTED".equals(primaryFriendship.getStatus())) {
                 return "이미 친구 관계입니다.";
             }
-            friendRelationship.setStatus("ACCEPTED");
-            friendRelationshipRepository.save(friendRelationship);
+            // 남은 데이터의 상태를 "ACCEPTED"로 변경 후 저장
+            primaryFriendship.setStatus("ACCEPTED");
+            friendRelationshipRepository.save(primaryFriendship);
 
             //친구 수락 알람
             String sender = friendRelationship.getFriend2Id();
