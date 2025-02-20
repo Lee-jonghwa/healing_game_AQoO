@@ -58,7 +58,7 @@ export default function RoomPage({ params }: RoomPageProps) {
   useEffect(() => {
     async function checkRoomExistence() {
       try {
-        const res = await axiosInstance.get(`/api/v1/chatrooms/${roomid}`);
+        const res = await axiosInstance.get(`/chatrooms/${roomid}`);
         if (res.status === 200) {
           setRoomExists(true);
         } else {

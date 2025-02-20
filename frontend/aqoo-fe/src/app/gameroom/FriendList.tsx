@@ -22,7 +22,6 @@ export default function FriendList() {
   const { showToast } = useToast();
 
   const { auth } = useAuth();
-  console.log("useAuth에서 가져온 사용자 정보", auth);
 
   // localStorage 접근을 위한 상태 변수
   const [loggedInUser, setLoggedInUser] = useState("");
@@ -36,7 +35,6 @@ export default function FriendList() {
     if (typeof window !== "undefined") {
       const storedUser = localStorage.getItem("loggedInUser") || "";
       setLoggedInUser(storedUser);
-      console.log("현재 아이디", storedUser);
     }
   }, []);
 
@@ -49,8 +47,6 @@ export default function FriendList() {
     axiosInstance
       .get(`/friends/${loggedInUser}`)
       .then((response) => {
-        console.log("loggedInUser", loggedInUser);
-        console.log("친구 목록 조회 성공:", response.data);
         setMyFriends(response.data.friends);
       })
       .catch((error) => {
