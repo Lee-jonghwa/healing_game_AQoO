@@ -41,11 +41,60 @@ interface GroupedFish {
 // 오버레이에 띄울 물고기 선택 모달 (그룹화된 데이터를 사용)
 interface FishOverlayModalProps {
   fishList: FishData[];
+  transparency: number;
+  setTransparency: (val: number) => void;
   onConfirm: (selected: { fishImage: string; size: string; count: number }[]) => void;
   onClose: () => void;
 }
 
-function FishOverlayModal({ fishList, onConfirm, onClose }: FishOverlayModalProps) {
+// 일렉트론 전용 모달 내 투명도 조절 슬라이더더
+function TransparencySlider({
+  transparency,
+  setTransparency,
+}: {
+  transparency: number;
+  setTransparency: (val: number) => void;
+}) {
+  // 직접 입력 핸들러 (0~100 사이로 clamp)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = parseInt(e.target.value, 10);
+    if (isNaN(value)) value = 0;
+    if (value < 0) value = 0;
+    if (value > 100) value = 100;
+    setTransparency(value);
+  };
+
+  return (
+    <div className="mt-4 mb-6">
+      <label htmlFor="transparencySlider" className="block mb-1">
+        투명도 (0: 불투명, 100: 완전 투명)
+      </label>
+      <div className="flex items-center space-x-2">
+        <input
+          id="transparencySlider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value={transparency}
+          onChange={(e) => setTransparency(parseInt(e.target.value, 10))}
+          className="w-full"
+        />
+        <input 
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          value={transparency}
+          onChange={handleInputChange}
+          className="w-20 border border-gray-300 rounded p-1 text-center"
+        />
+      </div>
+    </div>
+  );
+}
+
+function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, onClose }: FishOverlayModalProps) {
   const [groupedFish, setGroupedFish] = useState<GroupedFish[]>([]);
   const [selectedCounts, setSelectedCounts] = useState<Record<string, number>>({});
 
@@ -144,6 +193,9 @@ function FishOverlayModal({ fishList, onConfirm, onClose }: FishOverlayModalProp
           <span>전체 선택: {totalSelected} / 5</span>
         </div>
 
+        {/* 투명도 설정 슬라이더 추가 */}
+        <TransparencySlider transparency={transparency} setTransparency={setTransparency} />
+
         <div className="flex justify-end space-x-2">
           <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded transition duration-200 hover:bg-gray-400">
             취소
@@ -188,6 +240,7 @@ export default function MainPage() {
   const [selectedAquariumId, setSelectedAquariumId] = useState<number | null>(null);
 
   const [viewportHeight, setViewportHeight] = useState("100vh");
+  const [transparency, setTransparency] = useState(1); // 투명도 상태 선언
 
   useEffect(() => {
     const updateHeight = () => {
@@ -242,16 +295,19 @@ export default function MainPage() {
   };
 
   const onOverlayModalConfirm = (selected: { fishImage: string; size: string; count: number }[]) => {
-    // 예시: 각 항목을 문자열로 변환하여 전달 (필요에 따라 포맷 조정)
-    const overlayParam = selected.map((item) => `${item.fishImage}:${item.size}:${item.count}`).join(",");
+    // 각 항목을 "fishImage:size:count:" 형식으로 만든 후, 전체 문자열 뒤에 투명도 값을 추가
+    const overlayParam = selected
+      .map((item) => `${item.fishImage}:${item.size}:${item.count}:`)
+      .join(",") + transparency;
     (window as any).electronAPI.toggleOverlay(overlayParam);
     setOverlayActive(true);
     setShowOverlayModal(false);
   };
-
+  
   const onOverlayModalClose = () => {
     setShowOverlayModal(false);
   };
+  
 
   // []
   useEffect(() => {
@@ -379,18 +435,6 @@ export default function MainPage() {
     if (!auth.user?.id) return;
     refreshUserInfo();
   }, [auth.user?.id]);
-
-  // useEffect(() => {
-  //   if (!userInfo) return;
-  //   if (!auth.user) return;
-
-  //   axiosInstance.get(`aquariums/all/${auth.user.id}`).then((res) => {
-  //     setAquariumList(res.data.aquariums);
-  //     // userInfo.mainAquarium이 있으면 그걸로, 없으면 0번 인덱스
-  //     const defaultId = userInfo.mainAquarium ?? res.data.aquariums[0]?.id ?? null;
-  //     setSelectedAquariumId(defaultId);
-  //   });
-  // }, [userInfo]);
 
   // ② 어항 리스트 조회 (유저 정보와 auth.user.id가 준비되면)
   useEffect(() => {
@@ -561,7 +605,12 @@ export default function MainPage() {
       )}
       {/* 오버레이 물고기 선택 모달 */}
       {showOverlayModal && userInfo && (
-        <FishOverlayModal fishList={fishes} onConfirm={onOverlayModalConfirm} onClose={onOverlayModalClose} />
+        <FishOverlayModal
+        fishList={fishes}
+        transparency={transparency}
+        setTransparency={setTransparency}
+        onConfirm={onOverlayModalConfirm}
+        onClose={onOverlayModalClose} />
       )}
     </div>
   );
