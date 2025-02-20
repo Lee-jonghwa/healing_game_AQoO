@@ -9,6 +9,7 @@ import { Camera } from "@mediapipe/camera_utils"; // 카메라 사용 라이브�
 import axiosInstance from "@/services/axiosInstance";
 import { useAuth } from "@/hooks/useAuth"; // ✅ 로그인 정보 가져오기
 import { useSFX } from "@/hooks/useSFX";
+import { useToast } from "@/hooks/useToast";
 
 const PALM_IMAGE_SRC = "/cleanIcon.png";
 
@@ -27,6 +28,8 @@ export default function CleanComponent({
 
   const { play: playClean } = useSFX("/sounds/창문닦기.mp3");
   const { play: playClear } = useSFX("/sounds/성공알림-01.mp3");
+
+  const { showToast } = useToast();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -239,7 +242,9 @@ export default function CleanComponent({
     }
 
     if (count.current === 3) {
-      alert("청소에 성공했어요! 🐟");
+      // alert("청소에 성공했어요! 🐟");
+      showToast("청소에 성공했어요! 🐟", "success");
+
       playClear();
       motionData.current = { startX: null, movedLeft: false, movedRight: false };
       count.current = 0;

@@ -39,6 +39,7 @@ const BackgroundMusic = () => {
   if (pageMusicMap[pathname]) {
     currentMusic = pageMusicMap[pathname];
   }
+
   const { play, setVolume } = useSound(currentMusic, true, volume);
   const hasPlayed = useRef(false);
 

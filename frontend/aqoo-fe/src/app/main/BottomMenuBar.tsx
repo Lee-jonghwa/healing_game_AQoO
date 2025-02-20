@@ -11,6 +11,7 @@ import axiosInstance from "@/services/axiosInstance";
 import { useRouter } from "next/navigation";
 import { useSFX } from "@/hooks/useSFX";
 import { useState } from "react";
+import { useToast } from "@/hooks/useToast";
 
 interface BottomMenuBarProps {
   userInfo: UserInfo;
@@ -54,6 +55,8 @@ export default function BottomMenuBar({
 
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
 
+  const { showToast } = useToast();
+
   const toggleMenuBar = () => {
     setIsMenuVisible((prev) => !prev);
     setActiveComponent(null);
@@ -75,7 +78,11 @@ export default function BottomMenuBar({
     if (!selectedAquariumId) return; // ✅ 선택된 어항 ID가 없으면 return
 
     if ((type === "water" && isWaterMaxed) || (type === "feed" && isFeedMaxed)) {
-      alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
+      showToast(
+        `👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`,
+        "info"
+      );
+      // alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
       return;
     }
     try {
@@ -91,7 +98,8 @@ export default function BottomMenuBar({
         playFeed();
       }
 
-      alert(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`);
+      // alert(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`);
+      showToast(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`, "success");
       await handleIncreaseExp(10);
       refreshAquariumData();
       playSuccess();
@@ -279,7 +287,8 @@ export default function BottomMenuBar({
               label="Clean"
               onClick={() => {
                 if (isPollutionMaxed) {
-                  alert("청결 상태가 이미 최고 상태입니다!");
+                  // alert("청결 상태가 이미 최고 상태입니다!");
+                  showToast("청결 상태가 이미 최고 상태입니다!", "info");
                   return;
                 }
                 setActiveComponent("clean");
