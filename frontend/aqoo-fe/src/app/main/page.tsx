@@ -50,7 +50,11 @@ interface FishOverlayModalProps {
   fishList: FishData[];
   transparency: number;
   setTransparency: (val: number) => void;
-  onConfirm: (selected: { fishImage: string; size: string; count: number }[]) => void;
+  selectedMonitorId: number;
+  setSelectedMonitorId: (id: number) => void;
+  onConfirm: (
+    selected: { fishImage: string; size: string; count: number }[]
+  ) => void;
   onClose: () => void;
 }
 
@@ -67,7 +71,7 @@ function MonitorSelection({
   return (
     <div className="mb-4 p-2 border border-gray-300 rounded">
       <label htmlFor="monitorSelect" className="block mb-1">
-        오버레이를 띄울 모니터 선택
+        물고기를 띄울 모니터 선택
       </label>
       <select
         id="monitorSelect"
@@ -77,8 +81,7 @@ function MonitorSelection({
       >
         {displays.map((display) => (
           <option key={display.id} value={display.id}>
-            모니터 {display.id} (해상도: {display.bounds.width} x{" "}
-            {display.bounds.height})
+            모니터 {display.id} (해상도: {display.bounds.width} x {display.bounds.height})
           </option>
         ))}
       </select>
@@ -133,14 +136,21 @@ function TransparencySlider({
   );
 }
 
-function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, onClose }: FishOverlayModalProps) {
+function FishOverlayModal({
+  fishList,
+  transparency,
+  setTransparency,
+  selectedMonitorId,
+  setSelectedMonitorId,
+  onConfirm,
+  onClose,
+}: FishOverlayModalProps) {
   const [groupedFish, setGroupedFish] = useState<GroupedFish[]>([]);
   const [selectedCounts, setSelectedCounts] = useState<Record<string, number>>({});
   const { showToast } = useToast();
 
   // 모니터 관련 상태
   const [monitors, setMonitors] = useState<DisplayInfo[]>([]);
-  const [selectedMonitorId, setSelectedMonitorId] = useState<number>(0);
 
   // 전달받은 fishList 데이터를 fishName 기준으로 그룹화
   useEffect(() => {
@@ -170,18 +180,13 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
 
   // 모니터 정보 가져오기 (2개 이상일 경우 선택 UI 표출)
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      (window as any).electronAPI?.getDisplays
-    ) {
-      (window as any).electronAPI
-        .getDisplays()
-        .then((displays: DisplayInfo[]) => {
-          setMonitors(displays);
-          if (displays.length > 0) {
-            setSelectedMonitorId(displays[0].id);
-          }
-        });
+    if (typeof window !== "undefined" && (window as any).electronAPI?.getDisplays) {
+      (window as any).electronAPI.getDisplays().then((displays: DisplayInfo[]) => {
+        setMonitors(displays);
+        if (displays.length > 0) {
+          setSelectedMonitorId(displays[0].id);
+        }
+      });
     }
   }, []);
 
@@ -213,9 +218,25 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50" onClick={onClose}>
-      <div className="bg-white rounded-lg p-6 w-96" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-xl font-bold mb-4">항상 화면에서 함께 하고픈 물고기를 골라주세요!</h2>
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg p-6 w-96"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-xl font-bold mb-4">
+          항상 화면에서 함께 하고픈 물고기를 골라주세요!
+        </h2>
+        {/* 모니터가 2개 이상이면 선택 UI 표출 */}
+        {monitors.length >= 2 && (
+          <MonitorSelection
+            selectedMonitorId={selectedMonitorId}
+            setSelectedMonitorId={setSelectedMonitorId}
+            displays={monitors}
+          />
+        )}
         <div className="max-h-60 overflow-y-auto mb-4 custom-scrollbar">
           {groupedFish.length === 0 ? (
             <div>선택 가능한 물고기가 없습니다.</div>
@@ -303,6 +324,8 @@ export default function MainPage() {
   const [viewportHeight, setViewportHeight] = useState("100vh");
   const [transparency, setTransparency] = useState(75); // 투명도 상태 선언
 
+  const { showToast } = useToast();
+
   useEffect(() => {
     const updateHeight = () => {
       setViewportHeight(`${window.innerHeight}px`);
@@ -338,6 +361,8 @@ export default function MainPage() {
   const [overlayActive, setOverlayActive] = useState(false);
   const [showOverlayModal, setShowOverlayModal] = useState(false);
 
+  const [selectedMonitorId, setSelectedMonitorId] = useState<number>(0);
+
   // Electron 감지
   const isElectron = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
 
@@ -358,8 +383,12 @@ export default function MainPage() {
   const onOverlayModalConfirm = (selected: { fishImage: string; size: string; count: number }[]) => {
     // 각 항목을 "fishImage:size:count" 형식으로 변환하고, 이를 콤마로 연결한 후 "|" 구분자로 투명도 값을 추가
     const overlayParam =
-      selected.map((item) => `${item.fishImage}:${item.size}:${item.count}`).join(",") + "|" + transparency;
-    (window as any).electronAPI.toggleOverlay(overlayParam);
+      selected
+        .map((item) => `${item.fishImage}:${item.size}:${item.count}`)
+        .join(",") +
+      "|" +
+      transparency;
+    (window as any).electronAPI.toggleOverlay(overlayParam, selectedMonitorId);
     setOverlayActive(true);
     setShowOverlayModal(false);
   };
@@ -579,6 +608,7 @@ export default function MainPage() {
   useEffect(() => {
     if (newNotifications) {
       playPush();
+      showToast("알림이 도착했어요!", "info");
     }
   }, [newNotifications]);
 
@@ -668,6 +698,8 @@ export default function MainPage() {
           fishList={fishes}
           transparency={transparency}
           setTransparency={setTransparency}
+          selectedMonitorId={selectedMonitorId}
+          setSelectedMonitorId={setSelectedMonitorId}
           onConfirm={onOverlayModalConfirm}
           onClose={onOverlayModalClose}
         />

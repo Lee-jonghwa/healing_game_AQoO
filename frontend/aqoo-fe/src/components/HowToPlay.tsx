@@ -1,8 +1,9 @@
 "use client";
 
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+
 import { useState } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
 
 interface Slide {
   title: string;
@@ -173,17 +174,11 @@ export default function HowToPlayModal({ isOpen, onClose }: { isOpen: boolean; o
                 className="w-full flex-shrink-0 flex flex-col items-center justify-between text-center px-2"
               >
                 {/* aspect-ratio: 16:9 영역 확보 후 object-contain */}
-                <div className="w-[80%] sm:w-[70%] aspect-w-16 aspect-h-9 flex items-center justify-center">
-                  <img
-                    src={item.image}
-                    alt="Intro"
-                    className="
-                    max-h-[40vh]
-                    w-auto
-                    object-contain
-                    rounded-lg"
-                  />
-                </div>
+                {item.image && (
+                  <div className="w-[80%] sm:w-[70%] aspect-w-16 aspect-h-9 flex items-center justify-center">
+                    <img src={item.image} alt="Intro" className="max-h-[40vh]  w-auto object-contain  rounded-lg" />
+                  </div>
+                )}
                 <div>
                   <h2 className="mt-4 text-xl sm:text-3xl font-bold whitespace-pre-wrap">{item.title}</h2>
                   <p className="mt-2 text-base sm:text-lg text-gray-600 whitespace-pre-wrap">{item.description}</p>
