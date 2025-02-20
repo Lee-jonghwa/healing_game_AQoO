@@ -2,7 +2,12 @@
 
 import "@/lib/firebase"; // Firebase 초기화
 
-import { AquariumData, AquariumListItem, Notification, UserInfo } from "@/types";
+import {
+  AquariumData,
+  AquariumListItem,
+  Notification,
+  UserInfo,
+} from "@/types";
 import axios, { AxiosResponse } from "axios";
 import { increaseFishTicket, increaseUserExp } from "@/services/userService";
 import { useEffect, useState } from "react";
@@ -43,7 +48,9 @@ interface FishOverlayModalProps {
   fishList: FishData[];
   transparency: number;
   setTransparency: (val: number) => void;
-  onConfirm: (selected: { fishImage: string; size: string; count: number }[]) => void;
+  onConfirm: (
+    selected: { fishImage: string; size: string; count: number }[]
+  ) => void;
   onClose: () => void;
 }
 
@@ -67,7 +74,7 @@ function TransparencySlider({
   return (
     <div className="mt-4 mb-6">
       <label htmlFor="transparencySlider" className="block mb-1">
-        투명도 (0: 불투명, 100: 완전 투명)
+        투명도 (0: 완전 투명, 100: 불투명)
       </label>
       <div className="flex items-center space-x-2">
         <input
@@ -80,7 +87,7 @@ function TransparencySlider({
           onChange={(e) => setTransparency(parseInt(e.target.value, 10))}
           className="w-full"
         />
-        <input 
+        <input
           type="number"
           min="0"
           max="100"
@@ -94,9 +101,17 @@ function TransparencySlider({
   );
 }
 
-function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, onClose }: FishOverlayModalProps) {
+function FishOverlayModal({
+  fishList,
+  transparency,
+  setTransparency,
+  onConfirm,
+  onClose,
+}: FishOverlayModalProps) {
   const [groupedFish, setGroupedFish] = useState<GroupedFish[]>([]);
-  const [selectedCounts, setSelectedCounts] = useState<Record<string, number>>({});
+  const [selectedCounts, setSelectedCounts] = useState<Record<string, number>>(
+    {}
+  );
 
   // 전달받은 fishList 데이터를 fishName 기준으로 그룹화
   useEffect(() => {
@@ -125,11 +140,19 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
   }, [fishList]);
 
   // 전체 선택 개수 계산
-  const totalSelected = Object.values(selectedCounts).reduce((a, b) => a + b, 0);
+  const totalSelected = Object.values(selectedCounts).reduce(
+    (a, b) => a + b,
+    0
+  );
 
   const increment = (fish: string, max: number) => {
     if (totalSelected >= 5) {
-      alert("최대 5마리까지 선택할 수 있습니다.");
+      const electronAPI = (window as any).electronAPI;
+      if (electronAPI && electronAPI.showAlert) {
+        electronAPI.showAlert("최대 5마리까지 선택할 수 있습니다.");
+      } else {
+        alert("최대 5마리까지 선택할 수 있습니다.");
+      }
       return;
     }
     setSelectedCounts((prev) => {
@@ -152,9 +175,17 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50" onClick={onClose}>
-      <div className="bg-white rounded-lg p-6 w-96" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-xl font-bold mb-4">항상 화면에서 함께 하고픈 물고기를 골라주세요!</h2>
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg p-6 w-96"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-xl font-bold mb-4">
+          항상 화면에서 함께 하고픈 물고기를 골라주세요!
+        </h2>
         <div className="max-h-60 overflow-y-auto mb-4 custom-scrollbar">
           {groupedFish.length === 0 ? (
             <div>선택 가능한 물고기가 없습니다.</div>
@@ -165,7 +196,11 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
                 className="flex items-center justify-between mb-2 p-2 rounded-lg transition duration-200 hover:bg-gray-100"
               >
                 <div className="flex items-center space-x-2">
-                  <img src={group.fishImage} alt={group.fish} className="w-8 h-8 object-cover rounded-full" />
+                  <img
+                    src={group.fishImage}
+                    alt={group.fish}
+                    className="w-8 h-8 object-cover rounded-full"
+                  />
                   <span>
                     {group.fish} (최대 {group.count}마리)
                   </span>
@@ -177,7 +212,9 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
                   >
                     -
                   </button>
-                  <span className="px-3">{selectedCounts[group.fish] || 0}</span>
+                  <span className="px-3">
+                    {selectedCounts[group.fish] || 0}
+                  </span>
                   <button
                     onClick={() => increment(group.fish, group.count)}
                     className="px-2 py-1 bg-gray-300 rounded-r transition duration-200 hover:bg-gray-400"
@@ -194,10 +231,16 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
         </div>
 
         {/* 투명도 설정 슬라이더 추가 */}
-        <TransparencySlider transparency={transparency} setTransparency={setTransparency} />
+        <TransparencySlider
+          transparency={transparency}
+          setTransparency={setTransparency}
+        />
 
         <div className="flex justify-end space-x-2">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded transition duration-200 hover:bg-gray-400">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 rounded transition duration-200 hover:bg-gray-400"
+          >
             취소
           </button>
           <button
@@ -211,7 +254,12 @@ function FishOverlayModal({ fishList, transparency, setTransparency, onConfirm, 
                     : { fishImage: "", size: "", count };
                 });
               if (selectedArray.length === 0) {
-                alert("물고기를 한 마리 이상 선택해주세요.");
+                const electronAPI = (window as any).electronAPI;
+                if (electronAPI && electronAPI.showAlert) {
+                  electronAPI.showAlert("물고기를 한 마리 이상 선택해주세요.");
+                } else {
+                  alert("물고기를 한 마리 이상 선택해주세요.");
+                }
                 return;
               }
               onConfirm(selectedArray);
@@ -237,7 +285,9 @@ export default function MainPage() {
   const [manualSelected, setManualSelected] = useState(false);
 
   const [aquariumList, setAquariumList] = useState<AquariumListItem[]>([]);
-  const [selectedAquariumId, setSelectedAquariumId] = useState<number | null>(null);
+  const [selectedAquariumId, setSelectedAquariumId] = useState<number | null>(
+    null
+  );
 
   const [viewportHeight, setViewportHeight] = useState("100vh");
   const [transparency, setTransparency] = useState(1); // 투명도 상태 선언
@@ -256,7 +306,9 @@ export default function MainPage() {
     level: number;
     expProgress: number;
   } | null>(null);
-  const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(null);
+  const [firstLoginStatus, setFirstLoginStatus] = useState<boolean | null>(
+    null
+  );
   const [firstLoginModal, setFirstLoginModal] = useState<{
     status: boolean;
   } | null>(null);
@@ -278,7 +330,9 @@ export default function MainPage() {
   const [showOverlayModal, setShowOverlayModal] = useState(false);
 
   // Electron 감지
-  const isElectron = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
+  const isElectron =
+    typeof navigator !== "undefined" &&
+    navigator.userAgent.toLowerCase().includes("electron");
 
   // 오버레이 토글 함수: 활성화 상태면 끄고, 아니면 모달로 진행
   const handleToggleOverlay = async () => {
@@ -294,21 +348,24 @@ export default function MainPage() {
     }
   };
 
-  const onOverlayModalConfirm = (selected: { fishImage: string; size: string; count: number }[]) => {
+  const onOverlayModalConfirm = (
+    selected: { fishImage: string; size: string; count: number }[]
+  ) => {
     // 각 항목을 "fishImage:size:count" 형식으로 변환하고, 이를 콤마로 연결한 후 "|" 구분자로 투명도 값을 추가
-    const overlayParam = 
+    const overlayParam =
       selected
         .map((item) => `${item.fishImage}:${item.size}:${item.count}`)
-        .join(",") + "|" + transparency;
+        .join(",") +
+      "|" +
+      transparency;
     (window as any).electronAPI.toggleOverlay(overlayParam);
     setOverlayActive(true);
     setShowOverlayModal(false);
   };
-  
+
   const onOverlayModalClose = () => {
     setShowOverlayModal(false);
   };
-  
 
   // []
   useEffect(() => {
@@ -317,14 +374,18 @@ export default function MainPage() {
       navigator.serviceWorker
         .register("/firebase-messaging-sw.js")
         .then((registration: ServiceWorkerRegistration) => {})
-        .catch((err: unknown) => console.error("🔥 서비스 워커 등록 실패:", err));
+        .catch((err: unknown) =>
+          console.error("🔥 서비스 워커 등록 실패:", err)
+        );
     }
 
     // 첫 로그인 여부 확인용 메소드 -> 모달 set
     const fetchIsFirstLogin = async () => {
       if (!auth.user) return;
       try {
-        const response = await axiosInstance.get<boolean>(`/users/isFirst/${auth.user.id}`);
+        const response = await axiosInstance.get<boolean>(
+          `/users/isFirst/${auth.user.id}`
+        );
         setFirstLoginStatus(response.data);
       } catch (error) {
         console.error("API 호출 중 오류 발생:", error);
@@ -345,7 +406,9 @@ export default function MainPage() {
   const refreshAquariumData = async () => {
     if (!selectedAquariumId) return; // ✅ selectedAquariumId가 없다면 return
     try {
-      const response = await axiosInstance.get(`/aquariums/${selectedAquariumId}`); // ✅ 여기서도 selectedAquariumId 사용
+      const response = await axiosInstance.get(
+        `/aquariums/${selectedAquariumId}`
+      ); // ✅ 여기서도 selectedAquariumId 사용
       setAquariumData(response.data);
     } catch (error) {
       console.error("어항 상태 불러오기 실패", error);
@@ -353,14 +416,20 @@ export default function MainPage() {
   };
 
   // 배고픔 상태에 따른 효과음 처리리
-  const hungrySounds = ["/sounds/hungry_1.mp3", "/sounds/hungry_2.mp3", "/sounds/hungry_3.mp3", "/sounds/hungry_4.mp3"];
+  const hungrySounds = [
+    "/sounds/hungry_1.mp3",
+    "/sounds/hungry_2.mp3",
+    "/sounds/hungry_3.mp3",
+    "/sounds/hungry_4.mp3",
+  ];
   const { play, setSrc } = useSFX(hungrySounds[0]);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | null = null;
     const playRandomHungrySound = () => {
       if (!aquariumData || aquariumData.feedStatus > 3) return;
-      const randomSound = hungrySounds[Math.floor(Math.random() * hungrySounds.length)];
+      const randomSound =
+        hungrySounds[Math.floor(Math.random() * hungrySounds.length)];
       setSrc(randomSound);
       play();
       let minDelay, maxDelay;
@@ -384,7 +453,9 @@ export default function MainPage() {
         default:
           return;
       }
-      const randomDelay = Math.floor(Math.random() * (maxDelay - minDelay) + minDelay);
+      const randomDelay = Math.floor(
+        Math.random() * (maxDelay - minDelay) + minDelay
+      );
       timeoutId = setTimeout(playRandomHungrySound, randomDelay);
     };
     if (aquariumData && aquariumData.feedStatus <= 3) {
@@ -452,7 +523,8 @@ export default function MainPage() {
 
       // 만약 selectedAquariumId가 아직 null이면, mainAquarium (또는 0번)을 기본값으로
       if (selectedAquariumId === null) {
-        const defaultId = newUserInfo.mainAquarium ?? newAquariums[0]?.id ?? null;
+        const defaultId =
+          newUserInfo.mainAquarium ?? newAquariums[0]?.id ?? null;
         setSelectedAquariumId(defaultId);
       }
     });
@@ -505,7 +577,9 @@ export default function MainPage() {
         .get(`/notification/${auth.user.id}`)
         .then((response: AxiosResponse<Notification[]>) => {
           setNotifications(response.data);
-          const unreadNotifications = response.data.filter((notif) => notif.status === false);
+          const unreadNotifications = response.data.filter(
+            (notif) => notif.status === false
+          );
           setNewNotifications(unreadNotifications.length > 0);
         })
         .catch((error) => {
@@ -539,7 +613,10 @@ export default function MainPage() {
     );
 
   return (
-    <div className="fixed w-full min-h-full overflow-hidden" style={{ height: viewportHeight }}>
+    <div
+      className="fixed w-full min-h-full overflow-hidden"
+      style={{ height: viewportHeight }}
+    >
       <title>AQoO</title>
       <KickedModal />
       <div
@@ -552,10 +629,17 @@ export default function MainPage() {
 
       <OverlayEffect aquariumData={aquariumData} />
       {fishes.map((fish) => (
-        <Fish key={fish.fishId} fish={fish} handleIncreaseExp={handleIncreaseExp} />
+        <Fish
+          key={fish.fishId}
+          fish={fish}
+          handleIncreaseExp={handleIncreaseExp}
+        />
       ))}
-      
-      <NotificationComponent refreshAquariumData={refreshAquariumData} setNewNotifications={setNewNotifications} />
+
+      <NotificationComponent
+        refreshAquariumData={refreshAquariumData}
+        setNewNotifications={setNewNotifications}
+      />
 
       {/* BottomMenuBar에 오버레이 토글 함수 전달 */}
       <BottomMenuBar
@@ -607,11 +691,12 @@ export default function MainPage() {
       {/* 오버레이 물고기 선택 모달 */}
       {showOverlayModal && userInfo && (
         <FishOverlayModal
-        fishList={fishes}
-        transparency={transparency}
-        setTransparency={setTransparency}
-        onConfirm={onOverlayModalConfirm}
-        onClose={onOverlayModalClose} />
+          fishList={fishes}
+          transparency={transparency}
+          setTransparency={setTransparency}
+          onConfirm={onOverlayModalConfirm}
+          onClose={onOverlayModalClose}
+        />
       )}
     </div>
   );
