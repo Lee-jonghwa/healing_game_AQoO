@@ -333,8 +333,8 @@ export default function IntegratedRoom({ roomId, userName, user }: IntegratedRoo
   return (
     <>
       {!isConnected ? (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6 opacity-10">
-          <p className="text-2xl font-bold text-gray-900">로딩중...</p>
+        <div className="min-h-screen flex items-center justify-center p-6">
+          <p className="text-2xl font-bold text-white">로딩중...</p>
         </div>
       ) : (
         <>
