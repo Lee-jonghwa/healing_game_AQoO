@@ -71,7 +71,7 @@ function MonitorSelection({
   return (
     <div className="mb-4 p-2 border border-gray-300 rounded">
       <label htmlFor="monitorSelect" className="block mb-1">
-        오버레이를 띄울 모니터 선택
+        물고기를 띄울 모니터 선택
       </label>
       <select
         id="monitorSelect"
