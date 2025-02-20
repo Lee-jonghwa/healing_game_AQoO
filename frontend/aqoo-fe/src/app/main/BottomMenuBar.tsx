@@ -82,7 +82,6 @@ export default function BottomMenuBar({
         `👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`,
         "info"
       );
-      // alert(`👍👍 ${type === "water" ? "수질이 이미 최고 상태입니다!" : "먹이가 이미 가득 찼습니다!"} 👍👍`);
       return;
     }
     try {
@@ -98,7 +97,6 @@ export default function BottomMenuBar({
         playFeed();
       }
 
-      // alert(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`);
       showToast(`${type === "water" ? "물 갈이 성공!" : "먹이 주기 성공!"}`, "success");
       await handleIncreaseExp(10);
       refreshAquariumData();
@@ -287,7 +285,6 @@ export default function BottomMenuBar({
               label="Clean"
               onClick={() => {
                 if (isPollutionMaxed) {
-                  // alert("청결 상태가 이미 최고 상태입니다!");
                   showToast("청결 상태가 이미 최고 상태입니다!", "info");
                   return;
                 }

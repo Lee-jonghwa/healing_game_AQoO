@@ -1,6 +1,7 @@
 "use client";
 
 import { SubmitHandler, useForm } from "react-hook-form";
+
 import { FcGoogle } from "react-icons/fc";
 import InputField from "@/app/user/login/components/InputField";
 import LoginButton from "@/app/user/login/components/LoginButton";
@@ -8,6 +9,7 @@ import { SiNaver } from "react-icons/si";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/hooks/useToast";
 
 interface LoginFormInputs {
   id: string;
@@ -21,10 +23,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { showToast } = useToast();
+
   // Electron 환경 감지 (userAgent에 "electron"이 포함되어 있으면 Electron으로 판단)
-  const isElectron =
-    typeof navigator !== "undefined" &&
-    navigator.userAgent.toLowerCase().includes("electron");
+  const isElectron = typeof navigator !== "undefined" && navigator.userAgent.toLowerCase().includes("electron");
 
   // 일반 로그인 처리
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
@@ -34,12 +36,14 @@ export default function LoginPage() {
       router.push("/main");
     } catch (error: any) {
       // Electron 환경이면 native dialog 사용, 아니면 기존 alert 호출
-      const electronAPI = (window as any).electronAPI;
-      if (electronAPI && electronAPI.showAlert) {
-        electronAPI.showAlert(error.message);
-      } else {
-        alert(error.message);
-      }
+      // const electronAPI = (window as any).electronAPI;
+      // if (electronAPI && electronAPI.showAlert) {
+      //   electronAPI.showAlert(error.message);
+      // } else {
+      //   alert(error.message);
+      // }
+      // alert(error.message);
+      showToast(error.message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -51,13 +55,11 @@ export default function LoginPage() {
    */
   const handleSocialLogin = (provider: "google" | "naver") => {
     if (provider === "naver") {
-      alert("추후 서비스 예정입니다.");
+      // alert("추후 서비스 예정입니다.");
+      showToast("추후 서비스 예정입니다.", "info");
       return;
     }
-    const url =
-      provider === "google"
-        ? "/oauth2/authorization/google"
-        : "/oauth2/authorization/naver";
+    const url = provider === "google" ? "/oauth2/authorization/google" : "/oauth2/authorization/naver";
     window.location.href = url;
   };
 
