@@ -121,7 +121,7 @@ export default function ChatBox({ roomId, users, currentUser, onNewMessage }: Ch
         <button
           onClick={() => {
             playModal();
-            sendMessage}}
+            sendMessage()}}
           className='w-[25%] p-3 bg-blue-600 text-white hover:bg-blue-700 transition-colors'
         >
           보내기
