@@ -1,7 +1,7 @@
 # Aqoo 서비스 포팅 매뉴얼
 
 ### 이미지 폴더
-- images 폴더가 /home/ubuntu 에 위치 해있어야 합니다.
+- exec 폴더 내의 images 폴더가 /home/ubuntu 에 위치 해있어야 합니다.
 
 
 
