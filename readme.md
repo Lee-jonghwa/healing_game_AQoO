@@ -1,6 +1,13 @@
 # Aqoo
 ## 자신만의 어항에서 물고기를 키우고 물멍을 하며 일상에서 잠시 쉬어갈 수 있는 서비스 입니다.
 
+![img1.webp](img1.webp)
+![img2.webp](img2.webp)
+![img3.webp](img3.webp)
+![img4.webp](img4.webp)
+
+
+
 ### 이미지 폴더
 - exec 폴더 내의 images 폴더가 /home/ubuntu 에 위치 해있어야 합니다.
 
