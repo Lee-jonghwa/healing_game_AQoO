@@ -1,8 +1,5 @@
 # Aqoo
 ## 자신만의 어항에서 물고기를 키우고 물멍을 하며 일상에서 잠시 쉬어갈 수 있는 서비스 입니다.
-![image.png](attachment:9a1dda8a-a0fd-41f5-9b82-18ab79e02c10:image.png)
-![image.png](attachment:bdd82842-785b-46bc-81ce-fdcedd3e5632:image.png)
-![image.png](attachment:5e468b09-5c0a-401b-905b-9a279a859f9f:image.png)
 
 ### 이미지 폴더
 - exec 폴더 내의 images 폴더가 /home/ubuntu 에 위치 해있어야 합니다.
