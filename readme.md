@@ -78,7 +78,7 @@ Citations:
 - **정적 이미지**는 EC2 `/home/ubuntu/images` 외부 볼륨에 두고, Nginx `alias`로 노출합니다.
 - **환경 변수**는 `.env` 로 관리하며, Jenkins에서 Build‑time Secret 으로 주입합니다.
 - **Nginx Reverse Proxy** : 443 → Next.js :3000 / Spring API :8089 / WebSocket :8089.
-- **CI/CD** : Jenkins Pipeline이 프론트·백엔드 Docker 이미지를 빌드 후 `docker compose up -d` 로 롤링 업데이트.
+- **CI/CD** : Jenkins Pipeline이 프론트·백엔드 Docker 이미지를 빌드 후 배포
 
 ---
 
