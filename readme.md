@@ -12,14 +12,14 @@
 ---
 
 ## 2. 팀원 소개
-| 이름 | 역할 | 주요 담당 모듈 | GitHub |
-|------|------|----------------|--------|
-| 김OO | **PM / FE** | UI/UX · 상태관리 | [@kim](https://github.com/kim) |
-| 이OO | **BE Lead** | API · DB · Security | [@lee](https://github.com/lee) |
-| 박OO | **DevOps** | CI/CD · 인프라 | [@park](https://github.com/park) |
-| 최OO | **3D & Motion** | GSAP · Mediapipe | [@choi](https://github.com/choi) |
-
-> 📌 6 명 팀 프로젝트 중 예시 4 명 표기. 실제 인원에 맞게 수정하세요.
+| 이름 | 역할 | 주요 담당 모듈 |
+|------|------|----------------|
+| 이진호 | **팀장 / BE / Infra** | API 개발, CI/CD |
+| 최영환 | **BE / Infra** | API 개발, BE CI/CD |
+| 한송헌 | **BE / Infra** | API 개발, FE CI/CD |
+| 이조은 | **FE Leader** | FE개발, GSAP · Mediapipe |
+| 장은정 | **FE** | FE 개발, PPT |
+| 이종화 | **FE, 발표자** | FE개발, Mediapipe |
 
 ---
 
