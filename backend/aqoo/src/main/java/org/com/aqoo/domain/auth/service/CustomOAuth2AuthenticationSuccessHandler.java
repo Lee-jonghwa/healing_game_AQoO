@@ -102,7 +102,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
     private Boolean checkUserStatus(String email, HttpServletResponse response) throws IOException {
         if (userService.isAlreadyJoin(email)) { // 이미 가입된 회원인 경우
             if (!userService.getAccountStatus(email)) { // 탈퇴한 회원인 경우
-                String withdrawnRedirectUrl = "https://i12e203.p.ssafy.io/user/login/account-withdrawn"
+                String withdrawnRedirectUrl = "https://{domain}/user/login/account-withdrawn"
                         + "?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8);
                 log.info("User {} is withdrawn. Redirecting to {}", email, withdrawnRedirectUrl);
                 response.sendRedirect(withdrawnRedirectUrl);
@@ -132,7 +132,7 @@ public class CustomOAuth2AuthenticationSuccessHandler implements AuthenticationS
      * 프론트엔드 리다이렉트 URL을 생성하는 메서드
      */
     private String loginFrontendRedirectUrl(LoginResponse loginResponse, boolean isNewUser) {
-        String frontendRedirectUrl = "https://i12e203.p.ssafy.io/user/login/social-login-callback";
+        String frontendRedirectUrl = "https://{domain}/user/login/social-login-callback";
 
         // 안전하게 인코딩하기 위한 헬퍼 메서드 사용
         String accessToken = safeEncode(loginResponse.getAccessToken());
