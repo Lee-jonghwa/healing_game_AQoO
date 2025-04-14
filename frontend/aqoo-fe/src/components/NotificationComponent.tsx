@@ -82,7 +82,7 @@ export default function NotificationComponent({
   // 🔥 **Axios 대신 Fetch를 사용하여 서버로 토큰 전송 (중복 요청 방지)**
   const sendTokenToServer = async (userId: string, token: string) => {
     try {
-      const response = await fetch("https://i12e203.p.ssafy.io/api/v1/push/token", {
+      const response = await fetch("https://{domain}/api/v1/push/token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, token }),
